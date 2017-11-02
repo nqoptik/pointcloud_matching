@@ -21,4 +21,3 @@ void savePly(std::string fileName, std::vector<pcl::PointXYZRGB> listxyzrgb) {
     }
     ofs_ply.close();
 }
-

@@ -11,4 +11,3 @@
 void savePly(std::string fileName, std::vector<pcl::PointXYZRGB> listxyzrgb);
 
 #endif /* _PLYIO_H_ */
-
