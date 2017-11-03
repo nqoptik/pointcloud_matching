@@ -15,7 +15,11 @@
 #include <pcl/filters/uniform_sampling.h>
 #include <pcl/kdtree/kdtree_flann.h>
 
+#include "Configurations.h"
+
 int main (int argc, char** argv) {
+
+    Configurations::getInstance()->readConfig();
 
     std::vector<int> las_filenames;
     las_filenames = pcl::console::parse_file_extension_argument (argc, argv, ".las");
@@ -58,7 +62,7 @@ int main (int argc, char** argv) {
 
     // Down sampling
     pcl::VoxelGrid<pcl::PointXYZRGB> grid;
-    double leaf = 0.0015;
+    double leaf = Configurations::getInstance()->leaf_size;
     grid.setLeafSize(leaf, leaf, leaf);
     grid.setInputCloud(p_orgCloud);
     grid.filter(*p_orgCloud);
@@ -67,8 +71,8 @@ int main (int argc, char** argv) {
     // Create the filtering object
     pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
     sor.setInputCloud (p_orgCloud);
-    sor.setMeanK (50);
-    sor.setStddevMulThresh (4.0);
+    sor.setMeanK (Configurations::getInstance()->sor_neighbours);
+    sor.setStddevMulThresh (Configurations::getInstance()->sor_stdev_thresh);
     sor.filter (*p_orgCloud);
     std::cout << "pcd_file after filtering: " << *p_orgCloud << "\n";
 

@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef _PLYIO_H_
 #define _PLYIO_H_
 
