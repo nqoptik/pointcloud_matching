@@ -13,9 +13,9 @@ class Configurations {
 
 public:
 
-	Configurations();
+    Configurations();
     ~Configurations();
-    
+
     double leaf_size;
     int sor_neighbours;
     double sor_stdev_thresh;
