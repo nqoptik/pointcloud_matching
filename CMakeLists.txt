@@ -8,7 +8,7 @@ include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable (main main.cpp plyio.h plyio.cpp)
+add_executable (main main.cpp plyio.h plyio.cpp Configurations.cpp Configurations.h)
 add_executable (PreProcessing PreProcessing.cpp Configurations.cpp Configurations.h)
 
 target_link_libraries (main ${PCL_LIBRARIES})

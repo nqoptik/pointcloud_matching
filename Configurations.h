@@ -19,6 +19,12 @@ public:
     double leaf_size;
     int sor_neighbours;
     double sor_stdev_thresh;
+    double iss_old_salient_radius;
+    double iss_old_nonmax_radius;
+    int iss_old_min_neighbours;
+    double iss_new_salient_radius;
+    double iss_new_nonmax_radius;
+    int iss_new_min_neighbours;
 
 	void readConfig();
 
