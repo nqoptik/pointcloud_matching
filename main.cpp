@@ -61,6 +61,30 @@ int main (int argc, char** argv)
     iss_new_detector.compute(*p_new_kpts);
     std::cout << "p_new_kpts " << *p_new_kpts << "\n";
 
+    // Draw matches;
+    std::vector<pcl::PointXYZRGB> ply_matches;
+    pcl::PointXYZRGB pclxyzrgb;
+    for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
+        pcl::PointXYZRGB tmp;
+        tmp.r = 0;
+        tmp.g = 0;
+        tmp.b = 255;
+        tmp.x = p_old_pcl->points[i].x;
+        tmp.y = p_old_pcl->points[i].y;
+        tmp.z = p_old_pcl->points[i].z;
+        ply_matches.push_back(tmp);
+    }
+    for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
+        pcl::PointXYZRGB tmp;
+        tmp.r = 255;
+        tmp.g = 0;
+        tmp.b = 0;
+        tmp.x = p_new_pcl->points[i].x;
+        tmp.y = p_new_pcl->points[i].y;
+        tmp.z = p_new_pcl->points[i].z;
+        ply_matches.push_back(tmp);
+    }
+
     pcl::KdTreeFLANN<pcl::PointXYZ> kd_old_pcl;
     kd_old_pcl.setInputCloud (p_old_pcl);
     pcl::KdTreeFLANN<pcl::PointXYZ> kd_new_pcl;
@@ -125,6 +149,32 @@ int main (int argc, char** argv)
                 }
             }
         }
+        if (best_score < 1) {
+            pclxyzrgb.r = 255;
+            pclxyzrgb.g = 255;
+            pclxyzrgb.b = 255;
+            pcl::PointXYZ nearestPoint =  p_new_kpts->points[pos_refer_index[best_refer_index]];
+            pcl::PointXYZ vec;
+            vec.x = nearestPoint.x - old_kpt.x;
+            vec.y = nearestPoint.y - old_kpt.y;
+            vec.z = nearestPoint.z - old_kpt.z;
+            float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+            vec.x /= length;
+            vec.y /= length;
+            vec.z /= length;
+            for (float t = 0; t < 1e10; t += Configurations::getInstance()->leaf_size / 100)
+            {
+                if (t > length) {
+                    break;
+                }
+                pclxyzrgb.x = old_kpt.x + t * vec.x;
+                pclxyzrgb.y = old_kpt.y + t * vec.y;
+                pclxyzrgb.z = old_kpt.z + t * vec.z;
+                ply_matches.push_back(pclxyzrgb);
+            }
+        }
     }
+    savePly("Matches.ply", ply_matches);
+    std::cout << "Matches saved.\n";
     return 0;
 }
