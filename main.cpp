@@ -94,14 +94,17 @@ int main (int argc, char** argv)
     double des_radius = 0.05;
     double pos_radius = 0.03;
     int icp_iterations = 5;
+    double refine_radius = 0.005;
 
     // Search most similar point from posile regions
     for (size_t i = 0; i < p_old_kpts->points.size(); ++i) {
 
+        std::cout << " Matching process: " << i << "/" << p_old_kpts->points.size() << "\n";
         pcl::PointXYZ old_kpt = (p_old_kpts->points)[i];
         std::vector<int> old_neighbour_index;
         std::vector<float> old_neighbours_sqd;
         if (!kd_old_pcl.radiusSearch(old_kpt, des_radius, old_neighbour_index, old_neighbours_sqd) > 0) {
+            std::cout << " !not found old neighbours\n";
             continue;
         }
         // Old keypoint's neighbours
@@ -114,6 +117,7 @@ int main (int argc, char** argv)
         std::vector<int> pos_refer_index;
         std::vector<float> pos_refer_sqd;
         if (!kd_new_kpts.radiusSearch(old_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
+            std::cout << " !not found possible refer keypoint.\n";
             continue;
         }
         float best_score = 1e10;
@@ -123,6 +127,7 @@ int main (int argc, char** argv)
             std::vector<int> new_neighbour_index;
             std::vector<float> new_neighbours_sqd;
             if (!kd_new_pcl.radiusSearch(new_kpt, des_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
+                std::cout << " !not found new neighbours\n";
                 continue;
             }
             // New keypoint's neighbours
@@ -141,8 +146,7 @@ int main (int argc, char** argv)
                 if (icp.getFitnessScore() < best_score) {
                     best_score = icp.getFitnessScore();
                     best_refer_index = j;
-                    std::cout << " Matching process: " << i << "/" << p_old_kpts->points.size() <<
-                    " best index: " << best_refer_index << " score: " << best_score <<
+                    std::cout << " best index: " << best_refer_index << " score: " << best_score <<
                     " refer point " << j << "/" << pos_refer_index.size()  <<
                     " size icp " << new_neighbours->points.size() <<
                     " -> " << old_neighbours->points.size() << "\n";
@@ -150,10 +154,49 @@ int main (int argc, char** argv)
             }
         }
         if (best_score < 1) {
+            std::cout << "Refine";
+            // Get refine points
+            pcl::PointXYZ similar_kpt =  p_new_kpts->points[pos_refer_index[best_refer_index]];
+            std::vector<int> refine_index;
+            std::vector<float> refine_sqd;
+            if (!kd_new_pcl.radiusSearch(similar_kpt, refine_radius, refine_index, refine_sqd) > 0) {
+                std::cout << " !not found refine point\n";
+                continue;
+            }
+            float refine_best_score = 1e10;
+            int refine_best_refer_index = 0;
+            for (size_t j = 0; j < refine_index.size(); ++j) {
+                pcl::PointXYZ new_similar_point = (p_new_pcl->points)[refine_index[j]];
+                std::vector<int> new_neighbour_index;
+                std::vector<float> new_neighbours_sqd;
+                if (!kd_new_pcl.radiusSearch(new_similar_point, des_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
+                    std::cout << " !not found new neighbours\n";
+                    continue;
+                }
+                // New keypoint's neighbours
+                pcl::PointCloud<pcl::PointXYZ>::Ptr new_neighbours(new pcl::PointCloud<pcl::PointXYZ>());
+                for (size_t k = 0; k < new_neighbour_index.size(); ++k) {
+                    new_neighbours->points.push_back(p_new_pcl->points[new_neighbour_index[k]]);
+                }
+                pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
+                icp.setMaximumIterations (icp_iterations);
+                icp.setInputSource (new_neighbours);
+                icp.setInputTarget (old_neighbours);
+                icp.align (*new_neighbours);
+                icp.setMaximumIterations (1);
+                icp.align (*new_neighbours);
+                if (icp.hasConverged()) {
+                    if (icp.getFitnessScore() < refine_best_score) {
+                        refine_best_score = icp.getFitnessScore();
+                        refine_best_refer_index = j;
+                        std::cout << " precess: " << j << " / " << refine_index.size() << "\n";
+                    }
+                }
+            }
             pclxyzrgb.r = 255;
             pclxyzrgb.g = 255;
             pclxyzrgb.b = 255;
-            pcl::PointXYZ nearestPoint =  p_new_kpts->points[pos_refer_index[best_refer_index]];
+            pcl::PointXYZ nearestPoint =  p_new_pcl->points[refine_index[refine_best_refer_index]];
             pcl::PointXYZ vec;
             vec.x = nearestPoint.x - old_kpt.x;
             vec.y = nearestPoint.y - old_kpt.y;
