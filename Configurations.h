@@ -27,7 +27,7 @@ public:
     int iss_new_min_neighbours;
     double des_radius;
     double pos_radius;
-    int icp_iterations5;
+    int icp_iterations;
     double refine_radius;
 
 	void readConfig();
