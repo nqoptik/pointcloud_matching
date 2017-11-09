@@ -91,10 +91,10 @@ int main (int argc, char** argv)
     kd_new_pcl.setInputCloud (p_new_pcl);
     pcl::KdTreeFLANN<pcl::PointXYZ> kd_new_kpts;
     kd_new_kpts.setInputCloud (p_new_kpts);
-    double des_radius = 0.05;
-    double pos_radius = 0.03;
-    int icp_iterations = 5;
-    double refine_radius = 0.005;
+    double des_radius = Configurations::getInstance()->des_radius;
+    double pos_radius = Configurations::getInstance()->pos_radius;
+    int icp_iterations = Configurations::getInstance()->icp_iterations;
+    double refine_radius = Configurations::getInstance()->refine_radius;
 
     // Search most similar point from posile regions
     for (size_t i = 0; i < p_old_kpts->points.size(); ++i) {

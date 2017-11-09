@@ -13,6 +13,10 @@ Configurations::Configurations() {
     iss_new_salient_radius = 0.005;
     iss_new_nonmax_radius = 0.004;
     iss_new_min_neighbours = 1;
+    des_radius = 0.05;
+    pos_radius = 0.03;
+    icp_iterations = 5;
+    refine_radius = 0.005;
 }
 
 Configurations::~Configurations() {
@@ -72,6 +76,26 @@ void Configurations::readConfig() {
             in >> val;
             iss_new_min_neighbours = val;
         }
+        else if (option.compare("des_radius") == 0) {
+            double val;
+            in >> val;
+            des_radius = val;
+        }
+        else if (option.compare("pos_radius") == 0) {
+            double val;
+            in >> val;
+            pos_radius = val;
+        }
+        else if (option.compare("icp_iterations") == 0) {
+            int val;
+            in >> val;
+            icp_iterations = val;
+        }
+        else if (option.compare("refine_radius") == 0) {
+            double val;
+            in >> val;
+            refine_radius = val;
+        }
     }
     ifs.close();
 
@@ -85,4 +109,8 @@ void Configurations::readConfig() {
     std::cout << "iss_new_salient_radius: " << iss_new_salient_radius << "\n";
     std::cout << "iss_new_nonmax_radius:  " << iss_new_nonmax_radius << "\n";
     std::cout << "iss_new_min_neighbours: " << iss_new_min_neighbours << "\n";
+    std::cout << "des_radius:             " << des_radius << "\n";
+    std::cout << "pos_radius:             " << pos_radius << "\n";
+    std::cout << "icp_iterations:         " << icp_iterations << "\n";
+    std::cout << "refine_radius:          " << refine_radius << "\n";
 }
