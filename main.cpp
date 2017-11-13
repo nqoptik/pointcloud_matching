@@ -63,7 +63,30 @@ int main (int argc, char** argv)
 
     // Draw matches;
     std::vector<pcl::PointXYZRGB> ply_matches;
-    pcl::PointXYZRGB pclxyzrgb;
+    if (Configurations::getInstance()->draw_old_kpts == true) {
+        for (size_t i = 0; i < p_old_kpts->points.size(); ++i) {
+            pcl::PointXYZRGB tmp;
+            tmp.r = 0;
+            tmp.g = 255;
+            tmp.b = 0;
+            tmp.x = p_old_kpts->points[i].x;
+            tmp.y = p_old_kpts->points[i].y;
+            tmp.z = p_old_kpts->points[i].z;
+            ply_matches.push_back(tmp);
+        }
+    }
+    if (Configurations::getInstance()->draw_new_kpts == true) {
+        for (size_t i = 0; i < p_new_kpts->points.size(); ++i) {
+            pcl::PointXYZRGB tmp;
+            tmp.r = 0;
+            tmp.g = 255;
+            tmp.b = 255;
+            tmp.x = p_new_kpts->points[i].x;
+            tmp.y = p_new_kpts->points[i].y;
+            tmp.z = p_new_kpts->points[i].z;
+            ply_matches.push_back(tmp);
+        }
+    }
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
         pcl::PointXYZRGB tmp;
         if (Configurations::getInstance()->draw_old_colour) {
@@ -207,9 +230,10 @@ int main (int argc, char** argv)
                     }
                 }
             }
-            pclxyzrgb.r = 255;
-            pclxyzrgb.g = 255;
-            pclxyzrgb.b = 255;
+            pcl::PointXYZRGB tmp;
+            tmp.r = 255;
+            tmp.g = 255;
+            tmp.b = 255;
             pcl::PointXYZRGB nearestPoint =  p_new_pcl->points[refine_index[refine_best_refer_index]];
             pcl::PointXYZRGB vec;
             vec.x = nearestPoint.x - old_kpt.x;
@@ -224,10 +248,10 @@ int main (int argc, char** argv)
                 if (t > length) {
                     break;
                 }
-                pclxyzrgb.x = old_kpt.x + t * vec.x;
-                pclxyzrgb.y = old_kpt.y + t * vec.y;
-                pclxyzrgb.z = old_kpt.z + t * vec.z;
-                ply_matches.push_back(pclxyzrgb);
+                tmp.x = old_kpt.x + t * vec.x;
+                tmp.y = old_kpt.y + t * vec.y;
+                tmp.z = old_kpt.z + t * vec.z;
+                ply_matches.push_back(tmp);
             }
         }
     }

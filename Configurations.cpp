@@ -17,6 +17,8 @@ Configurations::Configurations() {
     pos_radius = 0.03;
     icp_iterations = 5;
     refine_radius = 0.005;
+    draw_old_kpts = false;
+    draw_new_kpts = false;
     draw_old_colour = false;
     draw_new_colour = false;
 }
@@ -98,6 +100,16 @@ void Configurations::readConfig() {
             in >> val;
             refine_radius = val;
         }
+        else if (option.compare("draw_old_kpts") == 0) {
+            bool val;
+            in >> val;
+            draw_old_kpts = val;
+        }
+        else if (option.compare("draw_new_kpts") == 0) {
+            bool val;
+            in >> val;
+            draw_new_kpts = val;
+        }
         else if (option.compare("draw_old_colour") == 0) {
             bool val;
             in >> val;
@@ -125,6 +137,8 @@ void Configurations::readConfig() {
     std::cout << "pos_radius:             " << pos_radius << "\n";
     std::cout << "icp_iterations:         " << icp_iterations << "\n";
     std::cout << "refine_radius:          " << refine_radius << "\n";
+    std::cout << "draw_old_kpts:          " << draw_old_kpts << "\n";
+    std::cout << "draw_new_kpts:          " << draw_new_kpts << "\n";
     std::cout << "draw_old_colour:        " << draw_old_colour << "\n";
     std::cout << "draw_new_colour:        " << draw_new_colour << "\n";
 }

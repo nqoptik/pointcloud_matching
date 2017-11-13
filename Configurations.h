@@ -29,6 +29,8 @@ public:
     double pos_radius;
     int icp_iterations;
     double refine_radius;
+    bool draw_old_kpts;
+    bool draw_new_kpts;
     bool draw_old_colour;
     bool draw_new_colour;
 
