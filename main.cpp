@@ -7,6 +7,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/console/parse.h>
+#include <pcl/filters/voxel_grid.h>
 #include <pcl/keypoints/iss_3d.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/registration/icp.h>
@@ -45,37 +46,76 @@ int main (int argc, char** argv)
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
 
-    for (size_t octave = 0; octave < 1; ++octave) {
+    for (size_t octave = 0; octave < 2; ++octave) {
+
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl_in(new pcl::PointCloud<pcl::PointXYZRGB>());
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl_in(new pcl::PointCloud<pcl::PointXYZRGB>());
+        double leaf_size;
+        int sor_neighbours;
+        double iss_old_salient_radius;
+        double iss_old_nonmax_radius;
+        int iss_old_min_neighbours = Configurations::getInstance()->iss_old_min_neighbours;;
+        double iss_new_salient_radius;
+        double iss_new_nonmax_radius;
+        int iss_new_min_neighbours = Configurations::getInstance()->iss_new_min_neighbours;;
+        double des_radius;
+        double pos_radius;
+        int icp_iterations = Configurations::getInstance()->icp_iterations;
+        double refine_radius = Configurations::getInstance()->refine_radius;
+        if (octave == 0) {
+            leaf_size = Configurations::getInstance()->leaf_size;
+            iss_old_salient_radius = Configurations::getInstance()->iss_old_salient_radius;
+            iss_old_nonmax_radius = Configurations::getInstance()->iss_old_nonmax_radius;
+            iss_new_salient_radius = Configurations::getInstance()->iss_new_salient_radius;
+            iss_new_nonmax_radius = Configurations::getInstance()->iss_new_nonmax_radius;
+            des_radius = Configurations::getInstance()->des_radius;
+            pos_radius = Configurations::getInstance()->pos_radius;
+
+        }
+        else if (octave == 1) {
+            leaf_size = Configurations::getInstance()->leaf_size*2;
+            iss_old_salient_radius = Configurations::getInstance()->iss_old_salient_radius;
+            iss_old_nonmax_radius = Configurations::getInstance()->iss_old_nonmax_radius;
+            iss_new_salient_radius = Configurations::getInstance()->iss_new_salient_radius*2;
+            iss_new_nonmax_radius = Configurations::getInstance()->iss_new_nonmax_radius*2;
+            des_radius = Configurations::getInstance()->des_radius*2;
+            pos_radius = Configurations::getInstance()->pos_radius*2;
+        }
+        // Down sampling
+        pcl::VoxelGrid<pcl::PointXYZRGB> grid;
+        grid.setLeafSize(leaf_size, leaf_size, leaf_size);
+        grid.setInputCloud(p_old_pcl);
+        grid.filter(*p_old_pcl_in);
+        std::cout << "p_old_pcl_in after down sampling: " << *p_old_pcl_in << "\n";
+        grid.setInputCloud(p_new_pcl);
+        grid.filter(*p_new_pcl_in);
+        std::cout << "p_new_pcl_in after down sampling: " << *p_new_pcl_in << "\n";
 
         // Detect ISS keypints
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_kpts(new pcl::PointCloud<pcl::PointXYZRGB>());
         pcl::ISSKeypoint3D<pcl::PointXYZRGB, pcl::PointXYZRGB> iss_old_detector;
-        iss_old_detector.setSalientRadius(Configurations::getInstance()->iss_old_salient_radius);
-        iss_old_detector.setNonMaxRadius(Configurations::getInstance()->iss_old_nonmax_radius);
-        iss_old_detector.setMinNeighbors(Configurations::getInstance()->iss_old_min_neighbours);
-        iss_old_detector.setInputCloud(p_old_pcl);
+        iss_old_detector.setSalientRadius(iss_old_salient_radius);
+        iss_old_detector.setNonMaxRadius(iss_old_nonmax_radius);
+        iss_old_detector.setMinNeighbors(iss_old_min_neighbours);
+        iss_old_detector.setInputCloud(p_old_pcl_in);
         iss_old_detector.compute(*p_old_kpts);
         std::cout << "p_old_kpts " << *p_old_kpts << "\n";
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_kpts(new pcl::PointCloud<pcl::PointXYZRGB>());
         pcl::ISSKeypoint3D<pcl::PointXYZRGB, pcl::PointXYZRGB> iss_new_detector;
-        iss_new_detector.setSalientRadius(Configurations::getInstance()->iss_new_salient_radius);
-        iss_new_detector.setNonMaxRadius(Configurations::getInstance()->iss_new_nonmax_radius);
-        iss_new_detector.setMinNeighbors(Configurations::getInstance()->iss_new_min_neighbours);
-        iss_new_detector.setInputCloud(p_new_pcl);
+        iss_new_detector.setSalientRadius(iss_new_salient_radius);
+        iss_new_detector.setNonMaxRadius(iss_new_nonmax_radius);
+        iss_new_detector.setMinNeighbors(iss_new_min_neighbours);
+        iss_new_detector.setInputCloud(p_new_pcl_in);
         iss_new_detector.compute(*p_new_kpts);
         std::cout << "p_new_kpts " << *p_new_kpts << "\n";
 
         pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_pcl;
-        kd_old_pcl.setInputCloud (p_old_pcl);
+        kd_old_pcl.setInputCloud (p_old_pcl_in);
         pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_pcl;
-        kd_new_pcl.setInputCloud (p_new_pcl);
+        kd_new_pcl.setInputCloud (p_new_pcl_in);
         pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kpts;
         kd_new_kpts.setInputCloud (p_new_kpts);
-        double des_radius = Configurations::getInstance()->des_radius;
-        double pos_radius = Configurations::getInstance()->pos_radius;
-        int icp_iterations = Configurations::getInstance()->icp_iterations;
-        double refine_radius = Configurations::getInstance()->refine_radius;
 
         // Search most similar point from possile regions
         for (size_t i = 0; i < p_old_kpts->points.size(); ++i) {
@@ -91,7 +131,7 @@ int main (int argc, char** argv)
             // Old keypoint's neighbours
             pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
             for (size_t j = 0; j < old_neighbour_index.size(); ++j) {
-                old_neighbours->points.push_back(p_old_pcl->points[old_neighbour_index[j]]);
+                old_neighbours->points.push_back(p_old_pcl_in->points[old_neighbour_index[j]]);
             }
 
             // Get possible refer keypoints
@@ -114,7 +154,7 @@ int main (int argc, char** argv)
                 // New keypoint's neighbours
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
                 for (size_t k = 0; k < new_neighbour_index.size(); ++k) {
-                    new_neighbours->points.push_back(p_new_pcl->points[new_neighbour_index[k]]);
+                    new_neighbours->points.push_back(p_new_pcl_in->points[new_neighbour_index[k]]);
                 }
                 pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
                 icp.setMaximumIterations(icp_iterations);
@@ -148,7 +188,7 @@ int main (int argc, char** argv)
                 int refine_best_refer_index = 0;
                 float diff_size_ratio = 1;
                 for (size_t j = 0; j < refine_index.size(); ++j) {
-                    pcl::PointXYZRGB new_similar_point = (p_new_pcl->points)[refine_index[j]];
+                    pcl::PointXYZRGB new_similar_point = (p_new_pcl_in->points)[refine_index[j]];
                     std::vector<int> new_neighbour_index;
                     std::vector<float> new_neighbours_sqd;
                     if (!kd_new_pcl.radiusSearch(new_similar_point, des_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
@@ -158,7 +198,7 @@ int main (int argc, char** argv)
                     // New keypoint's neighbours
                     pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
                     for (size_t k = 0; k < new_neighbour_index.size(); ++k) {
-                        new_neighbours->points.push_back(p_new_pcl->points[new_neighbour_index[k]]);
+                        new_neighbours->points.push_back(p_new_pcl_in->points[new_neighbour_index[k]]);
                     }
                     pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
                     icp.setMaximumIterations(icp_iterations);
@@ -180,7 +220,7 @@ int main (int argc, char** argv)
                         }
                     }
                 }
-                pcl::PointXYZRGB nearestPoint = p_new_pcl->points[refine_index[refine_best_refer_index]];
+                pcl::PointXYZRGB nearestPoint = p_new_pcl_in->points[refine_index[refine_best_refer_index]];
                 pcl::PointXYZRGB old_part = old_kpt;
                 old_part.r = 255*diff_size_ratio;
                 old_part.g = 255*diff_size_ratio;
