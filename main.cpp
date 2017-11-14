@@ -146,6 +146,7 @@ int main (int argc, char** argv)
                 }
                 float refine_best_score = 1e10;
                 int refine_best_refer_index = 0;
+                float diff_size_ratio = 1;
                 for (size_t j = 0; j < refine_index.size(); ++j) {
                     pcl::PointXYZRGB new_similar_point = (p_new_pcl->points)[refine_index[j]];
                     std::vector<int> new_neighbour_index;
@@ -171,11 +172,20 @@ int main (int argc, char** argv)
                             refine_best_score = icp.getFitnessScore();
                             refine_best_refer_index = j;
                             std::cout << " precess: " << j << " / " << refine_index.size() << "\n";
+                            float old_size = (float)old_neighbours->points.size();
+                            float new_size = (float)new_neighbours->points.size();
+                            float max_size = std::max(old_size, new_size);
+                            float min_size = std::min(old_size, new_size);
+                            diff_size_ratio = min_size / max_size;
                         }
                     }
                 }
                 pcl::PointXYZRGB nearestPoint = p_new_pcl->points[refine_index[refine_best_refer_index]];
-                p_old_parts->points.push_back(old_kpt);
+                pcl::PointXYZRGB old_part = old_kpt;
+                old_part.r = 255*diff_size_ratio;
+                old_part.g = 255*diff_size_ratio;
+                old_part.b = 255*diff_size_ratio;
+                p_old_parts->points.push_back(old_part);
                 p_new_parts->points.push_back(nearestPoint);
             }
         }
@@ -218,27 +228,29 @@ int main (int argc, char** argv)
         ply_matches.push_back(tmp);
     }
     for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
-        pcl::PointXYZRGB tmp;
-        tmp.r = 255;
-        tmp.g = 255;
-        tmp.b = 255;
-        pcl::PointXYZRGB vec;
-        vec.x = p_new_parts->points[i].x - p_old_parts->points[i].x;
-        vec.y = p_new_parts->points[i].y - p_old_parts->points[i].y;
-        vec.z = p_new_parts->points[i].z - p_old_parts->points[i].z;
-        float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-        vec.x /= length;
-        vec.y /= length;
-        vec.z /= length;
-        for (float t = 0; t < 1e10; t += Configurations::getInstance()->leaf_size / 100)
-        {
-            if (t > length) {
-                break;
+        if (p_old_parts->points[i].r > 200) {
+            pcl::PointXYZRGB tmp;
+            tmp.r = p_old_parts->points[i].r;
+            tmp.g = p_old_parts->points[i].g;
+            tmp.b = p_old_parts->points[i].b;
+            pcl::PointXYZRGB vec;
+            vec.x = p_new_parts->points[i].x - p_old_parts->points[i].x;
+            vec.y = p_new_parts->points[i].y - p_old_parts->points[i].y;
+            vec.z = p_new_parts->points[i].z - p_old_parts->points[i].z;
+            float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+            vec.x /= length;
+            vec.y /= length;
+            vec.z /= length;
+            for (float t = 0; t < 1e10; t += Configurations::getInstance()->leaf_size / 100)
+            {
+                if (t > length) {
+                    break;
+                }
+                tmp.x = p_old_parts->points[i].x + t * vec.x;
+                tmp.y = p_old_parts->points[i].y + t * vec.y;
+                tmp.z = p_old_parts->points[i].z + t * vec.z;
+                ply_matches.push_back(tmp);
             }
-            tmp.x = p_old_parts->points[i].x + t * vec.x;
-            tmp.y = p_old_parts->points[i].y + t * vec.y;
-            tmp.z = p_old_parts->points[i].z + t * vec.z;
-            ply_matches.push_back(tmp);
         }
     }
     savePly("Matches.ply", ply_matches);
