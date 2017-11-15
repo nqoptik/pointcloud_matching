@@ -5,6 +5,7 @@
 #include <string>
 
 #include <pcl/io/pcd_io.h>
+#include <pcl/io/ply_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/console/parse.h>
 #include <pcl/filters/voxel_grid.h>
@@ -42,7 +43,68 @@ int main (int argc, char** argv)
         exit(-1);
     }
     std::cout << "p_new_pcl " << *p_new_pcl << "\n";
+    double r_avg_old = 0, g_avg_old = 0, b_avg_old = 0;
+    double r_avg_new = 0, g_avg_new = 0, b_avg_new = 0;
+    for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
+        r_avg_old += p_old_pcl->points[i].r;
+        g_avg_old += p_old_pcl->points[i].g;
+        b_avg_old += p_old_pcl->points[i].b;
+    }
+    r_avg_old /= p_old_pcl->points.size();
+    g_avg_old /= p_old_pcl->points.size();
+    b_avg_old /= p_old_pcl->points.size();
 
+    for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
+        r_avg_new += p_new_pcl->points[i].r;
+        g_avg_new += p_new_pcl->points[i].g;
+        b_avg_new += p_new_pcl->points[i].b;
+    }
+    r_avg_new /= p_new_pcl->points.size();
+    g_avg_new /= p_new_pcl->points.size();
+    b_avg_new /= p_new_pcl->points.size();
+    std::cout << "r: " << r_avg_old << "->" << r_avg_new << "\n";
+    std::cout << "g: " << g_avg_old << "->" << g_avg_new << "\n";
+    std::cout << "b: " << b_avg_old << "->" << b_avg_new << "\n";
+    double r_std_old = 0, g_std_old = 0, b_std_old = 0;
+    double r_std_new = 0, g_std_new = 0, b_std_new = 0;
+    for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
+        r_std_old += (r_avg_old - p_old_pcl->points[i].r)*(r_avg_old - p_old_pcl->points[i].r);
+        g_std_old += (g_avg_old - p_old_pcl->points[i].g)*(g_avg_old - p_old_pcl->points[i].g);
+        b_std_old += (b_avg_old - p_old_pcl->points[i].b)*(b_avg_old - p_old_pcl->points[i].b);
+    }
+    r_std_old /= p_old_pcl->points.size();
+    g_std_old /= p_old_pcl->points.size();
+    b_std_old /= p_old_pcl->points.size();
+    r_std_old = sqrt(r_std_old);
+    g_std_old = sqrt(g_std_old);
+    b_std_old = sqrt(b_std_old);
+    for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
+        r_std_new += (r_avg_new - p_new_pcl->points[i].r)*(r_avg_new - p_new_pcl->points[i].r);
+        g_std_new += (g_avg_new - p_new_pcl->points[i].g)*(g_avg_new - p_new_pcl->points[i].g);
+        b_std_new += (b_avg_new - p_new_pcl->points[i].b)*(b_avg_new - p_new_pcl->points[i].b);
+    }
+    r_std_new /= p_new_pcl->points.size();
+    g_std_new /= p_new_pcl->points.size();
+    b_std_new /= p_new_pcl->points.size();
+    r_std_new = sqrt(r_std_new);
+    g_std_new = sqrt(g_std_new);
+    b_std_new = sqrt(b_std_new);
+    std::cout << "std r: " << r_std_old << "->" << r_std_new << "\n";
+    std::cout << "std g: " << g_std_old << "->" << g_std_new << "\n";
+    std::cout << "std b: " << b_std_old << "->" << b_std_new << "\n";
+    for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
+        p_old_pcl->points[i].r = std::max(0.0, std::min(255.0, (100.0 + (p_old_pcl->points[i].r - r_avg_old) * 35.0 / r_std_old)));
+        p_old_pcl->points[i].g = std::max(0.0, std::min(255.0, (100.0 + (p_old_pcl->points[i].g - g_avg_old) * 35.0 / g_std_old)));
+        p_old_pcl->points[i].b = std::max(0.0, std::min(255.0, (100.0 + (p_old_pcl->points[i].b - b_avg_old) * 35.0 / b_std_old)));
+    }
+    for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
+        p_new_pcl->points[i].r = std::max(0.0, std::min(255.0, (100.0 + (p_new_pcl->points[i].r - r_avg_new) * 35.0 / r_std_new)));
+        p_new_pcl->points[i].g = std::max(0.0, std::min(255.0, (100.0 + (p_new_pcl->points[i].g - g_avg_new) * 35.0 / g_std_new)));
+        p_new_pcl->points[i].b = std::max(0.0, std::min(255.0, (100.0 + (p_new_pcl->points[i].b - b_avg_new) * 35.0 / b_std_new)));
+    }
+    pcl::io::savePLYFile("p_old_pcl.ply", *p_old_pcl);
+    pcl::io::savePLYFile("p_new_pcl.ply", *p_new_pcl);
+    std::cout << "Save with new colours\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
 
