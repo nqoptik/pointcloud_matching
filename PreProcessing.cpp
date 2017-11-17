@@ -76,7 +76,7 @@ int main (int argc, char** argv) {
     sor.filter (*p_orgCloud);
     std::cout << "pcd_file after filtering: " << *p_orgCloud << "\n";
 
-    pcl::io::savePCDFileASCII(pcd_file, *p_orgCloud);
+    pcl::io::savePCDFile(pcd_file, *p_orgCloud, true);
     std::cout << pcd_file << " saved\n";
     return 0;
 }
