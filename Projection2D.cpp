@@ -16,6 +16,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/nonfree/features2d.hpp>
+#include <opencv2/video/tracking.hpp>   
 
 #include "plyio.h"
 #include "Configurations.h"
@@ -36,6 +38,8 @@ int main (int argc, char** argv) {
     // Load old and new pointclouds
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_flat(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_flat(new pcl::PointCloud<pcl::PointXYZRGB>());
     if (pcl::io::loadPCDFile(argv[pcd_filenames[0]], *p_old_pcl)) {
         std::cout << "Error loading old pointcloud!\n";
         exit(-1);
@@ -46,6 +50,7 @@ int main (int argc, char** argv) {
         exit(-1);
     }
     std::cout << "p_new_pcl " << *p_new_pcl << "\n";
+
     double r_avg_old = 0, g_avg_old = 0, b_avg_old = 0;
     double r_avg_new = 0, g_avg_new = 0, b_avg_new = 0;
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
@@ -108,6 +113,31 @@ int main (int argc, char** argv) {
     pcl::io::savePLYFile("p_old_pcl.ply", *p_old_pcl, true);
     pcl::io::savePLYFile("p_new_pcl.ply", *p_new_pcl, true);
     std::cout << "Save with new colours\n";
+
+    for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
+        pcl::PointXYZRGB tmp = p_old_pcl->points[i];
+        tmp.z = 0;
+        p_old_flat->points.push_back(tmp);
+    }
+    p_old_flat->width = p_old_flat->points.size();
+    p_old_flat->height = 1;
+    p_old_flat->is_dense = 1;
+    std::cout << "p_old_flat " << *p_old_flat << "\n";
+    for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
+        pcl::PointXYZRGB tmp = p_new_pcl->points[i];
+        tmp.z = 0;
+        p_new_flat->points.push_back(tmp);
+    }
+    p_new_flat->width = p_new_flat->points.size();
+    p_new_flat->height = 1;
+    p_new_flat->is_dense = 1;
+    std::cout << "p_new_flat " << *p_new_flat << "\n";
+
+    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_flat;
+    kd_old_flat.setInputCloud(p_old_flat);
+    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_flat;
+    kd_new_flat.setInputCloud(p_new_flat);
+
     double x_min = 1e10, y_min = 1e10, z_min = 1e10;
     double x_max = -1e10, y_max = -1e10, z_max = -1e10;
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
@@ -138,36 +168,272 @@ int main (int argc, char** argv) {
     int y_size = floor(dy/distance_threshold) + 1;
     std::cout << "image size: " << x_size << "x" << y_size << "\n";
 
-    cv::Mat zeroMat_old = cv::Mat::zeros(y_size, x_size, CV_8UC3);
-    cv::Mat zMat_old(y_size, x_size, CV_32FC1, -1e10);
+    cv::Mat old_project = cv::Mat::zeros(y_size, x_size, CV_8UC3);
+    for (int i = 0; i < old_project.rows; ++i) {
+        for (int j = 0; j < old_project.cols; ++j) {
+            pcl::PointXYZRGB tmp;
+            tmp.x = x_min + j*distance_threshold + distance_threshold/2;
+            tmp.y = y_min + i*distance_threshold + distance_threshold/2;
+            tmp.z = 0;
+            std::vector<int> nn_index;
+            std::vector<float> nn_sqd_distance;
+            if (!(kd_old_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+                continue;
+            }
+            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
+                continue;
+            }
+            pcl::PointXYZRGB nn_point = p_old_flat->points[nn_index[0]];
+            old_project.at<cv::Vec3b>(i, j)[0] = nn_point.b;
+            old_project.at<cv::Vec3b>(i, j)[1] = nn_point.g;
+            old_project.at<cv::Vec3b>(i, j)[2] = nn_point.r;
+        }
+    }
+
+    cv::Mat new_project = cv::Mat::zeros(y_size, x_size, CV_8UC3);
+    for (int i = 0; i < new_project.rows; ++i) {
+        for (int j = 0; j < new_project.cols; ++j) {
+            pcl::PointXYZRGB tmp;
+            tmp.x = x_min + j*distance_threshold + distance_threshold/2;
+            tmp.y = y_min + i*distance_threshold + distance_threshold/2;
+            tmp.z = 0;
+            std::vector<int> nn_index;
+            std::vector<float> nn_sqd_distance;
+            if (!(kd_new_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+                continue;
+            }
+            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
+                continue;
+            }
+            pcl::PointXYZRGB nn_point = p_new_flat->points[nn_index[0]];
+            new_project.at<cv::Vec3b>(i, j)[0] = nn_point.b;
+            new_project.at<cv::Vec3b>(i, j)[1] = nn_point.g;
+            new_project.at<cv::Vec3b>(i, j)[2] = nn_point.r;
+        }
+    }
+
+    //Detect key points using SIFT
+    cv::SiftFeatureDetector detector;
+    std::vector<cv::KeyPoint> keypoints_old, keypoints_new;
+    detector.detect(old_project, keypoints_old);
+    std::cout << "keypoints_old's size " << keypoints_old.size() << "\n";
+    detector.detect(new_project, keypoints_new);
+    std::cout << "keypoints_new's size " << keypoints_new.size() << "\n";
+    //Compute descriptors using SIFT
+    cv::SiftDescriptorExtractor extractor;
+    cv::Mat descriptors_old, descriptors_new;
+    extractor.compute(old_project, keypoints_old, descriptors_old);
+    extractor.compute(new_project, keypoints_new, descriptors_new);
+
+    cv::FlannBasedMatcher matcher;
+    std::vector<std::vector<cv::DMatch> > matches;
+	matcher.knnMatch(descriptors_new, descriptors_old, matches, 2);
+    std::vector<cv::DMatch> good_matches;
+	for (size_t i = 0; i < matches.size(); i++) {
+        if (matches[i][0].distance / matches[i][1].distance < 0.7) {
+            cv::Point2f trainPoint = keypoints_old[matches[i][0].trainIdx].pt;
+            cv::Point2f queryPoint = keypoints_new[matches[i][0].queryIdx].pt;
+            float dx = trainPoint.x - queryPoint.x;
+            float dy = trainPoint.y - queryPoint.y;
+            float d = sqrt(dx*dx + dy*dy);
+            if (d < 15) {
+                good_matches.push_back(matches[i][0]);
+            }
+        }
+    }
+    std::cout << "good_matches.size() " << good_matches.size() << "\n";
+    cv::Mat img_correctMatches;
+    drawMatches(new_project, keypoints_new, old_project, keypoints_old,
+        good_matches, img_correctMatches, cv::Scalar::all(-1), cv::Scalar::all(-1),
+               std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+
+    cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
+    cv::Size subPixWinSize(1, 1);
+    cv::Mat old_project_gray, new_project_gray;
+    std::vector<cv::Point2f> corners;
+    cv::cvtColor(old_project, old_project_gray, CV_BGR2GRAY);
+    cv::cvtColor(new_project, new_project_gray, CV_BGR2GRAY);
+    cv::goodFeaturesToTrack(old_project_gray, corners, 5000, 0.01, 10, cv::Mat(), 5, false, 0.04);
+
+    if (corners.size() > 0) {
+        cornerSubPix(old_project_gray, corners, subPixWinSize, cv::Size(-1, -1), termcrit);
+    }
+    std::cout << "corners.size() " << corners.size() << "\n";
+
+    cv::Mat cornerMat = old_project.clone();
+    for (size_t i = 0; i < corners.size(); ++i) {
+        cv::circle(cornerMat, corners[i], 3, cv::Scalar(255), -1, 8);
+    }
+
+    std::vector<cv::Point2f> new_corners;
+    std::vector<uchar> status;
+    std::vector<float> errors;
+    cv::Size winSize(15, 15);
+    cv::calcOpticalFlowPyrLK(old_project_gray, new_project_gray, corners, new_corners,
+        status, errors, winSize, 0, termcrit, 0, 0.01);
+    std::cout << "new_corners.size() " << new_corners.size() << "\n";
+
+    for (size_t i = 0; i < corners.size(); ++i) {
+        if ((int)status[i] == 1 && errors[i] < 20) {
+            cv::line(cornerMat, corners[i], new_corners[i], cv::Scalar(0, 0, 255), 1, 8, 0);
+        }
+    }
+
+    // Draw matches;
+    std::cout << "Drawing matches\n";
+    std::vector<pcl::PointXYZRGB> ply_matches;
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
-        int x_idx = floor((p_old_pcl->points[i].x - x_min)/distance_threshold);
-        int y_idx = floor((p_old_pcl->points[i].y - y_min)/distance_threshold);
-        if (p_old_pcl->points[i].z > zMat_old.at<float>(y_idx, x_idx)) {
-            zeroMat_old.at<cv::Vec3b>(y_idx, x_idx)[0] = p_old_pcl->points[i].b;
-            zeroMat_old.at<cv::Vec3b>(y_idx, x_idx)[1] = p_old_pcl->points[i].g;
-            zeroMat_old.at<cv::Vec3b>(y_idx, x_idx)[2] = p_old_pcl->points[i].r;
-            zMat_old.at<float>(y_idx, x_idx) = p_old_pcl->points[i].z;
+        pcl::PointXYZRGB tmp;
+        if (Configurations::getInstance()->draw_old_colour) {
+            tmp.r = p_old_pcl->points[i].r;
+            tmp.g = p_old_pcl->points[i].g;
+            tmp.b = p_old_pcl->points[i].b;
         }
+        else {
+            tmp.r = 0;
+            tmp.g = 0;
+            tmp.b = 255;
+        }
+        tmp.x = p_old_pcl->points[i].x;
+        tmp.y = p_old_pcl->points[i].y;
+        tmp.z = p_old_pcl->points[i].z;
+        ply_matches.push_back(tmp);
     }
-    cv::flip(zeroMat_old.clone(), zeroMat_old, 0);
-    cv::imshow("zeroMat_old", zeroMat_old);
-    cv::imwrite("zeroMat_old.png", zeroMat_old);
-    cv::Mat zeroMat_new = cv::Mat::zeros(y_size, x_size, CV_8UC3);
-    cv::Mat zMat_new(y_size, x_size, CV_32FC1, -1e10);
     for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
-        int x_idx = floor((p_new_pcl->points[i].x - x_min)/distance_threshold);
-        int y_idx = floor((p_new_pcl->points[i].y - y_min)/distance_threshold);
-        if (p_new_pcl->points[i].z > zMat_new.at<float>(y_idx, x_idx)) {
-            zeroMat_new.at<cv::Vec3b>(y_idx, x_idx)[0] = p_new_pcl->points[i].b;
-            zeroMat_new.at<cv::Vec3b>(y_idx, x_idx)[1] = p_new_pcl->points[i].g;
-            zeroMat_new.at<cv::Vec3b>(y_idx, x_idx)[2] = p_new_pcl->points[i].r;
-            zMat_new.at<float>(y_idx, x_idx) = p_new_pcl->points[i].z;
+        pcl::PointXYZRGB tmp;
+        if (Configurations::getInstance()->draw_new_colour) {
+            tmp.r = p_new_pcl->points[i].r;
+            tmp.g = p_new_pcl->points[i].g;
+            tmp.b = p_new_pcl->points[i].b;
+        }
+        else {
+            tmp.r = 255;
+            tmp.g = 0;
+            tmp.b = 0;
+        }
+        tmp.x = p_new_pcl->points[i].x;
+        tmp.y = p_new_pcl->points[i].y;
+        tmp.z = p_new_pcl->points[i].z;
+        ply_matches.push_back(tmp);
+    }
+
+    for (size_t i = 0; i < corners.size(); ++i) {
+        if ((int)status[i] == 1 && errors[i] < 20) {
+            cv::Point2f trainPoint = corners[i];
+            cv::Point2f queryPoint = new_corners[i];
+            pcl::PointXYZRGB tmp;
+            tmp.x = x_min + trainPoint.x*distance_threshold + distance_threshold/2;
+            tmp.y = y_min + trainPoint.y*distance_threshold + distance_threshold/2;
+            tmp.z = 0;
+            std::vector<int> nn_index;
+            std::vector<float> nn_sqd_distance;
+            if (!(kd_old_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+                continue;
+            }
+            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
+                continue;
+            }
+            pcl::PointXYZRGB nn_old_point = p_old_pcl->points[nn_index[0]];
+            tmp.x = x_min + queryPoint.x*distance_threshold + distance_threshold/2;
+            tmp.y = y_min + queryPoint.y*distance_threshold + distance_threshold/2;
+            if (!(kd_new_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+                continue;
+            }
+            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
+                continue;
+            }
+            pcl::PointXYZRGB nn_new_point = p_new_pcl->points[nn_index[0]];
+            pcl::PointXYZRGB vec;
+            vec.x = nn_old_point.x - nn_new_point.x;
+            vec.y = nn_old_point.y - nn_new_point.y;
+            vec.z = nn_old_point.z - nn_new_point.z;
+            float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+            if (length > Configurations::getInstance()->pos_radius*2) {
+                continue;
+            }
+            vec.x /= length;
+            vec.y /= length;
+            vec.z /= length;
+            for (float t = 0; t < 1e10; t += Configurations::getInstance()->leaf_size / 20) {
+                if (t > length) {
+                    break;
+                }
+                pcl::PointXYZRGB tran;
+                tran.r = 0;
+                tran.g = 255;
+                tran.b = 255;
+                tran.x = nn_new_point.x + t * vec.x;
+                tran.y = nn_new_point.y + t * vec.y;
+                tran.z = nn_new_point.z + t * vec.z;
+                ply_matches.push_back(tran);
+            }
         }
     }
-    cv::flip(zeroMat_new.clone(), zeroMat_new, 0);
-    cv::imshow("zeroMat_new", zeroMat_new);
-    cv::imwrite("zeroMat_new.png", zeroMat_new);
+
+    for (size_t i = 0; i < good_matches.size(); ++i) {
+            cv::Point2f trainPoint = keypoints_old[good_matches[i].trainIdx].pt;
+            cv::Point2f queryPoint = keypoints_new[good_matches[i].queryIdx].pt;
+            pcl::PointXYZRGB tmp;
+            tmp.x = x_min + trainPoint.x*distance_threshold + distance_threshold/2;
+            tmp.y = y_min + trainPoint.y*distance_threshold + distance_threshold/2;
+            tmp.z = 0;
+            std::vector<int> nn_index;
+            std::vector<float> nn_sqd_distance;
+            if (!(kd_old_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+                continue;
+            }
+            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
+                continue;
+            }
+            pcl::PointXYZRGB nn_old_point = p_old_pcl->points[nn_index[0]];
+            tmp.x = x_min + queryPoint.x*distance_threshold + distance_threshold/2;
+            tmp.y = y_min + queryPoint.y*distance_threshold + distance_threshold/2;
+            if (!(kd_new_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+                continue;
+            }
+            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
+                continue;
+            }
+            pcl::PointXYZRGB nn_new_point = p_new_pcl->points[nn_index[0]];
+            pcl::PointXYZRGB vec;
+            vec.x = nn_old_point.x - nn_new_point.x;
+            vec.y = nn_old_point.y - nn_new_point.y;
+            vec.z = nn_old_point.z - nn_new_point.z;
+            float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+            if (length > Configurations::getInstance()->pos_radius*2) {
+                continue;
+            }
+            vec.x /= length;
+            vec.y /= length;
+            vec.z /= length;
+            for (float t = 0; t < 1e10; t += Configurations::getInstance()->leaf_size / 20) {
+                if (t > length) {
+                    break;
+                }
+                pcl::PointXYZRGB tran;
+                tran.r = 255;
+                tran.g = 255;
+                tran.b = 0;
+                tran.x = nn_new_point.x + t * vec.x;
+                tran.y = nn_new_point.y + t * vec.y;
+                tran.z = nn_new_point.z + t * vec.z;
+                ply_matches.push_back(tran);
+            }
+    }
+    savePly("Matches.ply", ply_matches);
+    std::cout << "Matches saved.\n";
+    cv::flip(old_project.clone(), old_project, 0);
+    cv::flip(new_project.clone(), new_project, 0);
+    cv::flip(cornerMat.clone(), cornerMat, 0);
+    cv::flip(img_correctMatches.clone(), img_correctMatches, 0);
+    cv::imshow("cornerMat", cornerMat);
+    cv::imwrite("cornerMat.png", cornerMat);
+    cv::imshow("old_project", old_project);
+    cv::imwrite("old_project.png", old_project);
+    cv::imshow("new_project", new_project);
+    cv::imwrite("new_project.png", new_project);
+    cv::imshow("img_correctMatches", img_correctMatches);
+    cv::imwrite("img_correctMatches.png", img_correctMatches);
     cv::waitKey();
     return 0;
 }
