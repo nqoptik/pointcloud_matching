@@ -265,16 +265,19 @@ int main (int argc, char** argv) {
         cv::circle(cornerMat, corners[i], 3, cv::Scalar(255), -1, 8);
     }
 
-    std::vector<cv::Point2f> new_corners;
-    std::vector<uchar> status;
-    std::vector<float> errors;
+    std::vector<cv::Point2f> new_corners, tmp_corners;
+    std::vector<uchar> status, status_2;
+    std::vector<float> errors, errors_2;
     cv::Size winSize(15, 15);
     cv::calcOpticalFlowPyrLK(old_project_gray, new_project_gray, corners, new_corners,
         status, errors, winSize, 0, termcrit, 0, 0.01);
+    cv::calcOpticalFlowPyrLK(new_project_gray, old_project_gray, new_corners, tmp_corners,
+            status_2, errors_2, winSize, 0, termcrit, 0, 0.01);
     std::cout << "new_corners.size() " << new_corners.size() << "\n";
 
     for (size_t i = 0; i < corners.size(); ++i) {
-        if ((int)status[i] == 1 && errors[i] < 20) {
+        if ((int)status[i] == 1 && errors[i] < 20 &&
+            (int)status_2[i] == 1 && errors_2[i] < 20) {
             cv::line(cornerMat, corners[i], new_corners[i], cv::Scalar(0, 0, 255), 1, 8, 0);
         }
     }
@@ -318,7 +321,8 @@ int main (int argc, char** argv) {
     }
 
     for (size_t i = 0; i < corners.size(); ++i) {
-        if ((int)status[i] == 1 && errors[i] < 20) {
+        if ((int)status[i] == 1 && errors[i] < 20 &&
+            (int)status_2[i] == 1 && errors_2[i] < 20) {
             cv::Point2f trainPoint = corners[i];
             cv::Point2f queryPoint = new_corners[i];
             pcl::PointXYZRGB tmp;
