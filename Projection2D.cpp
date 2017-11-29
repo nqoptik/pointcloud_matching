@@ -424,10 +424,55 @@ int main (int argc, char** argv) {
                 ply_matches.push_back(tran);
             }
     }
+    cv::Mat reesultMat = old_project.clone();
+    for (size_t i = 0; i < corners.size(); ++i) {
+        if ((int)status[i] == 1 && errors[i] < 20 &&
+        (int)status_2[i] == 1 && errors_2[i] < 20) {
+            cv::Point2f trainPoint = corners[i];
+            cv::Point2f queryPoint = new_corners[i];
+            cv::Point2f visualPoint;
+            visualPoint.x = queryPoint.x + 2*(queryPoint.x - trainPoint.x);
+            visualPoint.y = queryPoint.y + 2*(queryPoint.y - trainPoint.y);
+            pcl::PointXYZRGB tmp;
+            tmp.x = x_min + trainPoint.x*distance_threshold + distance_threshold/2;
+            tmp.y = y_min + trainPoint.y*distance_threshold + distance_threshold/2;
+            tmp.z = 0;
+            std::vector<int> nn_index;
+            std::vector<float> nn_sqd_distance;
+            if (!(kd_old_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+                continue;
+            }
+            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
+                continue;
+            }
+            pcl::PointXYZRGB nn_old_point = p_old_pcl->points[nn_index[0]];
+            tmp.x = x_min + queryPoint.x*distance_threshold + distance_threshold/2;
+            tmp.y = y_min + queryPoint.y*distance_threshold + distance_threshold/2;
+            if (!(kd_new_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+                continue;
+            }
+            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
+                continue;
+            }
+            pcl::PointXYZRGB nn_new_point = p_new_pcl->points[nn_index[0]];
+            float z_diff = nn_new_point.z - nn_old_point.z;
+            std::cout << z_diff << "\n";
+            cv::circle(reesultMat, trainPoint, 1, cv::Scalar(0, 255, 0), -1, 8);
+            if (z_diff < 0) {
+                uchar b_val = 150 + std::min(100, (int)floor((-z_diff)/(0.02/100)));
+                cv::line(reesultMat, trainPoint, visualPoint, cv::Scalar(b_val, 0, 0), 1, 8, 0);
+            }
+            else {
+                uchar r_val = 150 + std::min(100, (int)floor((z_diff)/(0.02/100)));
+                cv::line(reesultMat, trainPoint, visualPoint, cv::Scalar(0, 0, r_val), 1, 8, 0);
+            }
+        }
+    }
     savePly("Matches.ply", ply_matches);
     std::cout << "Matches saved.\n";
     cv::flip(old_project.clone(), old_project, 0);
     cv::flip(new_project.clone(), new_project, 0);
+    cv::flip(reesultMat.clone(), reesultMat, 0);
     cv::flip(cornerMat.clone(), cornerMat, 0);
     cv::flip(img_correctMatches.clone(), img_correctMatches, 0);
     cv::imshow("cornerMat", cornerMat);
@@ -438,6 +483,8 @@ int main (int argc, char** argv) {
     cv::imwrite("new_project.png", new_project);
     cv::imshow("img_correctMatches", img_correctMatches);
     cv::imwrite("img_correctMatches.png", img_correctMatches);
+    cv::imshow("reesultMat", reesultMat);
+    cv::imwrite("reesultMat.png", reesultMat);
     cv::waitKey();
     return 0;
 }
