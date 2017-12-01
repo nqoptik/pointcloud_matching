@@ -236,7 +236,7 @@ int main (int argc, char** argv) {
             float dx = trainPoint.x - queryPoint.x;
             float dy = trainPoint.y - queryPoint.y;
             float d = sqrt(dx*dx + dy*dy);
-            if (d < 15) {
+            if (d < Configurations::getInstance()->OF_winSize) {
                 good_matches.push_back(matches[i][0]);
             }
         }
@@ -273,18 +273,71 @@ int main (int argc, char** argv) {
         status, errors, winSize, 0, termcrit, 0, 0.01);
     cv::calcOpticalFlowPyrLK(new_project_gray, old_project_gray, new_corners, tmp_corners,
             status_2, errors_2, winSize, 0, termcrit, 0, 0.01);
-    std::cout << "new_corners.size() " << new_corners.size() << "\n";
-    float OF_error_threshold = Configurations::getInstance()->OF_error_threshold;
 
+    float OF_error_threshold = Configurations::getInstance()->OF_error_threshold;
+    std::vector<cv::Point2f> trainPoints, queryPoints;
     for (size_t i = 0; i < corners.size(); ++i) {
         if ((int)status[i] == 1 && errors[i] < OF_error_threshold &&
             (int)status_2[i] == 1 && errors_2[i] < OF_error_threshold) {
+            trainPoints.push_back(corners[i]);
+            queryPoints.push_back(new_corners[i]);
             cv::line(cornerMat, corners[i], new_corners[i], cv::Scalar(0, 0, 255), 1, 8, 0);
         }
     }
+    std::cout << "Optical flow pairs: " << trainPoints.size() << "\n";
+
+    for (size_t i = 0; i < good_matches.size(); ++i) {
+        trainPoints.push_back(keypoints_old[good_matches[i].trainIdx].pt);
+        queryPoints.push_back(keypoints_new[good_matches[i].queryIdx].pt);
+    }
+    std::cout << "Total pairs: " << trainPoints.size() << "\n";
+
+    std::cout << "Get 3d pairs\n";
+    std::vector<pcl::PointXYZRGB> trainPoints_3D(trainPoints.size()), queryPoints_3D(trainPoints.size());
+    std::vector<bool> pair_status(trainPoints.size(), true);
+    for (size_t i = 0; i < trainPoints.size(); ++i) {
+        cv::Point2f trainPoint = trainPoints[i];
+        cv::Point2f queryPoint = queryPoints[i];
+        pcl::PointXYZRGB tmp;
+        tmp.x = x_min + trainPoint.x*distance_threshold + distance_threshold/2;
+        tmp.y = y_min + trainPoint.y*distance_threshold + distance_threshold/2;
+        tmp.z = 0;
+        std::vector<int> nn_index;
+        std::vector<float> nn_sqd_distance;
+        if (!(kd_old_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+            pair_status[i] = false;
+            continue;
+        }
+        if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
+            pair_status[i] = false;
+            continue;
+        }
+        pcl::PointXYZRGB nn_old_point = p_old_pcl->points[nn_index[0]];
+        tmp.x = x_min + queryPoint.x*distance_threshold + distance_threshold/2;
+        tmp.y = y_min + queryPoint.y*distance_threshold + distance_threshold/2;
+        if (!(kd_new_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+            pair_status[i] = false;
+            continue;
+        }
+        if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
+            pair_status[i] = false;
+            continue;
+        }
+        pcl::PointXYZRGB nn_new_point = p_new_pcl->points[nn_index[0]];
+        double dx = nn_old_point.x - nn_new_point.x;
+        double dy = nn_old_point.y - nn_new_point.y;
+        double dz = nn_old_point.z - nn_new_point.z;
+        float length = sqrt(dx*dx + dy*dy + dz*dz);
+        if (length > Configurations::getInstance()->pos_radius) {
+            pair_status[i] = false;
+            continue;
+        }
+        trainPoints_3D[i] = nn_old_point;
+        queryPoints_3D[i] = nn_new_point;
+    }
 
     // Draw matches;
-    std::cout << "Drawing matches\n";
+    std::cout << "Draw matches\n";
     std::vector<pcl::PointXYZRGB> ply_matches;
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
         pcl::PointXYZRGB tmp;
@@ -319,95 +372,16 @@ int main (int argc, char** argv) {
         tmp.y = p_new_pcl->points[i].y;
         tmp.z = p_new_pcl->points[i].z;
         ply_matches.push_back(tmp);
-    }
-
-    for (size_t i = 0; i < corners.size(); ++i) {
-        if ((int)status[i] == 1 && errors[i] < OF_error_threshold &&
-            (int)status_2[i] == 1 && errors_2[i] < OF_error_threshold) {
-            cv::Point2f trainPoint = corners[i];
-            cv::Point2f queryPoint = new_corners[i];
-            pcl::PointXYZRGB tmp;
-            tmp.x = x_min + trainPoint.x*distance_threshold + distance_threshold/2;
-            tmp.y = y_min + trainPoint.y*distance_threshold + distance_threshold/2;
-            tmp.z = 0;
-            std::vector<int> nn_index;
-            std::vector<float> nn_sqd_distance;
-            if (!(kd_old_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
-                continue;
-            }
-            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
-                continue;
-            }
-            pcl::PointXYZRGB nn_old_point = p_old_pcl->points[nn_index[0]];
-            tmp.x = x_min + queryPoint.x*distance_threshold + distance_threshold/2;
-            tmp.y = y_min + queryPoint.y*distance_threshold + distance_threshold/2;
-            if (!(kd_new_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
-                continue;
-            }
-            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
-                continue;
-            }
-            pcl::PointXYZRGB nn_new_point = p_new_pcl->points[nn_index[0]];
+    }    
+    for (size_t i = 0; i < trainPoints.size(); ++i) {
+        if (pair_status[i]) {
+            pcl::PointXYZRGB nn_old_point = trainPoints_3D[i];
+            pcl::PointXYZRGB nn_new_point = queryPoints_3D[i];
             pcl::PointXYZRGB vec;
             vec.x = nn_old_point.x - nn_new_point.x;
             vec.y = nn_old_point.y - nn_new_point.y;
             vec.z = nn_old_point.z - nn_new_point.z;
             float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-            if (length > Configurations::getInstance()->pos_radius*2) {
-                continue;
-            }
-            vec.x /= length;
-            vec.y /= length;
-            vec.z /= length;
-            for (float t = 0; t < 1e10; t += Configurations::getInstance()->leaf_size / 20) {
-                if (t > length) {
-                    break;
-                }
-                pcl::PointXYZRGB tran;
-                tran.r = 0;
-                tran.g = 255;
-                tran.b = 255;
-                tran.x = nn_new_point.x + t * vec.x;
-                tran.y = nn_new_point.y + t * vec.y;
-                tran.z = nn_new_point.z + t * vec.z;
-                ply_matches.push_back(tran);
-            }
-        }
-    }
-
-    for (size_t i = 0; i < good_matches.size(); ++i) {
-            cv::Point2f trainPoint = keypoints_old[good_matches[i].trainIdx].pt;
-            cv::Point2f queryPoint = keypoints_new[good_matches[i].queryIdx].pt;
-            pcl::PointXYZRGB tmp;
-            tmp.x = x_min + trainPoint.x*distance_threshold + distance_threshold/2;
-            tmp.y = y_min + trainPoint.y*distance_threshold + distance_threshold/2;
-            tmp.z = 0;
-            std::vector<int> nn_index;
-            std::vector<float> nn_sqd_distance;
-            if (!(kd_old_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
-                continue;
-            }
-            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
-                continue;
-            }
-            pcl::PointXYZRGB nn_old_point = p_old_pcl->points[nn_index[0]];
-            tmp.x = x_min + queryPoint.x*distance_threshold + distance_threshold/2;
-            tmp.y = y_min + queryPoint.y*distance_threshold + distance_threshold/2;
-            if (!(kd_new_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
-                continue;
-            }
-            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
-                continue;
-            }
-            pcl::PointXYZRGB nn_new_point = p_new_pcl->points[nn_index[0]];
-            pcl::PointXYZRGB vec;
-            vec.x = nn_old_point.x - nn_new_point.x;
-            vec.y = nn_old_point.y - nn_new_point.y;
-            vec.z = nn_old_point.z - nn_new_point.z;
-            float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-            if (length > Configurations::getInstance()->pos_radius*2) {
-                continue;
-            }
             vec.x /= length;
             vec.y /= length;
             vec.z /= length;
@@ -424,38 +398,21 @@ int main (int argc, char** argv) {
                 tran.z = nn_new_point.z + t * vec.z;
                 ply_matches.push_back(tran);
             }
+        }
     }
+    savePly("Matches.ply", ply_matches);
+    std::cout << "Matches saved.\n";
+
     cv::Mat reesultMat = old_project.clone();
-    for (size_t i = 0; i < corners.size(); ++i) {
-        if ((int)status[i] == 1 && errors[i] < OF_error_threshold &&
-        (int)status_2[i] == 1 && errors_2[i] < OF_error_threshold) {
-            cv::Point2f trainPoint = corners[i];
-            cv::Point2f queryPoint = new_corners[i];
+    for (size_t i = 0; i < trainPoints.size(); ++i) {
+        if (pair_status[i]) {
+            cv::Point2f trainPoint = trainPoints[i];
+            cv::Point2f queryPoint = queryPoints[i];
             cv::Point2f visualPoint;
             visualPoint.x = queryPoint.x + 2*(queryPoint.x - trainPoint.x);
             visualPoint.y = queryPoint.y + 2*(queryPoint.y - trainPoint.y);
-            pcl::PointXYZRGB tmp;
-            tmp.x = x_min + trainPoint.x*distance_threshold + distance_threshold/2;
-            tmp.y = y_min + trainPoint.y*distance_threshold + distance_threshold/2;
-            tmp.z = 0;
-            std::vector<int> nn_index;
-            std::vector<float> nn_sqd_distance;
-            if (!(kd_old_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
-                continue;
-            }
-            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
-                continue;
-            }
-            pcl::PointXYZRGB nn_old_point = p_old_pcl->points[nn_index[0]];
-            tmp.x = x_min + queryPoint.x*distance_threshold + distance_threshold/2;
-            tmp.y = y_min + queryPoint.y*distance_threshold + distance_threshold/2;
-            if (!(kd_new_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
-                continue;
-            }
-            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
-                continue;
-            }
-            pcl::PointXYZRGB nn_new_point = p_new_pcl->points[nn_index[0]];
+            pcl::PointXYZRGB nn_old_point = trainPoints_3D[i];
+            pcl::PointXYZRGB nn_new_point = queryPoints_3D[i];
             float z_diff = nn_new_point.z - nn_old_point.z;
             cv::circle(reesultMat, trainPoint, 1, cv::Scalar(0, 255, 0), -1, 8);
             if (z_diff < 0) {
@@ -468,8 +425,7 @@ int main (int argc, char** argv) {
             }
         }
     }
-    savePly("Matches.ply", ply_matches);
-    std::cout << "Matches saved.\n";
+
     cv::flip(old_project.clone(), old_project, 0);
     cv::flip(new_project.clone(), new_project, 0);
     cv::flip(reesultMat.clone(), reesultMat, 0);
