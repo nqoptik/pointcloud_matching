@@ -21,6 +21,9 @@ Configurations::Configurations() {
     draw_new_kpts = false;
     draw_old_colour = false;
     draw_new_colour = false;
+    project_imageSize = 700;
+    OF_winSize = 15;
+    OF_error_threshold = 20;
 }
 
 Configurations::~Configurations() {
@@ -120,6 +123,21 @@ void Configurations::readConfig() {
             in >> val;
             draw_new_colour = val;
         }
+        else if (option.compare("project_imageSize") == 0) {
+            int val;
+            in >> val;
+            project_imageSize = val;
+        }
+        else if (option.compare("OF_winSize") == 0) {
+            int val;
+            in >> val;
+            OF_winSize = val;
+        }
+        else if (option.compare("OF_error_threshold") == 0) {
+            float val;
+            in >> val;
+            OF_error_threshold = val;
+        }
     }
     ifs.close();
 
@@ -141,4 +159,7 @@ void Configurations::readConfig() {
     std::cout << "draw_new_kpts:          " << draw_new_kpts << "\n";
     std::cout << "draw_old_colour:        " << draw_old_colour << "\n";
     std::cout << "draw_new_colour:        " << draw_new_colour << "\n";
+    std::cout << "project_imageSize:      " << project_imageSize << "\n";
+    std::cout << "OF_winSize:             " << OF_winSize << "\n";
+    std::cout << "OF_error_threshold:     " << OF_error_threshold << "\n";
 }

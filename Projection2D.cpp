@@ -163,7 +163,7 @@ int main (int argc, char** argv) {
     double dy = y_max - y_min;
     double d_min = std::min(dx, dy);
     std::cout << "d_min: " << d_min << "\n";
-    double distance_threshold = d_min / 700;
+    double distance_threshold = d_min / (Configurations::getInstance()->project_imageSize);
     int x_size = floor(dx/distance_threshold) + 1;
     int y_size = floor(dy/distance_threshold) + 1;
     std::cout << "image size: " << x_size << "x" << y_size << "\n";
@@ -268,16 +268,17 @@ int main (int argc, char** argv) {
     std::vector<cv::Point2f> new_corners, tmp_corners;
     std::vector<uchar> status, status_2;
     std::vector<float> errors, errors_2;
-    cv::Size winSize(15, 15);
+    cv::Size winSize(Configurations::getInstance()->OF_winSize, Configurations::getInstance()->OF_winSize);
     cv::calcOpticalFlowPyrLK(old_project_gray, new_project_gray, corners, new_corners,
         status, errors, winSize, 0, termcrit, 0, 0.01);
     cv::calcOpticalFlowPyrLK(new_project_gray, old_project_gray, new_corners, tmp_corners,
             status_2, errors_2, winSize, 0, termcrit, 0, 0.01);
     std::cout << "new_corners.size() " << new_corners.size() << "\n";
+    float OF_error_threshold = Configurations::getInstance()->OF_error_threshold;
 
     for (size_t i = 0; i < corners.size(); ++i) {
-        if ((int)status[i] == 1 && errors[i] < 20 &&
-            (int)status_2[i] == 1 && errors_2[i] < 20) {
+        if ((int)status[i] == 1 && errors[i] < OF_error_threshold &&
+            (int)status_2[i] == 1 && errors_2[i] < OF_error_threshold) {
             cv::line(cornerMat, corners[i], new_corners[i], cv::Scalar(0, 0, 255), 1, 8, 0);
         }
     }
@@ -321,8 +322,8 @@ int main (int argc, char** argv) {
     }
 
     for (size_t i = 0; i < corners.size(); ++i) {
-        if ((int)status[i] == 1 && errors[i] < 20 &&
-            (int)status_2[i] == 1 && errors_2[i] < 20) {
+        if ((int)status[i] == 1 && errors[i] < OF_error_threshold &&
+            (int)status_2[i] == 1 && errors_2[i] < OF_error_threshold) {
             cv::Point2f trainPoint = corners[i];
             cv::Point2f queryPoint = new_corners[i];
             pcl::PointXYZRGB tmp;
@@ -426,8 +427,8 @@ int main (int argc, char** argv) {
     }
     cv::Mat reesultMat = old_project.clone();
     for (size_t i = 0; i < corners.size(); ++i) {
-        if ((int)status[i] == 1 && errors[i] < 20 &&
-        (int)status_2[i] == 1 && errors_2[i] < 20) {
+        if ((int)status[i] == 1 && errors[i] < OF_error_threshold &&
+        (int)status_2[i] == 1 && errors_2[i] < OF_error_threshold) {
             cv::Point2f trainPoint = corners[i];
             cv::Point2f queryPoint = new_corners[i];
             cv::Point2f visualPoint;
@@ -456,14 +457,13 @@ int main (int argc, char** argv) {
             }
             pcl::PointXYZRGB nn_new_point = p_new_pcl->points[nn_index[0]];
             float z_diff = nn_new_point.z - nn_old_point.z;
-            std::cout << z_diff << "\n";
             cv::circle(reesultMat, trainPoint, 1, cv::Scalar(0, 255, 0), -1, 8);
             if (z_diff < 0) {
-                uchar b_val = 150 + std::min(100, (int)floor((-z_diff)/(0.02/100)));
+                uchar b_val = 150 + std::min(100, (int)floor((-z_diff)/(Configurations::getInstance()->pos_radius/100)));
                 cv::line(reesultMat, trainPoint, visualPoint, cv::Scalar(b_val, 0, 0), 1, 8, 0);
             }
             else {
-                uchar r_val = 150 + std::min(100, (int)floor((z_diff)/(0.02/100)));
+                uchar r_val = 150 + std::min(100, (int)floor((z_diff)/(Configurations::getInstance()->pos_radius/100)));
                 cv::line(reesultMat, trainPoint, visualPoint, cv::Scalar(0, 0, r_val), 1, 8, 0);
             }
         }

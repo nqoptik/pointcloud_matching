@@ -33,6 +33,9 @@ public:
     bool draw_new_kpts;
     bool draw_old_colour;
     bool draw_new_colour;
+    int project_imageSize;
+    int OF_winSize;
+    float OF_error_threshold;
 
 	void readConfig();
 
