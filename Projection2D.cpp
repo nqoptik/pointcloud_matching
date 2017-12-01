@@ -50,7 +50,27 @@ int main (int argc, char** argv) {
         exit(-1);
     }
     std::cout << "p_new_pcl " << *p_new_pcl << "\n";
-
+    Eigen::Matrix4f transform_1 = Eigen::Matrix4f::Identity();
+    if (Configurations::getInstance()->pi_theta_x != 0) {
+        float theta = M_PI*Configurations::getInstance()->pi_theta_x;
+        transform_1(1,1) = cos(theta);
+        transform_1(1,2) = -sin(theta);
+        transform_1(2,1) = sin(theta);
+        transform_1(2,2) = cos(theta);
+        std::cout << "transform_1 " << transform_1 << std::endl;
+        pcl::transformPointCloud (*p_old_pcl, *p_old_pcl, transform_1);
+        pcl::transformPointCloud (*p_new_pcl, *p_new_pcl, transform_1);
+    }
+    else if (Configurations::getInstance()->pi_theta_y != 0) {
+        float theta = M_PI*Configurations::getInstance()->pi_theta_y;
+        transform_1(0,0) = cos(theta);
+        transform_1(2,0) = sin(theta);
+        transform_1(0,2) = -sin(theta);
+        transform_1(2,2) = cos(theta);
+        std::cout << "transform_1 " << transform_1 << std::endl;
+        pcl::transformPointCloud (*p_old_pcl, *p_old_pcl, transform_1);
+        pcl::transformPointCloud (*p_new_pcl, *p_new_pcl, transform_1);
+    }
     double r_avg_old = 0, g_avg_old = 0, b_avg_old = 0;
     double r_avg_new = 0, g_avg_new = 0, b_avg_new = 0;
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
@@ -177,13 +197,17 @@ int main (int argc, char** argv) {
             tmp.z = 0;
             std::vector<int> nn_index;
             std::vector<float> nn_sqd_distance;
-            if (!(kd_old_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+            if (!(kd_old_flat.radiusSearch(tmp, distance_threshold, nn_index, nn_sqd_distance) > 0)) {
                 continue;
             }
-            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
-                continue;
+            pcl::PointXYZRGB nn_point = p_old_pcl->points[nn_index[0]];
+            double max_z = -1e10;
+            for (size_t k = 0; k < nn_index.size(); ++k) {
+                if (p_old_pcl->points[nn_index[k]].z > max_z) {
+                    max_z = p_old_pcl->points[nn_index[k]].z;
+                    nn_point = p_old_pcl->points[nn_index[k]];
+                }
             }
-            pcl::PointXYZRGB nn_point = p_old_flat->points[nn_index[0]];
             old_project.at<cv::Vec3b>(i, j)[0] = nn_point.b;
             old_project.at<cv::Vec3b>(i, j)[1] = nn_point.g;
             old_project.at<cv::Vec3b>(i, j)[2] = nn_point.r;
@@ -199,13 +223,17 @@ int main (int argc, char** argv) {
             tmp.z = 0;
             std::vector<int> nn_index;
             std::vector<float> nn_sqd_distance;
-            if (!(kd_new_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+            if (!(kd_new_flat.radiusSearch(tmp, distance_threshold, nn_index, nn_sqd_distance) > 0)) {
                 continue;
             }
-            if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
-                continue;
+            pcl::PointXYZRGB nn_point = p_new_pcl->points[nn_index[0]];
+            double max_z = -1e10;
+            for (size_t k = 0; k < nn_index.size(); ++k) {
+                if (p_new_pcl->points[nn_index[k]].z > max_z) {
+                    max_z = p_new_pcl->points[nn_index[k]].z;
+                    nn_point = p_new_pcl->points[nn_index[k]];
+                }
             }
-            pcl::PointXYZRGB nn_point = p_new_flat->points[nn_index[0]];
             new_project.at<cv::Vec3b>(i, j)[0] = nn_point.b;
             new_project.at<cv::Vec3b>(i, j)[1] = nn_point.g;
             new_project.at<cv::Vec3b>(i, j)[2] = nn_point.r;
@@ -304,26 +332,33 @@ int main (int argc, char** argv) {
         tmp.z = 0;
         std::vector<int> nn_index;
         std::vector<float> nn_sqd_distance;
-        if (!(kd_old_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+        if (!(kd_old_flat.radiusSearch(tmp, distance_threshold, nn_index, nn_sqd_distance) > 0)) {
             pair_status[i] = false;
             continue;
         }
-        if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
-            pair_status[i] = false;
-            continue;
-        }
+        double max_z = -1e10;
         pcl::PointXYZRGB nn_old_point = p_old_pcl->points[nn_index[0]];
+        for (size_t j = 1; j < nn_index.size(); ++j) {
+            if (p_old_pcl->points[nn_index[j]].z > max_z) {
+                max_z = p_old_pcl->points[nn_index[j]].z;
+                nn_old_point = p_old_pcl->points[nn_index[j]];
+            }
+        }
         tmp.x = x_min + queryPoint.x*distance_threshold + distance_threshold/2;
         tmp.y = y_min + queryPoint.y*distance_threshold + distance_threshold/2;
-        if (!(kd_new_flat.nearestKSearch(tmp, 1, nn_index, nn_sqd_distance) > 0)) {
+        if (!(kd_new_flat.radiusSearch(tmp, distance_threshold, nn_index, nn_sqd_distance) > 0)) {
             pair_status[i] = false;
             continue;
         }
-        if (nn_sqd_distance[0] > 2*distance_threshold*distance_threshold) {
-            pair_status[i] = false;
-            continue;
-        }
+        max_z = -1e10;
         pcl::PointXYZRGB nn_new_point = p_new_pcl->points[nn_index[0]];
+        for (size_t j = 1; j < nn_index.size(); ++j) {
+            if (p_new_pcl->points[nn_index[j]].z > max_z) {
+                max_z = p_new_pcl->points[nn_index[j]].z;
+                nn_new_point = p_new_pcl->points[nn_index[j]];
+            }
+        }
+
         double dx = nn_old_point.x - nn_new_point.x;
         double dy = nn_old_point.y - nn_new_point.y;
         double dz = nn_old_point.z - nn_new_point.z;

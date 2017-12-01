@@ -36,6 +36,8 @@ public:
     int project_imageSize;
     int OF_winSize;
     float OF_error_threshold;
+    double pi_theta_x;
+    double pi_theta_y;
 
 	void readConfig();
 

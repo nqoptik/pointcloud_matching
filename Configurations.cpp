@@ -24,6 +24,8 @@ Configurations::Configurations() {
     project_imageSize = 700;
     OF_winSize = 15;
     OF_error_threshold = 20;
+    pi_theta_x = 0.0;
+    pi_theta_y = 0.0;
 }
 
 Configurations::~Configurations() {
@@ -138,6 +140,16 @@ void Configurations::readConfig() {
             in >> val;
             OF_error_threshold = val;
         }
+        else if (option.compare("pi_theta_x") == 0) {
+            double val;
+            in >> val;
+            pi_theta_x = val;
+        }
+        else if (option.compare("pi_theta_y") == 0) {
+            double val;
+            in >> val;
+            pi_theta_y = val;
+        }
     }
     ifs.close();
 
@@ -162,4 +174,6 @@ void Configurations::readConfig() {
     std::cout << "project_imageSize:      " << project_imageSize << "\n";
     std::cout << "OF_winSize:             " << OF_winSize << "\n";
     std::cout << "OF_error_threshold:     " << OF_error_threshold << "\n";
+    std::cout << "pi_theta_x:             " << pi_theta_x << "\n";
+    std::cout << "pi_theta_y:             " << pi_theta_y << "\n";
 }
