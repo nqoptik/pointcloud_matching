@@ -50,6 +50,8 @@ int main (int argc, char** argv) {
         exit(-1);
     }
     std::cout << "p_new_pcl " << *p_new_pcl << "\n";
+
+    // Transform both pointclouds
     Eigen::Matrix4f transform_1 = Eigen::Matrix4f::Identity();
     if (Configurations::getInstance()->pi_theta_x != 0) {
         float theta = M_PI*Configurations::getInstance()->pi_theta_x;
@@ -71,6 +73,8 @@ int main (int argc, char** argv) {
         pcl::transformPointCloud (*p_old_pcl, *p_old_pcl, transform_1);
         pcl::transformPointCloud (*p_new_pcl, *p_new_pcl, transform_1);
     }
+
+    // Computer average colours' values
     double r_avg_old = 0, g_avg_old = 0, b_avg_old = 0;
     double r_avg_new = 0, g_avg_new = 0, b_avg_new = 0;
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
@@ -93,6 +97,8 @@ int main (int argc, char** argv) {
     std::cout << "r: " << r_avg_old << "->" << r_avg_new << "\n";
     std::cout << "g: " << g_avg_old << "->" << g_avg_new << "\n";
     std::cout << "b: " << b_avg_old << "->" << b_avg_new << "\n";
+
+    // Compute colours' standard deviation
     double r_std_old = 0, g_std_old = 0, b_std_old = 0;
     double r_std_new = 0, g_std_new = 0, b_std_new = 0;
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
@@ -120,6 +126,8 @@ int main (int argc, char** argv) {
     std::cout << "std r: " << r_std_old << "->" << r_std_new << "\n";
     std::cout << "std g: " << g_std_old << "->" << g_std_new << "\n";
     std::cout << "std b: " << b_std_old << "->" << b_std_new << "\n";
+
+    // Synchronize pointclouds' colours
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
         p_old_pcl->points[i].r = std::max(0.0, std::min(255.0, (100.0 + (p_old_pcl->points[i].r - r_avg_old) * 35.0 / r_std_old)));
         p_old_pcl->points[i].g = std::max(0.0, std::min(255.0, (100.0 + (p_old_pcl->points[i].g - g_avg_old) * 35.0 / g_std_old)));
@@ -158,6 +166,7 @@ int main (int argc, char** argv) {
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_flat;
     kd_new_flat.setInputCloud(p_new_flat);
 
+    // Determine pointcloud's boundary
     double x_min = 1e10, y_min = 1e10, z_min = 1e10;
     double x_max = -1e10, y_max = -1e10, z_max = -1e10;
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
@@ -188,6 +197,7 @@ int main (int argc, char** argv) {
     int y_size = floor(dy/distance_threshold) + 1;
     std::cout << "image size: " << x_size << "x" << y_size << "\n";
 
+    // Project old pointcloud
     cv::Mat old_project = cv::Mat::zeros(y_size, x_size, CV_8UC3);
     for (int i = 0; i < old_project.rows; ++i) {
         for (int j = 0; j < old_project.cols; ++j) {
@@ -214,6 +224,7 @@ int main (int argc, char** argv) {
         }
     }
 
+    // Project new pointcloud
     cv::Mat new_project = cv::Mat::zeros(y_size, x_size, CV_8UC3);
     for (int i = 0; i < new_project.rows; ++i) {
         for (int j = 0; j < new_project.cols; ++j) {
@@ -275,6 +286,7 @@ int main (int argc, char** argv) {
         good_matches, img_correctMatches, cv::Scalar::all(-1), cv::Scalar::all(-1),
                std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
 
+    // Detect good features to track
     cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
     cv::Size subPixWinSize(1, 1);
     cv::Mat old_project_gray, new_project_gray;
@@ -293,6 +305,7 @@ int main (int argc, char** argv) {
         cv::circle(cornerMat, corners[i], 3, cv::Scalar(255), -1, 8);
     }
 
+    // Execute optical flow
     std::vector<cv::Point2f> new_corners, tmp_corners;
     std::vector<uchar> status, status_2;
     std::vector<float> errors, errors_2;
@@ -320,9 +333,9 @@ int main (int argc, char** argv) {
     }
     std::cout << "Total pairs: " << trainPoints.size() << "\n";
 
-    std::cout << "Get 3d pairs\n";
-    std::vector<pcl::PointXYZRGB> trainPoints_3D(trainPoints.size()), queryPoints_3D(trainPoints.size());
-    std::vector<bool> pair_status(trainPoints.size(), true);
+    // Get 3d pairs
+    std::vector<cv::Point2f> trainPoints_2D, queryPoints_2D;
+    std::vector<size_t> trainPoint3D_indices, queryPoint3D_indices;
     for (size_t i = 0; i < trainPoints.size(); ++i) {
         cv::Point2f trainPoint = trainPoints[i];
         cv::Point2f queryPoint = queryPoints[i];
@@ -333,29 +346,31 @@ int main (int argc, char** argv) {
         std::vector<int> nn_index;
         std::vector<float> nn_sqd_distance;
         if (!(kd_old_flat.radiusSearch(tmp, distance_threshold, nn_index, nn_sqd_distance) > 0)) {
-            pair_status[i] = false;
             continue;
         }
         double max_z = -1e10;
+        size_t old_best_nn_index = 0;
         pcl::PointXYZRGB nn_old_point = p_old_pcl->points[nn_index[0]];
-        for (size_t j = 1; j < nn_index.size(); ++j) {
+        for (size_t j = 0; j < nn_index.size(); ++j) {
             if (p_old_pcl->points[nn_index[j]].z > max_z) {
                 max_z = p_old_pcl->points[nn_index[j]].z;
                 nn_old_point = p_old_pcl->points[nn_index[j]];
+                old_best_nn_index = nn_index[j];
             }
         }
         tmp.x = x_min + queryPoint.x*distance_threshold + distance_threshold/2;
         tmp.y = y_min + queryPoint.y*distance_threshold + distance_threshold/2;
         if (!(kd_new_flat.radiusSearch(tmp, distance_threshold, nn_index, nn_sqd_distance) > 0)) {
-            pair_status[i] = false;
             continue;
         }
         max_z = -1e10;
+        size_t new_best_nn_index = 0;
         pcl::PointXYZRGB nn_new_point = p_new_pcl->points[nn_index[0]];
-        for (size_t j = 1; j < nn_index.size(); ++j) {
+        for (size_t j = 0; j < nn_index.size(); ++j) {
             if (p_new_pcl->points[nn_index[j]].z > max_z) {
                 max_z = p_new_pcl->points[nn_index[j]].z;
                 nn_new_point = p_new_pcl->points[nn_index[j]];
+                new_best_nn_index = nn_index[j];
             }
         }
 
@@ -364,11 +379,12 @@ int main (int argc, char** argv) {
         double dz = nn_old_point.z - nn_new_point.z;
         float length = sqrt(dx*dx + dy*dy + dz*dz);
         if (length > Configurations::getInstance()->pos_radius) {
-            pair_status[i] = false;
             continue;
         }
-        trainPoints_3D[i] = nn_old_point;
-        queryPoints_3D[i] = nn_new_point;
+        trainPoints_2D.push_back(trainPoint);
+        queryPoints_2D.push_back(queryPoint);
+        trainPoint3D_indices.push_back(old_best_nn_index);
+        queryPoint3D_indices.push_back(new_best_nn_index);
     }
 
     // Draw matches;
@@ -407,57 +423,53 @@ int main (int argc, char** argv) {
         tmp.y = p_new_pcl->points[i].y;
         tmp.z = p_new_pcl->points[i].z;
         ply_matches.push_back(tmp);
-    }    
-    for (size_t i = 0; i < trainPoints.size(); ++i) {
-        if (pair_status[i]) {
-            pcl::PointXYZRGB nn_old_point = trainPoints_3D[i];
-            pcl::PointXYZRGB nn_new_point = queryPoints_3D[i];
-            pcl::PointXYZRGB vec;
-            vec.x = nn_old_point.x - nn_new_point.x;
-            vec.y = nn_old_point.y - nn_new_point.y;
-            vec.z = nn_old_point.z - nn_new_point.z;
-            float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-            vec.x /= length;
-            vec.y /= length;
-            vec.z /= length;
-            for (float t = 0; t < 1e10; t += Configurations::getInstance()->leaf_size / 20) {
-                if (t > length) {
-                    break;
-                }
-                pcl::PointXYZRGB tran;
-                tran.r = 255;
-                tran.g = 255;
-                tran.b = 0;
-                tran.x = nn_new_point.x + t * vec.x;
-                tran.y = nn_new_point.y + t * vec.y;
-                tran.z = nn_new_point.z + t * vec.z;
-                ply_matches.push_back(tran);
-            }
-        }
     }
+    for (size_t i = 0; i < trainPoint3D_indices.size(); ++i) {
+        pcl::PointXYZRGB nn_old_point = p_old_pcl->points[trainPoint3D_indices[i]];
+        pcl::PointXYZRGB nn_new_point = p_new_pcl->points[queryPoint3D_indices[i]];
+        pcl::PointXYZRGB vec;
+        vec.x = nn_old_point.x - nn_new_point.x;
+        vec.y = nn_old_point.y - nn_new_point.y;
+        vec.z = nn_old_point.z - nn_new_point.z;
+        float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+        vec.x /= length;
+        vec.y /= length;
+        vec.z /= length;
+        for (float t = 0; t < 1e10; t += Configurations::getInstance()->leaf_size / 20) {
+            if (t > length) {
+                break;
+            }
+            pcl::PointXYZRGB tran;
+            tran.r = 255;
+            tran.g = 255;
+            tran.b = 0;
+            tran.x = nn_new_point.x + t * vec.x;
+            tran.y = nn_new_point.y + t * vec.y;
+            tran.z = nn_new_point.z + t * vec.z;
+            ply_matches.push_back(tran);
+        }
+}
     savePly("Matches.ply", ply_matches);
     std::cout << "Matches saved.\n";
 
     cv::Mat reesultMat = old_project.clone();
-    for (size_t i = 0; i < trainPoints.size(); ++i) {
-        if (pair_status[i]) {
-            cv::Point2f trainPoint = trainPoints[i];
-            cv::Point2f queryPoint = queryPoints[i];
-            cv::Point2f visualPoint;
-            visualPoint.x = queryPoint.x + 2*(queryPoint.x - trainPoint.x);
-            visualPoint.y = queryPoint.y + 2*(queryPoint.y - trainPoint.y);
-            pcl::PointXYZRGB nn_old_point = trainPoints_3D[i];
-            pcl::PointXYZRGB nn_new_point = queryPoints_3D[i];
-            float z_diff = nn_new_point.z - nn_old_point.z;
-            cv::circle(reesultMat, trainPoint, 1, cv::Scalar(0, 255, 0), -1, 8);
-            if (z_diff < 0) {
-                uchar b_val = 150 + std::min(100, (int)floor((-z_diff)/(Configurations::getInstance()->pos_radius/100)));
-                cv::line(reesultMat, trainPoint, visualPoint, cv::Scalar(b_val, 0, 0), 1, 8, 0);
-            }
-            else {
-                uchar r_val = 150 + std::min(100, (int)floor((z_diff)/(Configurations::getInstance()->pos_radius/100)));
-                cv::line(reesultMat, trainPoint, visualPoint, cv::Scalar(0, 0, r_val), 1, 8, 0);
-            }
+    for (size_t i = 0; i < trainPoints_2D.size(); ++i) {
+        cv::Point2f trainPoint = trainPoints_2D[i];
+        cv::Point2f queryPoint = queryPoints_2D[i];
+        cv::Point2f visualPoint;
+        visualPoint.x = queryPoint.x + 2*(queryPoint.x - trainPoint.x);
+        visualPoint.y = queryPoint.y + 2*(queryPoint.y - trainPoint.y);
+        pcl::PointXYZRGB nn_old_point = p_old_pcl->points[trainPoint3D_indices[i]];
+        pcl::PointXYZRGB nn_new_point = p_new_pcl->points[queryPoint3D_indices[i]];
+        float z_diff = nn_new_point.z - nn_old_point.z;
+        cv::circle(reesultMat, trainPoint, 1, cv::Scalar(0, 255, 0), -1, 8);
+        if (z_diff < 0) {
+            uchar b_val = 150 + std::min(100, (int)floor((-z_diff)/(Configurations::getInstance()->pos_radius/100)));
+            cv::line(reesultMat, trainPoint, visualPoint, cv::Scalar(b_val, 0, 0), 1, 8, 0);
+        }
+        else {
+            uchar r_val = 150 + std::min(100, (int)floor((z_diff)/(Configurations::getInstance()->pos_radius/100)));
+            cv::line(reesultMat, trainPoint, visualPoint, cv::Scalar(0, 0, r_val), 1, 8, 0);
         }
     }
 
