@@ -13,7 +13,6 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/registration/icp.h>
 
-#include "plyio.h"
 #include "Configurations.h"
 
 int main (int argc, char** argv)
@@ -232,7 +231,7 @@ int main (int argc, char** argv)
     }
 
     // Draw matches;
-    std::vector<pcl::PointXYZRGB> ply_matches;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_matches(new pcl::PointCloud<pcl::PointXYZRGB>());
     for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
         pcl::PointXYZRGB tmp;
         if (Configurations::getInstance()->draw_old_colour) {
@@ -248,7 +247,7 @@ int main (int argc, char** argv)
         tmp.x = p_old_pcl->points[i].x;
         tmp.y = p_old_pcl->points[i].y;
         tmp.z = p_old_pcl->points[i].z;
-        ply_matches.push_back(tmp);
+        p_matches->points.push_back(tmp);
     }
     for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
         pcl::PointXYZRGB tmp;
@@ -265,7 +264,7 @@ int main (int argc, char** argv)
         tmp.x = p_new_pcl->points[i].x;
         tmp.y = p_new_pcl->points[i].y;
         tmp.z = p_new_pcl->points[i].z;
-        ply_matches.push_back(tmp);
+        p_matches->points.push_back(tmp);
     }
     for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
         if (p_old_parts->points[i].r > 200) {
@@ -289,11 +288,14 @@ int main (int argc, char** argv)
                 tmp.x = p_old_parts->points[i].x + t * vec.x;
                 tmp.y = p_old_parts->points[i].y + t * vec.y;
                 tmp.z = p_old_parts->points[i].z + t * vec.z;
-                ply_matches.push_back(tmp);
+                p_matches->points.push_back(tmp);
             }
         }
     }
-    savePly("Matches.ply", ply_matches);
+    p_matches->width = p_matches->points.size();
+    p_matches->height = 1;
+    p_matches->is_dense = 1;
+    pcl::io::savePLYFile("Matches.ply", *p_matches, true);
     std::cout << "Matches saved.\n";
     return 0;
 }
