@@ -11,7 +11,7 @@ add_definitions(${PCL_DEFINITIONS})
 
 add_executable (main main.cpp Configurations.cpp Configurations.h)
 add_executable (PreProcessing PreProcessing.cpp Configurations.cpp Configurations.h)
-add_executable (Projection2D Projection2D.cpp Configurations.cpp Configurations.h)
+add_executable (Projection2D Projection2D.cpp CloudProjection.h CloudProjection.cpp Configurations.cpp Configurations.h)
 
 target_link_libraries (main ${PCL_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries (PreProcessing ${PCL_LIBRARIES} las)
