@@ -29,8 +29,7 @@ int main (int argc, char** argv) {
 
     std::vector<int> pcd_filenames;
     pcd_filenames = pcl::console::parse_file_extension_argument (argc, argv, ".pcd");
-    if (pcd_filenames.size () != 2)
-    {
+    if (pcd_filenames.size () != 2) {
         std::cout << "pcd_filenames missing.\n";
         exit (-1);
     }
