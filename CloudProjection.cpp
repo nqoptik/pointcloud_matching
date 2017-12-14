@@ -107,7 +107,63 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform) {
     double dy = y_max - y_min;
     double d_min = std::min(dx, dy);
     std::cout << "d_min: " << d_min << "\n";
-    double distance_threshold = d_min / (Configurations::getInstance()->project_imageSize);
+
+    int low_size = 0;
+    int high_size = 1000;
+    for (int l = 0; l < 10; l++){
+        int picked_size = (low_size + high_size)/2;
+        double picked_threshold = d_min/picked_size;
+        int picked_x_size = floor(dx/picked_threshold) + 1;
+        int picked_y_size = floor(dy/picked_threshold) + 1;
+        cv::Mat count_Mat = cv::Mat::zeros(picked_y_size, picked_x_size, CV_32SC1);
+        for (int i = 0; i < count_Mat.rows; ++i) {
+            for (int j = 0; j < count_Mat.cols; ++j) {
+                pcl::PointXYZRGB tmp;
+                tmp.x = x_min + j*picked_threshold + picked_threshold/2;
+                tmp.y = y_min + i*picked_threshold + picked_threshold/2;
+                tmp.z = 0;
+                std::vector<int> nn_index;
+                std::vector<float> nn_sqd_distance;
+                if (!(kd_old_flat.radiusSearch(tmp, 0.5*picked_threshold, nn_index, nn_sqd_distance) > 0)) {
+                    continue;
+                }
+                if (nn_index.size()) {
+                    count_Mat.at<int>(i, j)++;
+                }
+            }
+        }
+        int single_count = cv::countNonZero(count_Mat);
+
+        count_Mat = cv::Mat::zeros(picked_y_size, picked_x_size, CV_32SC1);
+        for (int i = 0; i < count_Mat.rows; ++i) {
+            for (int j = 0; j < count_Mat.cols; ++j) {
+                pcl::PointXYZRGB tmp;
+                tmp.x = x_min + j*picked_threshold + picked_threshold/2;
+                tmp.y = y_min + i*picked_threshold + picked_threshold/2;
+                tmp.z = 0;
+                std::vector<int> nn_index;
+                std::vector<float> nn_sqd_distance;
+                if (!(kd_old_flat.radiusSearch(tmp, 0.707*picked_threshold, nn_index, nn_sqd_distance) > 0)) {
+                    continue;
+                }
+                if (nn_index.size()) {
+                    count_Mat.at<int>(i, j)++;
+                }
+            }
+        }
+        int double_count = cv::countNonZero(count_Mat);
+        float dense_ratio = (float)single_count/double_count;
+        std::cout << dense_ratio << std::endl;
+        if (dense_ratio < 0.85) {
+            high_size = picked_size;
+        }
+        else {
+            low_size = picked_size;
+        }
+
+    }
+    std::cout << "low high " << low_size << " " << high_size << "\n";
+    double distance_threshold = d_min / low_size;
     int x_size = floor(dx/distance_threshold) + 1;
     int y_size = floor(dy/distance_threshold) + 1;
     std::cout << "image size: " << x_size << "x" << y_size << "\n";
