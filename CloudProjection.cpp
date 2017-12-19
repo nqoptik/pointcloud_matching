@@ -7,6 +7,7 @@ CloudProjection::CloudProjection(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pc
     this->p_new_pcl = p_new_pcl;
     match_train_indices.clear();
     match_query_indices.clear();
+    direction_indices.clear();
 }
 
 CloudProjection::~CloudProjection() {
@@ -47,7 +48,7 @@ void CloudProjection::normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_
     }
 }
 
-void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform) {
+void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int direction_index) {
 
     // Rotate both pointclouds
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_rotated_old_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
@@ -273,6 +274,7 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform) {
         }
         match_train_indices.push_back(old_best_nn_index);
         match_query_indices.push_back(new_best_nn_index);
+        direction_indices.push_back(direction_index);
     }
 }
 
@@ -429,9 +431,33 @@ void CloudProjection::draw_matches() {
                 break;
             }
             pcl::PointXYZRGB tran;
-            tran.r = 255;
-            tran.g = 255;
-            tran.b = 0;
+            switch (direction_indices[i]) {
+                case 0: {
+                    tran.r = 0;
+                    tran.g = 255;
+                    tran.b = 0;
+                } break;
+                case 1: {
+                    tran.r = 255;
+                    tran.g = 255;
+                    tran.b = 0;
+                } break;
+                case 2: {
+                    tran.r = 0;
+                    tran.g = 255;
+                    tran.b = 255;
+                } break;
+                case 3: {
+                    tran.r = 255;
+                    tran.g = 0;
+                    tran.b = 255;
+                } break;
+                case 4: {
+                    tran.r = 255;
+                    tran.g = 255;
+                    tran.b = 255;
+                } break;
+            }
             tran.x = nn_new_point.x + t * vec.x;
             tran.y = nn_new_point.y + t * vec.y;
             tran.z = nn_new_point.z + t * vec.z;
@@ -459,14 +485,14 @@ void CloudProjection::detect_matches() {
         transform(1,2) = -sin(theta);
         transform(2,1) = sin(theta);
         transform(2,2) = cos(theta);
-        get_matches_by_direction(transform);
+        get_matches_by_direction(transform, 1);
 
         theta = -M_PI*Configurations::getInstance()->pi_theta_x;
         transform(1,1) = cos(theta);
         transform(1,2) = -sin(theta);
         transform(2,1) = sin(theta);
         transform(2,2) = cos(theta);
-        get_matches_by_direction(transform);
+        get_matches_by_direction(transform, 2);
 
     }
     if (Configurations::getInstance()->pi_theta_y != 0) {
@@ -476,15 +502,15 @@ void CloudProjection::detect_matches() {
         transform(2,0) = sin(theta);
         transform(0,2) = -sin(theta);
         transform(2,2) = cos(theta);
-        get_matches_by_direction(transform);
+        get_matches_by_direction(transform, 3);
 
         theta = -M_PI*Configurations::getInstance()->pi_theta_y;
         transform(0,0) = cos(theta);
         transform(2,0) = sin(theta);
         transform(0,2) = -sin(theta);
         transform(2,2) = cos(theta);
-        get_matches_by_direction(transform);
+        get_matches_by_direction(transform, 4);
     }
-    get_matches_by_direction(Eigen::Matrix4f::Identity());
+    get_matches_by_direction(Eigen::Matrix4f::Identity(), 0);
     draw_matches();
 }
