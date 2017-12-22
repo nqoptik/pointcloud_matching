@@ -526,6 +526,7 @@ void CloudProjection::detect_matches() {
     kd_new_pcl.setInputCloud (p_new_pcl);
     double des_radius = Configurations::getInstance()->des_radius;
     std::vector<float> match_errors(match_train_indices.size(), 0);
+    std::vector<cv::Point3f> match_thetas(match_train_indices.size(), cv::Point3f(0.0, 0.0, 0.0));
     for (size_t i = 0; i < match_train_indices.size(); ++i) {
         pcl::PointXYZRGB old_point = p_old_pcl->points[match_train_indices[i]];
         pcl::PointXYZRGB new_point = p_new_pcl->points[match_query_indices[i]];
@@ -550,21 +551,27 @@ void CloudProjection::detect_matches() {
             new_neighbours->points.push_back(p_new_pcl->points[new_neighbour_index[j]]);
         }
         pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
-        icp.setMaximumIterations(1);
+        icp.setMaximumIterations(2);
         icp.setInputSource(new_neighbours);
         icp.setInputTarget(old_neighbours);
         icp.align(*new_neighbours);
-        icp.setMaximumIterations(1);
-        icp.align(*new_neighbours);
         if (icp.hasConverged()) {
             match_errors[i] = icp.getFitnessScore()/(new_neighbours->points.size() + old_neighbours->points.size());
+            Eigen::Matrix4d trans_matrix = icp.getFinalTransformation().cast<double>();
+            float theta_x = atan2(trans_matrix(2, 1), trans_matrix(2, 2));
+            float theta_y = atan2(-trans_matrix(2, 0), sqrt(trans_matrix(2, 1)*trans_matrix(2, 1) + trans_matrix(2, 2)*trans_matrix(2, 2)));
+            float theta_z = atan2(trans_matrix(1, 0), trans_matrix(0, 0));
+            match_thetas[i].x = fabs(theta_x);
+            match_thetas[i].y = fabs(theta_y);
+            match_thetas[i].z = fabs(theta_z);
+            std::cout << "re-check " << i << "/" << match_train_indices.size() << ":  " << old_neighbour_index.size() << "-->"
+            << new_neighbour_index.size()  << " theta " << theta_x << " " << theta_y << " " << theta_z << "\n";
         }
-        std::cout << "re-check " << i << "/" << match_train_indices.size() << ":  " << old_neighbour_index.size() << "-->"
-            << new_neighbour_index.size() << "\n";
     }
     float error_icp_threshold = 1e-7*Configurations::getInstance()->pos_radius;
     for (size_t i = 0; i < direction_indices.size(); ++i) {
-        if (match_errors[i] > error_icp_threshold) {
+        if ((match_thetas[i].x + match_thetas[i].y + match_thetas[i].z > 0.1) &&
+            match_errors[i] > error_icp_threshold) {
             direction_indices[i] = 10;
         }
     }
