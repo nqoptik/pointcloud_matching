@@ -519,64 +519,129 @@ void CloudProjection::detect_matches() {
     get_matches_by_direction(Eigen::Matrix4f::Identity(), 0);
     std::cout << "Total 3D matches " << match_train_indices.size() << "\n";
 
-    // Re-check matches by using 3D structure
-    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_pcl;
-    kd_old_pcl.setInputCloud (p_old_pcl);
-    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_pcl;
-    kd_new_pcl.setInputCloud (p_new_pcl);
-    double des_radius = Configurations::getInstance()->des_radius;
-    std::vector<float> match_errors(match_train_indices.size(), 0);
-    std::vector<cv::Point3f> match_thetas(match_train_indices.size(), cv::Point3f(0.0, 0.0, 0.0));
-    for (size_t i = 0; i < match_train_indices.size(); ++i) {
-        pcl::PointXYZRGB old_point = p_old_pcl->points[match_train_indices[i]];
-        pcl::PointXYZRGB new_point = p_new_pcl->points[match_query_indices[i]];
-        std::vector<int> old_neighbour_index;
-        std::vector<float> old_neighbours_sqd;
-        if (!kd_old_pcl.radiusSearch(old_point, des_radius, old_neighbour_index, old_neighbours_sqd) > 0) {
-            std::cout << " !not found old neighbours\n";
-            continue;
-        }
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
-        for (size_t j = 0; j < old_neighbour_index.size(); ++j) {
-            old_neighbours->points.push_back(p_old_pcl->points[old_neighbour_index[j]]);
-        }
-        std::vector<int> new_neighbour_index;
-        std::vector<float> new_neighbours_sqd;
-        if (!kd_new_pcl.radiusSearch(new_point, des_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
-            std::cout << " !not found new neighbours\n";
-            continue;
-        }
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
-        for (size_t j = 0; j < new_neighbour_index.size(); ++j) {
-            new_neighbours->points.push_back(p_new_pcl->points[new_neighbour_index[j]]);
-        }
-        pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
-        icp.setMaximumIterations(2);
-        icp.setInputSource(new_neighbours);
-        icp.setInputTarget(old_neighbours);
-        icp.align(*new_neighbours);
-        if (icp.hasConverged()) {
-            match_errors[i] = icp.getFitnessScore()/(new_neighbours->points.size() + old_neighbours->points.size());
-            Eigen::Matrix4d trans_matrix = icp.getFinalTransformation().cast<double>();
-            float theta_x = atan2(trans_matrix(2, 1), trans_matrix(2, 2));
-            float theta_y = atan2(-trans_matrix(2, 0), sqrt(trans_matrix(2, 1)*trans_matrix(2, 1) + trans_matrix(2, 2)*trans_matrix(2, 2)));
-            float theta_z = atan2(trans_matrix(1, 0), trans_matrix(0, 0));
-            match_thetas[i].x = fabs(theta_x);
-            match_thetas[i].y = fabs(theta_y);
-            match_thetas[i].z = fabs(theta_z);
-            std::cout << "re-check " << i << "/" << match_train_indices.size() << ":  " << old_neighbour_index.size() << "-->"
-            << new_neighbour_index.size()  << " theta " << theta_x << " " << theta_y << " " << theta_z << "\n";
-        }
+    // Re-check matches by using FPFH
+    pcl::PointCloud<pcl::Normal>::Ptr p_old_normal(new pcl::PointCloud<pcl::Normal>());
+    pcl::PointCloud<pcl::Normal>::Ptr p_new_normal(new pcl::PointCloud<pcl::Normal>());
+    pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> norm_est;
+    pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
+    norm_est.setSearchMethod(tree);
+    norm_est.setKSearch(10);
+    std::cout << "Compute old pointcloud's normals.\n";
+    norm_est.setInputCloud(p_old_pcl);
+    norm_est.compute(*p_old_normal);
+    std::cout << "Compute new pointcloud's normals.\n";
+    norm_est.setInputCloud(p_new_pcl);
+    norm_est.compute(*p_new_normal);
+
+    std::cout << "Compute old pointcloud's fpfh descriptors.\n";
+    pcl::FPFHEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33> fpfh_old;
+    boost::shared_ptr<std::vector<int> > p_old_indices(new std::vector<int>(0));
+    for (size_t i = 0; i < match_train_indices.size (); i++) {
+        p_old_indices->push_back(match_train_indices[i]);
     }
-    float error_icp_threshold = 1e-7*Configurations::getInstance()->pos_radius;
+    fpfh_old.setInputCloud(p_old_pcl);
+    fpfh_old.setIndices(p_old_indices);
+    fpfh_old.setInputNormals(p_old_normal);
+    pcl::PointCloud<pcl::FPFHSignature33>::Ptr old_fpfhs(new pcl::PointCloud<pcl::FPFHSignature33> ());
+    fpfh_old.setRadiusSearch(Configurations::getInstance()->des_radius);
+    fpfh_old.compute (*old_fpfhs);
+    std::cout << "old_fpfhs " << *old_fpfhs << "\n";
+
+    std::cout << "Compute new pointcloud's fpfh descriptors.\n";
+    pcl::FPFHEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33> fpfh_new;
+    boost::shared_ptr<std::vector<int> > p_new_indices(new std::vector<int>(0));
+    for (size_t i = 0; i < match_query_indices.size (); i++) {
+        p_new_indices->push_back(match_query_indices[i]);
+    }
+    fpfh_new.setInputCloud(p_new_pcl);
+    fpfh_new.setIndices(p_new_indices);
+    fpfh_new.setInputNormals(p_new_normal);
+    pcl::PointCloud<pcl::FPFHSignature33>::Ptr new_fpfhs(new pcl::PointCloud<pcl::FPFHSignature33> ());
+    fpfh_new.setRadiusSearch(Configurations::getInstance()->des_radius);
+    fpfh_new.compute (*new_fpfhs);
+    std::cout << "new_fpfhs " << *old_fpfhs << "\n";
+    std::vector<float> fpfh_distances(old_fpfhs->size());
+    for (size_t i = 0; i < old_fpfhs->size(); i++) {
+        float fpfh_d = 0;
+        for (int j = 0; j < 33; ++j) {
+            fpfh_d += (old_fpfhs->points[i].histogram[j] - new_fpfhs->points[i].histogram[j]) * 
+                (old_fpfhs->points[i].histogram[j] - new_fpfhs->points[i].histogram[j]);
+        }
+        fpfh_d = sqrt(fpfh_d);
+        fpfh_distances[i] = fpfh_d;
+
+    }
+    std::vector<float> sorted_fpfh_distances = fpfh_distances;
+    std::sort(sorted_fpfh_distances.begin(), sorted_fpfh_distances.end());
+    float fpfh_threshold = sorted_fpfh_distances[sorted_fpfh_distances.size()*9/10];
+    fpfh_threshold = 13.5;
+    std::cout << "fpfh_threshold " << fpfh_threshold << "\n";
+    std::cout << "fpfh_min_threshold " << sorted_fpfh_distances[0] << "\n";
+    std::cout << "fpfh_max_threshold " << sorted_fpfh_distances[sorted_fpfh_distances.size() - 1] << "\n";
     for (size_t i = 0; i < direction_indices.size(); ++i) {
-        if ((match_thetas[i].x + match_thetas[i].y + match_thetas[i].z > 0.1) &&
-            match_errors[i] > error_icp_threshold) {
+        if (fpfh_distances[i] > fpfh_threshold) {
             direction_indices[i] = 10;
         }
     }
-    std::sort(match_errors.begin(), match_errors.end());
-    std::cout << "error_icp_threshold " << error_icp_threshold << "\n";
-    std::cout << "Score " << match_errors[0] << " -> " << match_errors[match_errors.size()-1] << "\n";
+
+    // // Re-check matches by using 3D structure
+    // pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_pcl;
+    // kd_old_pcl.setInputCloud (p_old_pcl);
+    // pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_pcl;
+    // kd_new_pcl.setInputCloud (p_new_pcl);
+    // double des_radius = Configurations::getInstance()->des_radius;
+    // std::vector<float> match_errors(match_train_indices.size(), 0);
+    // std::vector<cv::Point3f> match_thetas(match_train_indices.size(), cv::Point3f(0.0, 0.0, 0.0));
+    // for (size_t i = 0; i < match_train_indices.size(); ++i) {
+    //     pcl::PointXYZRGB old_point = p_old_pcl->points[match_train_indices[i]];
+    //     pcl::PointXYZRGB new_point = p_new_pcl->points[match_query_indices[i]];
+    //     std::vector<int> old_neighbour_index;
+    //     std::vector<float> old_neighbours_sqd;
+    //     if (!kd_old_pcl.radiusSearch(old_point, des_radius, old_neighbour_index, old_neighbours_sqd) > 0) {
+    //         std::cout << " !not found old neighbours\n";
+    //         continue;
+    //     }
+    //     pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
+    //     for (size_t j = 0; j < old_neighbour_index.size(); ++j) {
+    //         old_neighbours->points.push_back(p_old_pcl->points[old_neighbour_index[j]]);
+    //     }
+    //     std::vector<int> new_neighbour_index;
+    //     std::vector<float> new_neighbours_sqd;
+    //     if (!kd_new_pcl.radiusSearch(new_point, des_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
+    //         std::cout << " !not found new neighbours\n";
+    //         continue;
+    //     }
+    //     pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
+    //     for (size_t j = 0; j < new_neighbour_index.size(); ++j) {
+    //         new_neighbours->points.push_back(p_new_pcl->points[new_neighbour_index[j]]);
+    //     }
+    //     pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
+    //     icp.setMaximumIterations(2);
+    //     icp.setInputSource(new_neighbours);
+    //     icp.setInputTarget(old_neighbours);
+    //     icp.align(*new_neighbours);
+    //     if (icp.hasConverged()) {
+    //         match_errors[i] = icp.getFitnessScore()/(new_neighbours->points.size() + old_neighbours->points.size());
+    //         Eigen::Matrix4d trans_matrix = icp.getFinalTransformation().cast<double>();
+    //         float theta_x = atan2(trans_matrix(2, 1), trans_matrix(2, 2));
+    //         float theta_y = atan2(-trans_matrix(2, 0), sqrt(trans_matrix(2, 1)*trans_matrix(2, 1) + trans_matrix(2, 2)*trans_matrix(2, 2)));
+    //         float theta_z = atan2(trans_matrix(1, 0), trans_matrix(0, 0));
+    //         match_thetas[i].x = fabs(theta_x);
+    //         match_thetas[i].y = fabs(theta_y);
+    //         match_thetas[i].z = fabs(theta_z);
+    //         std::cout << "re-check " << i << "/" << match_train_indices.size() << ":  " << old_neighbour_index.size() << "-->"
+    //         << new_neighbour_index.size()  << " theta " << theta_x << " " << theta_y << " " << theta_z << "\n";
+    //     }
+    // }
+    // float error_icp_threshold = 1e-7*Configurations::getInstance()->pos_radius;
+    // for (size_t i = 0; i < direction_indices.size(); ++i) {
+    //     if ((match_thetas[i].x + match_thetas[i].y + match_thetas[i].z > 0.1) &&
+    //         match_errors[i] > error_icp_threshold) {
+    //         direction_indices[i] = 10;
+    //     }
+    // }
+    // std::sort(match_errors.begin(), match_errors.end());
+    // std::cout << "error_icp_threshold " << error_icp_threshold << "\n";
+    // std::cout << "Score " << match_errors[0] << " -> " << match_errors[match_errors.size()-1] << "\n";
     draw_matches();
 }
