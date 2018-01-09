@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 
-#include <pcl/io/pcd_io.h>
 #include <pcl/io/ply_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/console/parse.h>
@@ -21,22 +20,22 @@ int main (int argc, char** argv) {
     Configurations::getInstance()->readConfig();
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
 
-    std::vector<int> pcd_filenames;
-    pcd_filenames = pcl::console::parse_file_extension_argument (argc, argv, ".pcd");
-    if (pcd_filenames.size() != 2) {
-        std::cout << "pcd_filenames missing.\n";
+    std::vector<int> ply_filenames;
+    ply_filenames = pcl::console::parse_file_extension_argument (argc, argv, ".ply");
+    if (ply_filenames.size() != 2) {
+        std::cout << "ply_filenames missing.\n";
         exit (-1);
     }
 
     // Load old and new pointclouds
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
-    if (pcl::io::loadPCDFile(argv[pcd_filenames[0]], *p_old_pcl)) {
+    if (pcl::io::loadPLYFile(argv[ply_filenames[0]], *p_old_pcl)) {
         std::cout << "Error loading old pointcloud!\n";
         exit(-1);
     }
     std::cout << "p_old_pcl " << *p_old_pcl << "\n";
-    if (pcl::io::loadPCDFile(argv[pcd_filenames[1]], *p_new_pcl)) {
+    if (pcl::io::loadPLYFile(argv[ply_filenames[1]], *p_new_pcl)) {
         std::cout << "Error loading new pointcloud!\n";
         exit(-1);
     }
