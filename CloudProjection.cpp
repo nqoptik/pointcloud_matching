@@ -14,40 +14,6 @@ CloudProjection::~CloudProjection() {
 
 }
 
-void CloudProjection::normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl) {
-
-    double r_avg = 0, g_avg = 0, b_avg = 0;
-    for (size_t i = 0; i < p_pcl->points.size(); ++i) {
-        r_avg += p_pcl->points[i].r;
-        g_avg += p_pcl->points[i].g;
-        b_avg += p_pcl->points[i].b;
-    }
-    r_avg /= p_pcl->points.size();
-    g_avg /= p_pcl->points.size();
-    b_avg /= p_pcl->points.size();
-
-    // Compute colours' standard deviation
-    double r_std = 0, g_std = 0, b_std = 0;
-    for (size_t i = 0; i < p_pcl->points.size(); ++i) {
-        r_std += (r_avg - p_pcl->points[i].r)*(r_avg - p_pcl->points[i].r);
-        g_std += (g_avg - p_pcl->points[i].g)*(g_avg - p_pcl->points[i].g);
-        b_std += (b_avg - p_pcl->points[i].b)*(b_avg - p_pcl->points[i].b);
-    }
-    r_std /= p_pcl->points.size();
-    g_std /= p_pcl->points.size();
-    b_std /= p_pcl->points.size();
-    r_std = sqrt(r_std);
-    g_std = sqrt(g_std);
-    b_std = sqrt(b_std);
-
-    // Synchronize pointclouds' colours
-    for (size_t i = 0; i < p_pcl->points.size(); ++i) {
-        p_pcl->points[i].r = std::max(0.0, std::min(255.0, (100.0 + (p_pcl->points[i].r - r_avg) * 35.0 / r_std)));
-        p_pcl->points[i].g = std::max(0.0, std::min(255.0, (100.0 + (p_pcl->points[i].g - g_avg) * 35.0 / g_std)));
-        p_pcl->points[i].b = std::max(0.0, std::min(255.0, (100.0 + (p_pcl->points[i].b - b_avg) * 35.0 / b_std)));
-    }
-}
-
 void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int direction_index) {
 
     // Rotate both pointclouds
@@ -110,7 +76,7 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int di
     std::cout << "d_min: " << d_min << "\n";
 
     int low_size = 0;
-    int high_size = 1000;
+    int high_size = 1500;
     for (int l = 0; l < 10; l++){
         int picked_size = (low_size + high_size)/2;
         double picked_threshold = d_min/picked_size;
@@ -161,9 +127,9 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int di
         else {
             low_size = picked_size;
         }
-
     }
     std::cout << "low high " << low_size << " " << high_size << "\n";
+    if (low_size < 500) return;
     double distance_threshold = d_min / low_size;
     int x_size = floor(dx/distance_threshold) + 1;
     int y_size = floor(dy/distance_threshold) + 1;
@@ -224,9 +190,10 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int di
     }
 
     std::vector<cv::Point2f> trainPoints, queryPoints;
-    get_2d_matches(old_project, new_project, trainPoints, queryPoints);
+    get_2d_matches(old_project, new_project, distance_threshold, trainPoints, queryPoints);
 
     // Get 3d pairs
+    std::cout << "OF 2d: " << trainPoints[0] << " " << queryPoints[0] << "\n";
     for (size_t i = 0; i < trainPoints.size(); ++i) {
         cv::Point2f trainPoint = trainPoints[i];
         cv::Point2f queryPoint = queryPoints[i];
@@ -278,8 +245,8 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int di
     }
 }
 
-void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, std::vector<cv::Point2f>& trainPoints,
-    std::vector<cv::Point2f>& queryPoints) {
+void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, double distance_threshold,
+    std::vector<cv::Point2f>& trainPoints, std::vector<cv::Point2f>& queryPoints) {
 
     //Detect key points using SIFT
     cv::SiftFeatureDetector detector;
@@ -294,6 +261,7 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, s
     cv::Mat descriptors_old, descriptors_new;
     extractor.compute(old_project, keypoints_old, descriptors_old);
     extractor.compute(new_project, keypoints_new, descriptors_new);
+    int win_size = Configurations::getInstance()->pos_radius/distance_threshold;
 
     cv::FlannBasedMatcher matcher;
     std::vector<std::vector<cv::DMatch> > matches;
@@ -306,7 +274,7 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, s
             float dx = trainPoint.x - queryPoint.x;
             float dy = trainPoint.y - queryPoint.y;
             float d = sqrt(dx*dx + dy*dy);
-            if (d < Configurations::getInstance()->OF_winSize) {
+            if (d < win_size) {
                 good_matches.push_back(matches[i][0]);
             }
         }
@@ -318,13 +286,13 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, s
                std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
 
     // Detect good features to track
-    cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
+    cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 30, 0.01);
     cv::Size subPixWinSize(1, 1);
     cv::Mat old_project_gray, new_project_gray;
     std::vector<cv::Point2f> corners;
     cv::cvtColor(old_project, old_project_gray, CV_BGR2GRAY);
     cv::cvtColor(new_project, new_project_gray, CV_BGR2GRAY);
-    cv::goodFeaturesToTrack(old_project_gray, corners, 5000, 0.01, 10, cv::Mat(), 5, false, 0.04);
+    cv::goodFeaturesToTrack(old_project_gray, corners, 50000, 0.01, win_size/2, cv::Mat(), 3, false, 0.04);
 
     if (corners.size() > 0) {
         cornerSubPix(old_project_gray, corners, subPixWinSize, cv::Size(-1, -1), termcrit);
@@ -340,16 +308,28 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, s
     std::vector<cv::Point2f> new_corners, tmp_corners;
     std::vector<uchar> status, status_2;
     std::vector<float> errors, errors_2;
-    cv::Size winSize(Configurations::getInstance()->OF_winSize, Configurations::getInstance()->OF_winSize);
+    cv::Size winSize(win_size, win_size);
     cv::calcOpticalFlowPyrLK(old_project_gray, new_project_gray, corners, new_corners,
-        status, errors, winSize, 0, termcrit, 0, 0.01);
+        status, errors, winSize, 0, termcrit, 0, 0.0001);
+    if (new_corners.size() > 0) {
+        cornerSubPix(new_project_gray, new_corners, subPixWinSize, cv::Size(-1, -1), termcrit);
+    }
     cv::calcOpticalFlowPyrLK(new_project_gray, old_project_gray, new_corners, tmp_corners,
-            status_2, errors_2, winSize, 0, termcrit, 0, 0.01);
-
+            status_2, errors_2, winSize, 0, termcrit, 0, 0.0001);
+    if (tmp_corners.size() > 0) {
+        cornerSubPix(old_project_gray, tmp_corners, subPixWinSize, cv::Size(-1, -1), termcrit);
+    }
     float OF_error_threshold = Configurations::getInstance()->OF_error_threshold;
     for (size_t i = 0; i < corners.size(); ++i) {
-        if ((int)status[i] == 1 && errors[i] < OF_error_threshold &&
-            (int)status_2[i] == 1 && errors_2[i] < OF_error_threshold) {
+        float dx_err = corners[i].x - tmp_corners[i].x;
+        float dy_err = corners[i].y - tmp_corners[i].y;
+        float d_err = sqrt(dx_err*dx_err + dy_err*dy_err);
+        float dx_mov = corners[i].x - new_corners[i].x;
+        float dy_mov = corners[i].y - new_corners[i].y;
+        float d_mov = sqrt(dx_mov*dx_mov + dy_mov*dy_mov);
+        if ((int)status[i] == 1 && errors[i] < win_size &&
+            (int)status_2[i] == 1 && errors_2[i] < win_size &&
+            d_err/d_mov < 0.3 && d_err < 1.0) {
             trainPoints.push_back(corners[i]);
             queryPoints.push_back(new_corners[i]);
             cv::line(cornerMat, corners[i], new_corners[i], cv::Scalar(0, 0, 255), 1, 8, 0);
@@ -379,40 +359,51 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, s
 
 void CloudProjection::draw_matches() {
 
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl_in(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl_in(new pcl::PointCloud<pcl::PointXYZRGB>());
+    // Down sampling
+    pcl::VoxelGrid<pcl::PointXYZRGB> grid;
+    double leaf_size = Configurations::getInstance()->leaf_size*2;
+    grid.setLeafSize(leaf_size, leaf_size, leaf_size);
+    grid.setInputCloud(p_old_pcl);
+    grid.filter(*p_old_pcl_in);
+    grid.setInputCloud(p_new_pcl);
+    grid.filter(*p_new_pcl_in);
+
     std::cout << "Draw matches\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_matches(new pcl::PointCloud<pcl::PointXYZRGB>());
-    for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
+    for (size_t i = 0; i < p_old_pcl_in->points.size(); ++i) {
         pcl::PointXYZRGB tmp;
         if (Configurations::getInstance()->draw_old_colour) {
-            tmp.r = p_old_pcl->points[i].r;
-            tmp.g = p_old_pcl->points[i].g;
-            tmp.b = p_old_pcl->points[i].b;
+            tmp.r = p_old_pcl_in->points[i].r;
+            tmp.g = p_old_pcl_in->points[i].g;
+            tmp.b = p_old_pcl_in->points[i].b;
         }
         else {
             tmp.r = 0;
             tmp.g = 0;
             tmp.b = 255;
         }
-        tmp.x = p_old_pcl->points[i].x;
-        tmp.y = p_old_pcl->points[i].y;
-        tmp.z = p_old_pcl->points[i].z;
+        tmp.x = p_old_pcl_in->points[i].x;
+        tmp.y = p_old_pcl_in->points[i].y;
+        tmp.z = p_old_pcl_in->points[i].z;
         p_matches->points.push_back(tmp);
     }
-    for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
+    for (size_t i = 0; i < p_new_pcl_in->points.size(); ++i) {
         pcl::PointXYZRGB tmp;
         if (Configurations::getInstance()->draw_new_colour) {
-            tmp.r = p_new_pcl->points[i].r;
-            tmp.g = p_new_pcl->points[i].g;
-            tmp.b = p_new_pcl->points[i].b;
+            tmp.r = p_new_pcl_in->points[i].r;
+            tmp.g = p_new_pcl_in->points[i].g;
+            tmp.b = p_new_pcl_in->points[i].b;
         }
         else {
             tmp.r = 255;
             tmp.g = 0;
             tmp.b = 0;
         }
-        tmp.x = p_new_pcl->points[i].x;
-        tmp.y = p_new_pcl->points[i].y;
-        tmp.z = p_new_pcl->points[i].z;
+        tmp.x = p_new_pcl_in->points[i].x;
+        tmp.y = p_new_pcl_in->points[i].y;
+        tmp.z = p_new_pcl_in->points[i].z;
         p_matches->points.push_back(tmp);
     }
     for (size_t i = 0; i < match_train_indices.size(); ++i) {
@@ -426,7 +417,7 @@ void CloudProjection::draw_matches() {
         vec.x /= length;
         vec.y /= length;
         vec.z /= length;
-        for (float t = 0; t < 1e10; t += Configurations::getInstance()->leaf_size / 20) {
+        for (float t = 0; t < 1e10; t += leaf_size / 20) {
             if (t > length) {
                 break;
             }
@@ -478,10 +469,9 @@ void CloudProjection::draw_matches() {
 
 void CloudProjection::detect_matches() {
 
-    normalizeColours(p_old_pcl);
-    normalizeColours(p_new_pcl);
     pcl::io::savePLYFile("p_old_pcl.ply", *p_old_pcl, true);
     pcl::io::savePLYFile("p_new_pcl.ply", *p_new_pcl, true);
+    draw_matches();
 
     if (Configurations::getInstance()->pi_theta_x != 0) {
         Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
@@ -498,7 +488,6 @@ void CloudProjection::detect_matches() {
         transform(2,1) = sin(theta);
         transform(2,2) = cos(theta);
         get_matches_by_direction(transform, 2);
-
     }
     if (Configurations::getInstance()->pi_theta_y != 0) {
         Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
@@ -518,6 +507,7 @@ void CloudProjection::detect_matches() {
     }
     get_matches_by_direction(Eigen::Matrix4f::Identity(), 0);
     std::cout << "Total 3D matches " << match_train_indices.size() << "\n";
+    draw_matches();
 
     // Re-check matches by using FPFH
     pcl::PointCloud<pcl::Normal>::Ptr p_old_normal(new pcl::PointCloud<pcl::Normal>());
@@ -569,7 +559,6 @@ void CloudProjection::detect_matches() {
         }
         fpfh_d = sqrt(fpfh_d);
         fpfh_distances[i] = fpfh_d;
-
     }
     std::vector<float> sorted_fpfh_distances = fpfh_distances;
     std::sort(sorted_fpfh_distances.begin(), sorted_fpfh_distances.end());
@@ -583,65 +572,5 @@ void CloudProjection::detect_matches() {
             direction_indices[i] = 10;
         }
     }
-
-    // // Re-check matches by using 3D structure
-    // pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_pcl;
-    // kd_old_pcl.setInputCloud (p_old_pcl);
-    // pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_pcl;
-    // kd_new_pcl.setInputCloud (p_new_pcl);
-    // double des_radius = Configurations::getInstance()->des_radius;
-    // std::vector<float> match_errors(match_train_indices.size(), 0);
-    // std::vector<cv::Point3f> match_thetas(match_train_indices.size(), cv::Point3f(0.0, 0.0, 0.0));
-    // for (size_t i = 0; i < match_train_indices.size(); ++i) {
-    //     pcl::PointXYZRGB old_point = p_old_pcl->points[match_train_indices[i]];
-    //     pcl::PointXYZRGB new_point = p_new_pcl->points[match_query_indices[i]];
-    //     std::vector<int> old_neighbour_index;
-    //     std::vector<float> old_neighbours_sqd;
-    //     if (!kd_old_pcl.radiusSearch(old_point, des_radius, old_neighbour_index, old_neighbours_sqd) > 0) {
-    //         std::cout << " !not found old neighbours\n";
-    //         continue;
-    //     }
-    //     pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
-    //     for (size_t j = 0; j < old_neighbour_index.size(); ++j) {
-    //         old_neighbours->points.push_back(p_old_pcl->points[old_neighbour_index[j]]);
-    //     }
-    //     std::vector<int> new_neighbour_index;
-    //     std::vector<float> new_neighbours_sqd;
-    //     if (!kd_new_pcl.radiusSearch(new_point, des_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
-    //         std::cout << " !not found new neighbours\n";
-    //         continue;
-    //     }
-    //     pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
-    //     for (size_t j = 0; j < new_neighbour_index.size(); ++j) {
-    //         new_neighbours->points.push_back(p_new_pcl->points[new_neighbour_index[j]]);
-    //     }
-    //     pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
-    //     icp.setMaximumIterations(2);
-    //     icp.setInputSource(new_neighbours);
-    //     icp.setInputTarget(old_neighbours);
-    //     icp.align(*new_neighbours);
-    //     if (icp.hasConverged()) {
-    //         match_errors[i] = icp.getFitnessScore()/(new_neighbours->points.size() + old_neighbours->points.size());
-    //         Eigen::Matrix4d trans_matrix = icp.getFinalTransformation().cast<double>();
-    //         float theta_x = atan2(trans_matrix(2, 1), trans_matrix(2, 2));
-    //         float theta_y = atan2(-trans_matrix(2, 0), sqrt(trans_matrix(2, 1)*trans_matrix(2, 1) + trans_matrix(2, 2)*trans_matrix(2, 2)));
-    //         float theta_z = atan2(trans_matrix(1, 0), trans_matrix(0, 0));
-    //         match_thetas[i].x = fabs(theta_x);
-    //         match_thetas[i].y = fabs(theta_y);
-    //         match_thetas[i].z = fabs(theta_z);
-    //         std::cout << "re-check " << i << "/" << match_train_indices.size() << ":  " << old_neighbour_index.size() << "-->"
-    //         << new_neighbour_index.size()  << " theta " << theta_x << " " << theta_y << " " << theta_z << "\n";
-    //     }
-    // }
-    // float error_icp_threshold = 1e-7*Configurations::getInstance()->pos_radius;
-    // for (size_t i = 0; i < direction_indices.size(); ++i) {
-    //     if ((match_thetas[i].x + match_thetas[i].y + match_thetas[i].z > 0.1) &&
-    //         match_errors[i] > error_icp_threshold) {
-    //         direction_indices[i] = 10;
-    //     }
-    // }
-    // std::sort(match_errors.begin(), match_errors.end());
-    // std::cout << "error_icp_threshold " << error_icp_threshold << "\n";
-    // std::cout << "Score " << match_errors[0] << " -> " << match_errors[match_errors.size()-1] << "\n";
     draw_matches();
 }

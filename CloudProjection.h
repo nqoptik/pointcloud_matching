@@ -38,10 +38,9 @@ private:
     std::vector<size_t> match_train_indices;
     std::vector<size_t> match_query_indices;
     std::vector<int> direction_indices;
-    static void normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl);
     void get_matches_by_direction(Eigen::Matrix4f transform, int direction_index);
-    static void get_2d_matches(cv::Mat old_project, cv::Mat new_project, std::vector<cv::Point2f>& trainPoints,
-        std::vector<cv::Point2f>& queryPoints);
+    static void get_2d_matches(cv::Mat old_project, cv::Mat new_project, double distance_threshold,
+        std::vector<cv::Point2f>& trainPoints, std::vector<cv::Point2f>& queryPoints);
     void draw_matches();
 
 public:
