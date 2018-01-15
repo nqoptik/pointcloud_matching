@@ -40,12 +40,12 @@ int main (int argc, char** argv) {
         std::cout << "Error loading old pointcloud!\n";
         exit(-1);
     }
-    std::cout << "p_old_pcl " << *p_old_pcl << "\n";
+    std::cout << "p_old_pcl size: " << p_old_pcl->points.size() << "\n";
     if (pcl::io::loadPLYFile(argv[ply_filenames[1]], *p_new_pcl)) {
         std::cout << "Error loading new pointcloud!\n";
         exit(-1);
     }
-    std::cout << "p_new_pcl " << *p_new_pcl << "\n";
+    std::cout << "p_new_pcl size: " << p_new_pcl->points.size() << "\n";
 
     CloudProjection clp_instance(p_old_pcl, p_new_pcl);
     clp_instance.detect_matches();

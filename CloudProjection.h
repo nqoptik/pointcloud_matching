@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <sstream>
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/ply_io.h>
@@ -40,7 +41,7 @@ private:
     std::vector<int> direction_indices;
     void get_matches_by_direction(Eigen::Matrix4f transform, int direction_index);
     static void get_2d_matches(cv::Mat old_project, cv::Mat new_project, double distance_threshold,
-        std::vector<cv::Point2f>& trainPoints, std::vector<cv::Point2f>& queryPoints);
+        std::vector<cv::Point2f>& trainPoints, std::vector<cv::Point2f>& queryPoints, int direction_index);
     void draw_matches();
 
 public:
