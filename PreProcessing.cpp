@@ -95,29 +95,56 @@ int main (int argc, char** argv) {
         cur_point.r = p.GetColor().GetRed()/256;
         p_orgCloud->points.push_back(cur_point);
     }
+    p_orgCloud->width = p_orgCloud->points.size();
+    p_orgCloud->height = 1;
     std::cout << "ply_file : " << *p_orgCloud << "\n";
 
     // Down sampling
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_ds_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::VoxelGrid<pcl::PointXYZRGB> grid;
     double leaf = Configurations::getInstance()->leaf_size;
     grid.setLeafSize(leaf, leaf, leaf);
     grid.setInputCloud(p_orgCloud);
-    grid.filter(*p_orgCloud);
-    std::cout << "ply_file after down sampling: " << *p_orgCloud << "\n";
-    normalizeColours(p_orgCloud);
+    grid.filter(*p_ds_pcl);
+    std::cout << "ply_file after down sampling: " << *p_ds_pcl << "\n";
+
+    // Down sampling with real point near center
+    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_org_pcl;
+    kd_org_pcl.setInputCloud(p_orgCloud);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_ds_near_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    for (size_t i = 0; i < p_ds_pcl->points.size(); ++i) {
+        pcl::PointXYZRGB centerP = p_ds_pcl->points[i];
+        std::vector<int> pointIdxNKNSearch;
+        std::vector<float> pointNKNSquaredDistance;
+        if (kd_org_pcl.nearestKSearch (centerP, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0) {
+            if (pointNKNSquaredDistance[0] < leaf*leaf) {
+                p_ds_near_pcl->points.push_back(p_orgCloud->points[pointIdxNKNSearch[0]]);
+            }
+        }
+    }
+    if (p_ds_near_pcl->points.size() != p_ds_pcl->points.size()) {
+        std::cout << "Need to check down sampling with real piont center.\n";
+        return 1;
+    }
+    p_ds_near_pcl->width = p_ds_near_pcl->points.size();
+    p_ds_near_pcl->height = 1;
+    pcl::io::savePLYFile(ply_file, *p_ds_near_pcl, true);
+    std::cout << ply_file << " saved\n";
+    std::cout << "Down down sampling with real point near center.\n";
+    std::cout << "ply_file after down sampling: " << *p_ds_near_pcl << "\n";
 
     // Create the filtering object
-    for (int loop = 0; loop < 15; ++loop) {
+    for (int loop = 0; loop < 10; ++loop) {
         pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
-        sor.setInputCloud (p_orgCloud);
+        sor.setInputCloud (p_ds_near_pcl);
         sor.setMeanK (Configurations::getInstance()->sor_neighbours);
         sor.setStddevMulThresh (Configurations::getInstance()->sor_stdev_thresh);
-        sor.filter (*p_orgCloud);
-        int cur_size = p_orgCloud->points.size();
+        sor.filter (*p_ds_near_pcl);
+        int cur_size = p_ds_near_pcl->points.size();
         std::cout << "Loop: " << loop << " ply_file after filtering: " << cur_size << "\n";
     }
-
-    pcl::io::savePLYFile(ply_file, *p_orgCloud, true);
+    normalizeColours(p_ds_near_pcl);
+    pcl::io::savePLYFile(ply_file, *p_ds_near_pcl, true);
     std::cout << ply_file << " saved\n";
     return 0;
 }
