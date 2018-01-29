@@ -11,6 +11,7 @@
 #include <pcl/console/parse.h>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/filters/uniform_sampling.h>
 #include <pcl/kdtree/kdtree_flann.h>
@@ -133,16 +134,27 @@ int main (int argc, char** argv) {
     std::cout << "Down down sampling with real point near center.\n";
     std::cout << "ply_file after down sampling: " << *p_ds_near_pcl << "\n";
 
-    // Create the filtering object
-    for (int loop = 0; loop < 1; ++loop) {
-        pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
-        sor.setInputCloud (p_ds_near_pcl);
-        sor.setMeanK (Configurations::getInstance()->sor_neighbours);
-        sor.setStddevMulThresh (Configurations::getInstance()->sor_stdev_thresh);
-        sor.filter (*p_ds_near_pcl);
-        int cur_size = p_ds_near_pcl->points.size();
-        std::cout << "Loop: " << loop << " ply_file after filtering: " << cur_size << "\n";
+
+    // Radius outliers removal
+    for (int loop = 0; loop < 5; ++loop) {
+        pcl::RadiusOutlierRemoval<pcl::PointXYZRGB> ror;
+        ror.setInputCloud(p_ds_near_pcl);
+        ror.setRadiusSearch(Configurations::getInstance()->leaf_size*3);
+        ror.setMinNeighborsInRadius (10);
+        // apply filter
+        ror.filter (*p_ds_near_pcl);
+        std::cout << "Loop: " << loop << " ply_file after applied radius outlier romoval: " << p_ds_near_pcl->points.size() << "\n";
     }
+
+    // // Create the filtering object
+    // for (int loop = 0; loop < 1; ++loop) {
+    //     pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
+    //     sor.setInputCloud (p_ds_near_pcl);
+    //     sor.setMeanK (Configurations::getInstance()->sor_neighbours);
+    //     sor.setStddevMulThresh (Configurations::getInstance()->sor_stdev_thresh);
+    //     sor.filter (*p_ds_near_pcl);
+    //     std::cout << "Loop: " << loop << " ply_file after filtering: " << p_ds_near_pcl->points.size() << "\n";
+    // }
     pcl::io::savePLYFile(ply_file, *p_ds_near_pcl, true);
     std::cout << ply_file << " saved\n";
 
