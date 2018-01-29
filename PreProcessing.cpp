@@ -134,7 +134,7 @@ int main (int argc, char** argv) {
     std::cout << "ply_file after down sampling: " << *p_ds_near_pcl << "\n";
 
     // Create the filtering object
-    for (int loop = 0; loop < 10; ++loop) {
+    for (int loop = 0; loop < 1; ++loop) {
         pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
         sor.setInputCloud (p_ds_near_pcl);
         sor.setMeanK (Configurations::getInstance()->sor_neighbours);
@@ -143,8 +143,57 @@ int main (int argc, char** argv) {
         int cur_size = p_ds_near_pcl->points.size();
         std::cout << "Loop: " << loop << " ply_file after filtering: " << cur_size << "\n";
     }
-    normalizeColours(p_ds_near_pcl);
     pcl::io::savePLYFile(ply_file, *p_ds_near_pcl, true);
+    std::cout << ply_file << " saved\n";
+
+    // Color-based filtering
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_ds_color_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_near_pcl;
+    kd_near_pcl.setInputCloud(p_ds_near_pcl);
+    for (size_t i = 0; i < p_ds_near_pcl->points.size(); ++i) {
+        pcl::PointXYZRGB nearP = p_ds_near_pcl->points[i];
+        int K = Configurations::getInstance()->sor_neighbours;
+        std::vector<int> pointIdxNKNSearch;
+        std::vector<float> pointNKNSquaredDistance;
+        if (kd_near_pcl.nearestKSearch (nearP, K, pointIdxNKNSearch, pointNKNSquaredDistance) > 0) {
+            pcl::PointXYZRGB colorP = nearP;
+            float avg_r = 0;
+            float avg_g = 0;
+            float avg_b = 0;
+            for (size_t j = 0; j < K; ++j) {
+                avg_r += p_ds_near_pcl->points[pointIdxNKNSearch[j]].r;
+                avg_g += p_ds_near_pcl->points[pointIdxNKNSearch[j]].g;
+                avg_b += p_ds_near_pcl->points[pointIdxNKNSearch[j]].b;
+            }
+            avg_r /= K;
+            avg_g /= K;
+            avg_b /= K;
+            float std_dev = 0;
+            for (size_t j = 0; j < K; ++j) {
+                float dr = p_ds_near_pcl->points[pointIdxNKNSearch[j]].r - avg_r;
+                float dg = p_ds_near_pcl->points[pointIdxNKNSearch[j]].g - avg_g;
+                float db = p_ds_near_pcl->points[pointIdxNKNSearch[j]].b - avg_b;
+                float d_color = dr*dr + dg*dg + db*db;
+                std_dev += d_color;
+            }
+            std_dev = sqrt(std_dev);
+            std_dev /= K;
+            float dr_color = colorP.r - avg_r;
+            float dg_color = colorP.g - avg_g;
+            float db_color = colorP.b - avg_b;
+            float d_colorP = sqrt(dr_color*dr_color + dg_color*dg_color + db_color*db_color);
+            if (d_colorP/std_dev < 10) {
+                p_ds_color_pcl->points.push_back(colorP);
+            }
+            else {
+            }
+        }
+    }
+    p_ds_color_pcl->width = p_ds_color_pcl->points.size();
+    p_ds_color_pcl->height = 1;
+    std::cout << "ply_file after color-based filtering: " << *p_ds_color_pcl << "\n";
+
+    pcl::io::savePLYFile(ply_file, *p_ds_color_pcl, true);
     std::cout << ply_file << " saved\n";
     return 0;
 }
