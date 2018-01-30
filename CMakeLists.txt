@@ -14,9 +14,11 @@ add_executable (PreProcessing PreProcessing.cpp Configurations.cpp Configuration
 add_executable (Projection2D Projection2D.cpp CloudProjection.h CloudProjection.cpp Configurations.cpp Configurations.h)
 add_executable (FPFH FPFH.cpp Configurations.cpp Configurations.h)
 add_executable (PreProcess preprocess.cpp preprocess.h Configurations.cpp Configurations.h)
+add_executable (Matching matching.cpp matching.h Configurations.cpp Configurations.h)
 
 target_link_libraries (main ${PCL_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries (PreProcessing ${PCL_LIBRARIES} las)
 target_link_libraries (Projection2D ${PCL_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries (FPFH ${PCL_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries (PreProcess ${PCL_LIBRARIES} ${OpenCV_LIBS} las)
+target_link_libraries (Matching ${PCL_LIBRARIES} ${OpenCV_LIBS})

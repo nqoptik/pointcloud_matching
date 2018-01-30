@@ -16,6 +16,7 @@ Configurations::Configurations() {
     iss_new_salient_radius = 0.005;
     iss_new_nonmax_radius = 0.004;
     iss_new_min_neighbours = 1;
+    harris3d_radius = 0.04;
     des_radius = 0.05;
     pos_radius = 0.03;
     icp_iterations = 5;
@@ -102,6 +103,11 @@ void Configurations::readConfig() {
             in >> val;
             iss_new_min_neighbours = val;
         }
+        else if (option.compare("harris3d_radius") == 0) {
+            double val;
+            in >> val;
+            harris3d_radius = val;
+        }
         else if (option.compare("des_radius") == 0) {
             double val;
             in >> val;
@@ -178,6 +184,7 @@ void Configurations::readConfig() {
     std::cout << "iss_new_salient_radius: " << iss_new_salient_radius << "\n";
     std::cout << "iss_new_nonmax_radius:  " << iss_new_nonmax_radius << "\n";
     std::cout << "iss_new_min_neighbours: " << iss_new_min_neighbours << "\n";
+    std::cout << "harris3d_radius       : " << harris3d_radius << "\n";
     std::cout << "des_radius:             " << des_radius << "\n";
     std::cout << "pos_radius:             " << pos_radius << "\n";
     std::cout << "icp_iterations:         " << icp_iterations << "\n";
