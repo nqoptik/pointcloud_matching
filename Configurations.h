@@ -28,6 +28,8 @@ public:
     int iss_old_min_neighbours;
     double iss_new_salient_radius;
     double iss_new_nonmax_radius;
+    double susan_old_radius;
+    double susan_new_radius;
     double harris3d_radius;
     int iss_new_min_neighbours;
     double des_radius;

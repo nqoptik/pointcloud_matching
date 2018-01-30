@@ -34,6 +34,18 @@ void issDetectKeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::Point
 void susanDetectKeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_kps, bool isBefore) {
 
     std::cout << "Susan keypoint detection.\n";
+    double susan_radius;
+    if (isBefore) {
+        susan_radius = Configurations::getInstance()->susan_old_radius;
+    }
+    else {
+        susan_radius = Configurations::getInstance()->susan_new_radius;
+    }
+     
+    pcl::SUSANKeypoint<pcl::PointXYZRGB, pcl::PointXYZRGB> susan_detector;
+    susan_detector.setRadius(susan_radius);
+    susan_detector.setInputCloud(p_pcl);
+    susan_detector.compute(*p_kps);
 }
 
 void harris3dDetechkeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_kps, bool isBefore) {

@@ -14,6 +14,7 @@
 #include <pcl/filters/uniform_sampling.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/keypoints/iss_3d.h>
+#include <pcl/keypoints/susan.h>
 #include <pcl/keypoints/harris_3d.h>
 #include <pcl/features/shot_omp.h>
 #include <pcl/features/fpfh_omp.h>
