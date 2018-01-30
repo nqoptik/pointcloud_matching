@@ -47,7 +47,9 @@ int main (int argc, char** argv) {
     }
     std::cout << "p_new_pcl size: " << p_new_pcl->points.size() << "\n";
 
-    CloudProjection clp_instance(p_old_pcl, p_new_pcl);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
+    CloudProjection clp_instance(p_old_pcl, p_new_pcl, p_old_parts, p_new_parts);
     clp_instance.detect_matches();
 
     return 0;

@@ -1,10 +1,14 @@
 #include "CloudProjection.h"
 
 CloudProjection::CloudProjection(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl,
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl) {
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
 
     this->p_old_pcl = p_old_pcl;
     this->p_new_pcl = p_new_pcl;
+    this->p_old_parts = p_old_parts;
+    this->p_new_parts = p_new_parts;
     match_train_indices.clear();
     match_query_indices.clear();
     direction_indices.clear();
@@ -543,70 +547,15 @@ void CloudProjection::detect_matches() {
     }
     get_matches_by_direction(Eigen::Matrix4f::Identity(), 0);
     std::cout << "Total 3D matches " << match_train_indices.size() << "\n";
-    draw_matches();
-
-    // Re-check matches by using FPFH
-    pcl::PointCloud<pcl::Normal>::Ptr p_old_normal(new pcl::PointCloud<pcl::Normal>());
-    pcl::PointCloud<pcl::Normal>::Ptr p_new_normal(new pcl::PointCloud<pcl::Normal>());
-    pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> norm_est;
-    pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
-    norm_est.setSearchMethod(tree);
-    norm_est.setKSearch(10);
-    std::cout << "Compute old pointcloud's normals.\n";
-    norm_est.setInputCloud(p_old_pcl);
-    norm_est.compute(*p_old_normal);
-    std::cout << "Compute new pointcloud's normals.\n";
-    norm_est.setInputCloud(p_new_pcl);
-    norm_est.compute(*p_new_normal);
-
-    std::cout << "Compute old pointcloud's fpfh descriptors.\n";
-    pcl::FPFHEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33> fpfh_old;
-    boost::shared_ptr<std::vector<int> > p_old_indices(new std::vector<int>(0));
-    for (size_t i = 0; i < match_train_indices.size (); i++) {
-        p_old_indices->push_back(match_train_indices[i]);
-    }
-    fpfh_old.setInputCloud(p_old_pcl);
-    fpfh_old.setIndices(p_old_indices);
-    fpfh_old.setInputNormals(p_old_normal);
-    pcl::PointCloud<pcl::FPFHSignature33>::Ptr old_fpfhs(new pcl::PointCloud<pcl::FPFHSignature33> ());
-    fpfh_old.setRadiusSearch(Configurations::getInstance()->des_radius);
-    fpfh_old.compute (*old_fpfhs);
-    std::cout << "old_fpfhs size: " << old_fpfhs->size() << "\n";
-
-    std::cout << "Compute new pointcloud's fpfh descriptors.\n";
-    pcl::FPFHEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33> fpfh_new;
-    boost::shared_ptr<std::vector<int> > p_new_indices(new std::vector<int>(0));
-    for (size_t i = 0; i < match_query_indices.size (); i++) {
-        p_new_indices->push_back(match_query_indices[i]);
-    }
-    fpfh_new.setInputCloud(p_new_pcl);
-    fpfh_new.setIndices(p_new_indices);
-    fpfh_new.setInputNormals(p_new_normal);
-    pcl::PointCloud<pcl::FPFHSignature33>::Ptr new_fpfhs(new pcl::PointCloud<pcl::FPFHSignature33> ());
-    fpfh_new.setRadiusSearch(Configurations::getInstance()->des_radius);
-    fpfh_new.compute (*new_fpfhs);
-    std::cout << "new_fpfhs size: " << new_fpfhs->size() << "\n";
-    std::vector<float> fpfh_distances(old_fpfhs->size());
-    for (size_t i = 0; i < old_fpfhs->size(); i++) {
-        float fpfh_d = 0;
-        for (int j = 0; j < 33; ++j) {
-            fpfh_d += (old_fpfhs->points[i].histogram[j] - new_fpfhs->points[i].histogram[j]) * 
-                (old_fpfhs->points[i].histogram[j] - new_fpfhs->points[i].histogram[j]);
-        }
-        fpfh_d = sqrt(fpfh_d);
-        fpfh_distances[i] = fpfh_d;
-    }
-    std::vector<float> sorted_fpfh_distances = fpfh_distances;
-    std::sort(sorted_fpfh_distances.begin(), sorted_fpfh_distances.end());
-    float fpfh_threshold = sorted_fpfh_distances[sorted_fpfh_distances.size()*9/10];
-    fpfh_threshold = 13.5;
-    std::cout << "fpfh_threshold " << fpfh_threshold << "\n";
-    std::cout << "fpfh_min_threshold " << sorted_fpfh_distances[0] << "\n";
-    std::cout << "fpfh_max_threshold " << sorted_fpfh_distances[sorted_fpfh_distances.size() - 1] << "\n";
-    for (size_t i = 0; i < direction_indices.size(); ++i) {
-        if (fpfh_distances[i] > fpfh_threshold) {
-            direction_indices[i] = 10;
+    for (size_t i = 0; i < match_train_indices.size(); ++i) {
+        pcl::PointXYZRGB nn_old_point = p_old_pcl->points[match_train_indices[i]];
+        pcl::PointXYZRGB nn_new_point = p_new_pcl->points[match_query_indices[i]];
+        if (direction_indices[i] != 10) {
+            p_old_parts->points.push_back(nn_old_point);
+            p_new_parts->points.push_back(nn_new_point);
         }
     }
+    p_old_parts->width = p_old_parts->points.size();
+    p_new_parts->height = 1;
     draw_matches();
 }

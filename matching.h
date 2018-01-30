@@ -81,9 +81,9 @@ const char* methodName[] = {
             "iss",
             "susan",
             "harris3D",
-            "2dmethod",
 
             /* descriptor detect method */
+            "2dmethod",
             "icp",
             "shot",
             "fpfh"

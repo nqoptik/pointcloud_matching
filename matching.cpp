@@ -2,6 +2,7 @@
 
 #include "matching.h"
 #include "Configurations.h"
+#include "CloudProjection.h"
 
 using namespace std;
 
@@ -91,9 +92,14 @@ void harris3dDetechkeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::
     p_kps->height = 1;
 }
 
-void twoDimensionDetechKeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_kps, bool isBefore) {
+void twoDimensionDetechKeypoints(
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_kps, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_kps,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
 
     std::cout << "2D matching method.\n";
+    CloudProjection clp_instance(p_old_pcl, p_new_pcl, p_old_parts, p_new_parts);
+    clp_instance.detect_matches();
 }
 
 /* descriptor detect method */
@@ -458,7 +464,7 @@ int configValueByOption(int option, char* _p) {
 
         // noise, have 3 method
         if (option == 0) {
-            if (i > 3)
+            if (i > 2)
                 goto error;
             
             if (i == 0) {
@@ -470,16 +476,16 @@ int configValueByOption(int option, char* _p) {
             else if (i == 2) {
                 commandOption.keypoint_detect_method.f3 = &harris3dDetechkeypoints;
             }
-            else if (i == 3) {
-                commandOption.keypoint_detect_method.f3 = &twoDimensionDetechKeypoints;
-            }
 
         }
         // down sample, have two method
         else if (option == 1) {
-            if (i <= 3)
+            if (i <= 2)
                 goto error;
-            if (i == 4) {
+            if (i == 3) {
+                commandOption.descriptor_detect_methos.f6 = &twoDimensionDetechKeypoints;
+            }
+            else if (i == 4) {
                 commandOption.descriptor_detect_methos.f6 = &icpDetectDescriptor;
             }
             else if (i == 5) {
@@ -575,6 +581,8 @@ int main (int argc, char* argv[]) {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
     commandOption.descriptor_detect_methos.f6(p_old_pcl, p_new_pcl, p_old_kps, p_new_kps, p_old_parts, p_new_parts);
+    std::cout << "p_old_parts " << p_old_parts->points.size() << "\n";
+    std::cout << "p_new_parts " << p_new_parts->points.size() << "\n";
 
     // Draw matches;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_matches(new pcl::PointCloud<pcl::PointXYZRGB>());
@@ -641,6 +649,6 @@ int main (int argc, char* argv[]) {
     p_matches->width = p_matches->points.size();
     p_matches->height = 1;
     p_matches->is_dense = 1;
-    pcl::io::savePLYFile("Matches.ply", *p_matches, true);
+    pcl::io::savePLYFile(commandOption.output, *p_matches, true);
     std::cout << "Matches saved.\n";
 }

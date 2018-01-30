@@ -36,6 +36,8 @@ private:
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts;
     std::vector<size_t> match_train_indices;
     std::vector<size_t> match_query_indices;
     std::vector<int> direction_indices;
@@ -47,7 +49,9 @@ private:
 public:
 
     CloudProjection(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl,
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl);
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts,
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts);
     ~CloudProjection();
     void detect_matches();
 };
