@@ -17,6 +17,7 @@
 #include <pcl/keypoints/harris_3d.h>
 #include <pcl/features/shot_omp.h>
 #include <pcl/features/fpfh_omp.h>
+#include <pcl/registration/icp.h>
 
 #define UNVALID -1
 #define ERROR  "Have problem when parsing command option"
