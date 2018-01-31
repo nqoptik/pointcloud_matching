@@ -109,10 +109,10 @@ void icpDetectDescriptor(
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
 
     std::cout << "ICP matching.\n";
-    double des_radius = Configurations::getInstance()->des_radius;
-    double pos_radius = Configurations::getInstance()->pos_radius;
+    double icp_radius = Configurations::getInstance()->icp_radius;
     int icp_iterations = Configurations::getInstance()->icp_iterations;
-    double refine_radius = Configurations::getInstance()->refine_radius;
+    double pos_radius = Configurations::getInstance()->pos_radius;
+    double icp_refine_radius = Configurations::getInstance()->icp_refine_radius;
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_pcl;
     kd_old_pcl.setInputCloud (p_old_pcl);
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_pcl;
@@ -127,7 +127,7 @@ void icpDetectDescriptor(
         pcl::PointXYZRGB old_kpt = (p_old_kps->points)[i];
         std::vector<int> old_neighbour_index;
         std::vector<float> old_neighbours_sqd;
-        if (!kd_old_pcl.radiusSearch(old_kpt, des_radius, old_neighbour_index, old_neighbours_sqd) > 0) {
+        if (!kd_old_pcl.radiusSearch(old_kpt, icp_radius, old_neighbour_index, old_neighbours_sqd) > 0) {
             std::cout << " !not found old neighbours\n";
             continue;
         }
@@ -150,7 +150,7 @@ void icpDetectDescriptor(
             pcl::PointXYZRGB new_kpt = (p_new_kps->points)[pos_refer_index[j]];
             std::vector<int> new_neighbour_index;
             std::vector<float> new_neighbours_sqd;
-            if (!kd_new_pcl.radiusSearch(new_kpt, des_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
+            if (!kd_new_pcl.radiusSearch(new_kpt, icp_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
                 std::cout << " !not found new neighbours\n";
                 continue;
             }
@@ -183,7 +183,7 @@ void icpDetectDescriptor(
             pcl::PointXYZRGB similar_kpt = p_new_kps->points[pos_refer_index[best_refer_index]];
             std::vector<int> refine_index;
             std::vector<float> refine_sqd;
-            if (!kd_new_pcl.radiusSearch(similar_kpt, refine_radius, refine_index, refine_sqd) > 0) {
+            if (!kd_new_pcl.radiusSearch(similar_kpt, icp_refine_radius, refine_index, refine_sqd) > 0) {
                 std::cout << " !not found refine point\n";
                 continue;
             }
@@ -194,7 +194,7 @@ void icpDetectDescriptor(
                 pcl::PointXYZRGB new_similar_point = (p_new_pcl->points)[refine_index[j]];
                 std::vector<int> new_neighbour_index;
                 std::vector<float> new_neighbours_sqd;
-                if (!kd_new_pcl.radiusSearch(new_similar_point, des_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
+                if (!kd_new_pcl.radiusSearch(new_similar_point, icp_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
                     std::cout << " !not found new neighbours\n";
                     continue;
                 }
@@ -253,9 +253,9 @@ void shotDetectDescriptor(
     norm_est.compute(*p_new_normal);
     std::cout << "p_new_normal: " << p_new_normal->points.size() << "\n";
 
-    double des_radius = Configurations::getInstance()->des_radius;
+    double shot_radius = Configurations::getInstance()->shot_radius;
     pcl::SHOTEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::SHOT352> descr_est;
-    descr_est.setRadiusSearch (des_radius);
+    descr_est.setRadiusSearch (shot_radius);
     descr_est.setInputCloud (p_old_kps);
     descr_est.setInputNormals (p_old_normal);
     descr_est.setSearchSurface (p_old_pcl);
@@ -356,10 +356,10 @@ void fpfhDetectDescriptor(
     }
     std::cout << "new_kpt_idx_in_pcl " << new_kpt_idx_in_pcl->size() << "\n";
 
-    double des_radius = Configurations::getInstance()->des_radius/4;
+    double fpfh_radius = Configurations::getInstance()->fpfh_radius;
     pcl::FPFHEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33> descr_est;
     norm_est.setSearchMethod(tree);
-    descr_est.setRadiusSearch (des_radius);
+    descr_est.setRadiusSearch (fpfh_radius);
     descr_est.setInputCloud (p_old_pcl);
     descr_est.setIndices(old_kpt_idx_in_pcl);
     descr_est.setInputNormals (p_old_normal);

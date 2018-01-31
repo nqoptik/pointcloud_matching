@@ -13,7 +13,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr statFilteringNoise(pcl::PointCloud<pcl::P
         sor.filter (*p_stat_pcl);
         std::cout << "Loop: " << loop << " remaining cloud: " << p_stat_pcl->points.size() << "\n";
     }
-    for (int loop = 1; loop < 5; ++loop) {
+    for (int loop = 1; loop < Configurations::getInstance()->sor_iterations; ++loop) {
         pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
         sor.setInputCloud (p_stat_pcl);
         sor.setMeanK (Configurations::getInstance()->sor_neighbours);
@@ -30,16 +30,16 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr radiusFilteringNoise(pcl::PointCloud<pcl:
     for (int loop = 0; loop < 1; ++loop) {
         pcl::RadiusOutlierRemoval<pcl::PointXYZRGB> ror;
         ror.setInputCloud(p);
-        ror.setRadiusSearch(Configurations::getInstance()->leaf_size*3);
-        ror.setMinNeighborsInRadius (10);
+        ror.setRadiusSearch(Configurations::getInstance()->ror_radius);
+        ror.setMinNeighborsInRadius(Configurations::getInstance()->ror_min_neighbours);
         ror.filter (*p_radius_pcl);
         std::cout << "Loop: " << loop << " remaining cloud: " << p_radius_pcl->points.size() << "\n";
     }
-    for (int loop = 1; loop < 5; ++loop) {
+    for (int loop = 1; loop < Configurations::getInstance()->ror_iterations; ++loop) {
         pcl::RadiusOutlierRemoval<pcl::PointXYZRGB> ror;
         ror.setInputCloud(p_radius_pcl);
-        ror.setRadiusSearch(Configurations::getInstance()->leaf_size*3);
-        ror.setMinNeighborsInRadius (10);
+        ror.setRadiusSearch(Configurations::getInstance()->ror_radius);
+        ror.setMinNeighborsInRadius(Configurations::getInstance()->ror_min_neighbours);
         ror.filter (*p_radius_pcl);
         std::cout << "Loop: " << loop << " remaining cloud: " << p_radius_pcl->points.size() << "\n";
     }
@@ -53,7 +53,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbasedFilteringNoise(pcl::PointCloud<
     kd_p.setInputCloud(p);
     for (size_t i = 0; i < p->points.size(); ++i) {
         pcl::PointXYZRGB nearP = p->points[i];
-        int K = Configurations::getInstance()->sor_neighbours;
+        int K = Configurations::getInstance()->cl_based_neighbours;
+        double cl_stdev_thresh = Configurations::getInstance()->cl_based_stdev_thresh;
         std::vector<int> pointIdxNKNSearch;
         std::vector<float> pointNKNSquaredDistance;
         if (kd_p.nearestKSearch (nearP, K, pointIdxNKNSearch, pointNKNSquaredDistance) > 0) {
@@ -83,7 +84,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbasedFilteringNoise(pcl::PointCloud<
             float dg_color = colorP.g - avg_g;
             float db_color = colorP.b - avg_b;
             float d_colorP = sqrt(dr_color*dr_color + dg_color*dg_color + db_color*db_color);
-            if (d_colorP/std_dev < 10) {
+            if (d_colorP/std_dev < cl_stdev_thresh) {
                 p_color_pcl->points.push_back(colorP);
             }
             else {

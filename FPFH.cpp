@@ -55,17 +55,16 @@ int main (int argc, char** argv) {
         double iss_new_salient_radius;
         double iss_new_nonmax_radius;
         int iss_new_min_neighbours = Configurations::getInstance()->iss_new_min_neighbours;;
-        double des_radius;
+        double fpfh_radius;
         double pos_radius;
         int icp_iterations = Configurations::getInstance()->icp_iterations;
-        double refine_radius = Configurations::getInstance()->refine_radius;
         if (octave == 0) {
             leaf_size = Configurations::getInstance()->leaf_size;
             iss_old_salient_radius = Configurations::getInstance()->iss_old_salient_radius;
             iss_old_nonmax_radius = Configurations::getInstance()->iss_old_nonmax_radius;
             iss_new_salient_radius = Configurations::getInstance()->iss_new_salient_radius;
             iss_new_nonmax_radius = Configurations::getInstance()->iss_new_nonmax_radius;
-            des_radius = Configurations::getInstance()->des_radius;
+            fpfh_radius = Configurations::getInstance()->fpfh_radius;
             pos_radius = Configurations::getInstance()->pos_radius;
 
         }
@@ -75,7 +74,7 @@ int main (int argc, char** argv) {
             iss_old_nonmax_radius = Configurations::getInstance()->iss_old_nonmax_radius;
             iss_new_salient_radius = Configurations::getInstance()->iss_new_salient_radius*2;
             iss_new_nonmax_radius = Configurations::getInstance()->iss_new_nonmax_radius*2;
-            des_radius = Configurations::getInstance()->des_radius*2;
+            fpfh_radius = Configurations::getInstance()->fpfh_radius*2;
             pos_radius = Configurations::getInstance()->pos_radius*2;
         }
 
@@ -157,7 +156,7 @@ int main (int argc, char** argv) {
         fpfh_old.setIndices(old_kpt_idx_in_pcl);
         fpfh_old.setInputNormals(p_old_normal_in);
         pcl::PointCloud<pcl::FPFHSignature33>::Ptr old_fpfhs(new pcl::PointCloud<pcl::FPFHSignature33> ());
-        fpfh_old.setRadiusSearch(Configurations::getInstance()->des_radius);
+        fpfh_old.setRadiusSearch(Configurations::getInstance()->fpfh_radius);
         fpfh_old.compute (*old_fpfhs);
         std::cout << "old_fpfhs " << *old_fpfhs << "\n";
 
@@ -167,7 +166,7 @@ int main (int argc, char** argv) {
         fpfh_new.setIndices(new_kpt_idx_in_pcl);
         fpfh_new.setInputNormals(p_new_normal_in);
         pcl::PointCloud<pcl::FPFHSignature33>::Ptr new_fpfhs(new pcl::PointCloud<pcl::FPFHSignature33> ());
-        fpfh_new.setRadiusSearch(Configurations::getInstance()->des_radius);
+        fpfh_new.setRadiusSearch(Configurations::getInstance()->fpfh_radius);
         fpfh_new.compute (*new_fpfhs);
         std::cout << "new_fpfhs " << *new_fpfhs << "\n";
 

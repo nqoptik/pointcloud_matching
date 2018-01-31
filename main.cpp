@@ -44,7 +44,7 @@ int main (int argc, char** argv)
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
 
-    for (size_t octave = 0; octave < 2; ++octave) {
+    for (size_t octave = 0; octave < 1; ++octave) {
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl_in(new pcl::PointCloud<pcl::PointXYZRGB>());
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl_in(new pcl::PointCloud<pcl::PointXYZRGB>());
@@ -56,17 +56,17 @@ int main (int argc, char** argv)
         double iss_new_salient_radius;
         double iss_new_nonmax_radius;
         int iss_new_min_neighbours = Configurations::getInstance()->iss_new_min_neighbours;;
-        double des_radius;
+        double icp_radius;
         double pos_radius;
         int icp_iterations = Configurations::getInstance()->icp_iterations;
-        double refine_radius = Configurations::getInstance()->refine_radius;
+        double icp_refine_radius = Configurations::getInstance()->icp_refine_radius;
         if (octave == 0) {
             leaf_size = Configurations::getInstance()->leaf_size;
             iss_old_salient_radius = Configurations::getInstance()->iss_old_salient_radius;
             iss_old_nonmax_radius = Configurations::getInstance()->iss_old_nonmax_radius;
             iss_new_salient_radius = Configurations::getInstance()->iss_new_salient_radius;
             iss_new_nonmax_radius = Configurations::getInstance()->iss_new_nonmax_radius;
-            des_radius = Configurations::getInstance()->des_radius;
+            icp_radius = Configurations::getInstance()->icp_radius;
             pos_radius = Configurations::getInstance()->pos_radius;
 
         }
@@ -76,7 +76,7 @@ int main (int argc, char** argv)
             iss_old_nonmax_radius = Configurations::getInstance()->iss_old_nonmax_radius;
             iss_new_salient_radius = Configurations::getInstance()->iss_new_salient_radius*2;
             iss_new_nonmax_radius = Configurations::getInstance()->iss_new_nonmax_radius*2;
-            des_radius = Configurations::getInstance()->des_radius*2;
+            icp_radius = Configurations::getInstance()->icp_radius*2;
             pos_radius = Configurations::getInstance()->pos_radius*2;
         }
         // Down sampling
@@ -122,7 +122,7 @@ int main (int argc, char** argv)
             pcl::PointXYZRGB old_kpt = (p_old_kpts->points)[i];
             std::vector<int> old_neighbour_index;
             std::vector<float> old_neighbours_sqd;
-            if (!kd_old_pcl.radiusSearch(old_kpt, des_radius, old_neighbour_index, old_neighbours_sqd) > 0) {
+            if (!kd_old_pcl.radiusSearch(old_kpt, icp_radius, old_neighbour_index, old_neighbours_sqd) > 0) {
                 std::cout << " !not found old neighbours\n";
                 continue;
             }
@@ -145,7 +145,7 @@ int main (int argc, char** argv)
                 pcl::PointXYZRGB new_kpt = (p_new_kpts->points)[pos_refer_index[j]];
                 std::vector<int> new_neighbour_index;
                 std::vector<float> new_neighbours_sqd;
-                if (!kd_new_pcl.radiusSearch(new_kpt, des_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
+                if (!kd_new_pcl.radiusSearch(new_kpt, icp_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
                     std::cout << " !not found new neighbours\n";
                     continue;
                 }
@@ -178,7 +178,7 @@ int main (int argc, char** argv)
                 pcl::PointXYZRGB similar_kpt = p_new_kpts->points[pos_refer_index[best_refer_index]];
                 std::vector<int> refine_index;
                 std::vector<float> refine_sqd;
-                if (!kd_new_pcl.radiusSearch(similar_kpt, refine_radius, refine_index, refine_sqd) > 0) {
+                if (!kd_new_pcl.radiusSearch(similar_kpt, icp_refine_radius, refine_index, refine_sqd) > 0) {
                     std::cout << " !not found refine point\n";
                     continue;
                 }
@@ -189,7 +189,7 @@ int main (int argc, char** argv)
                     pcl::PointXYZRGB new_similar_point = (p_new_pcl_in->points)[refine_index[j]];
                     std::vector<int> new_neighbour_index;
                     std::vector<float> new_neighbours_sqd;
-                    if (!kd_new_pcl.radiusSearch(new_similar_point, des_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
+                    if (!kd_new_pcl.radiusSearch(new_similar_point, icp_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
                         std::cout << " !not found new neighbours\n";
                         continue;
                     }
