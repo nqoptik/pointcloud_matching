@@ -518,7 +518,12 @@ int configValueByOption(int option, char* _p) {
         else if (option == 5) {
             commandOption.output = _p;
         }
-
+        else if (option == 6) {
+            commandOption.interKeypoint1 = _p;
+        }
+        else if (option == 7) {
+            commandOption.interKeypoint2 = _p;
+        }
         return 1;
 error:
         PrintMatchingOption(_p, option);
@@ -576,6 +581,12 @@ int main (int argc, char* argv[]) {
     std::cout << "p_old_kps size: " << p_old_kps->points.size() << "\n";
     commandOption.keypoint_detect_method.f3(p_old_pcl, p_new_kps, false);
     std::cout << "p_new_kps size: " << p_new_kps->points.size() << "\n";
+    if (commandOption.inter) {
+        pcl::io::savePLYFile(commandOption.interKeypoint1, *p_old_kps, true);
+        std::cout << "p_old_kps saved.\n";
+        pcl::io::savePLYFile(commandOption.interKeypoint2, *p_new_kps, true);
+        std::cout << "p_new_kps saved.\n";
+    }
 
     // Compute descriptor and matching
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts(new pcl::PointCloud<pcl::PointXYZRGB>());

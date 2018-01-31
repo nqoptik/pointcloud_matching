@@ -229,6 +229,12 @@ int configValueByOption(int option, char* _p) {
         else if (option == 4) {
             commandOption.output = _p;
         }
+        else if (option == 5) {
+            commandOption.interNoise = _p;
+        }
+        else if (option == 6) {
+            commandOption.interDownSample = _p;
+        }
 
         return 1;
 error:
@@ -293,9 +299,17 @@ int main (int argc, char* argv[]) {
     p_orgCloud->height = 1;
     std::cout << "ply_file : " << *p_orgCloud << "\n";
     std::cout << "p_orgCloud " << p_orgCloud->points.size() << "\n";
-    p_orgCloud = commandOption.down_sample(p_orgCloud);
-    std::cout << "p_orgCloud " << p_orgCloud->points.size() << "\n";
     p_orgCloud = commandOption.noise(p_orgCloud);
+    if (commandOption.inter) {
+        pcl::io::savePLYFile(commandOption.interNoise, *p_orgCloud, true);
+        std::cout << "noisefiltering saved.\n";
+    }
+    std::cout << "p_orgCloud " << p_orgCloud->points.size() << "\n";
+    p_orgCloud = commandOption.down_sample(p_orgCloud);
+    if (commandOption.inter) {
+        pcl::io::savePLYFile(commandOption.interDownSample, *p_orgCloud, true);
+        std::cout << "downsample.ply saved.\n";
+    }
     std::cout << "p_orgCloud " << p_orgCloud->points.size() << "\n";
     return 0;
 	//todo

@@ -57,6 +57,8 @@ struct CommandOption {
     char* input1 = NULL;
     char* input2 = NULL;
     char* output = NULL;
+    char* interKeypoint1 = NULL;
+    char* interKeypoint2 = NULL;
 } commandOption;
 
 /* keypoints detect method */
@@ -104,7 +106,13 @@ const char* options[] = {
             "-i2",
 
             // output file
-            "-o"
+            "-o",
+
+            // output keypoints 1
+            "-ikp1",
+
+            // output keypoints 2
+            "-ikp2"
 };
 
 #endif

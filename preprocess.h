@@ -41,6 +41,8 @@ struct CommandOption {
     bool inter = false;
     char* input = NULL;
     char* output = NULL;
+    char* interNoise = NULL;
+    char* interDownSample = NULL;
 } commandOption;
 
 /* noise filtering methods*/
@@ -90,7 +92,13 @@ const char* options[] = {
             "-i",
 
             // output file
-            "-o"
+            "-o",
+
+            //char* interNoise = NULL;
+            "-in",
+
+            //char* interDownSample = NULL;
+            "-ids"
 };
 
 #endif
