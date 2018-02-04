@@ -4,6 +4,51 @@
 #include "Configurations.h"
 #include "CloudProjection.h"
 
+void drawKeypoints(std::string fileName, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_kps) {
+
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr drawKP(new pcl::PointCloud<pcl::PointXYZRGB>());
+    for (size_t i = 0; i < p_kps->points.size(); ++i) {
+        float step = Configurations::getInstance()->leaf_size/100;
+        pcl::PointXYZRGB tmp;
+        tmp.r = 255;
+        tmp.g = 0;
+        tmp.b = 0;
+        tmp.x = p_kps->points[i].x + step;
+        tmp.y = p_kps->points[i].y;
+        tmp.z = p_kps->points[i].z;
+        drawKP->points.push_back(tmp);
+        tmp.x = p_kps->points[i].x - step;
+        tmp.y = p_kps->points[i].y;
+        tmp.z = p_kps->points[i].z;
+        drawKP->points.push_back(tmp);
+        tmp.x = p_kps->points[i].x;
+        tmp.y = p_kps->points[i].y + step;
+        tmp.z = p_kps->points[i].z;
+        drawKP->points.push_back(tmp);
+        tmp.x = p_kps->points[i].x;
+        tmp.y = p_kps->points[i].y - step;
+        tmp.z = p_kps->points[i].z;
+        drawKP->points.push_back(tmp);
+        tmp.x = p_kps->points[i].x;
+        tmp.y = p_kps->points[i].y;
+        tmp.z = p_kps->points[i].z + step;
+        drawKP->points.push_back(tmp);
+        tmp.x = p_kps->points[i].x;
+        tmp.y = p_kps->points[i].y;
+        tmp.z = p_kps->points[i].z - step;
+        drawKP->points.push_back(tmp);
+    }
+    for (size_t i = 0; i < p_pcl->points.size(); ++i) {
+        pcl::PointXYZRGB tmp = p_pcl->points[i];
+        drawKP->points.push_back(tmp);
+    }
+    drawKP->width = drawKP->points.size();
+    drawKP->height = 1;
+    pcl::io::savePLYFile(fileName, *drawKP, true);
+    std::cout << fileName << " saved.\n";
+}
+
 using namespace std;
 
 /* keypoints detect method */
@@ -61,7 +106,7 @@ void harris3dDetechkeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::
             pcl::PointCloud<pcl::PointXYZI>::Ptr p_xyzi_kps(new pcl::PointCloud<pcl::PointXYZI>);
             harris3d.setRadius(harris3d_radius*hariss_octave*2);
             harris3d.compute (*p_xyzi_kps);
-            std::cout << "p_xyzi_kps " << p_xyzi_kps->points.size() << "\n";
+            std::cout << "p_xyzi_kps: " << p_xyzi_kps->points.size() << "\n";
             for (size_t i = 0; i < p_xyzi_kps->points.size(); ++i) {
                 pcl::PointXYZI pointi = p_xyzi_kps->points[i];
                 pcl::PointXYZRGB pointrgb;
@@ -77,7 +122,7 @@ void harris3dDetechkeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::
             pcl::PointCloud<pcl::PointXYZI>::Ptr p_xyzi_kps(new pcl::PointCloud<pcl::PointXYZI>);
             harris3d.setRadius(harris3d_radius*hariss_octave);
             harris3d.compute (*p_xyzi_kps);
-            std::cout << "p_xyzi_kps " << p_xyzi_kps->points.size() << "\n";
+            std::cout << "p_xyzi_kps: " << p_xyzi_kps->points.size() << "\n";
             for (size_t i = 0; i < p_xyzi_kps->points.size(); ++i) {
                 pcl::PointXYZI pointi = p_xyzi_kps->points[i];
                 pcl::PointXYZRGB pointrgb;
@@ -109,14 +154,27 @@ void icpDetectDescriptor(
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
 
     std::cout << "ICP matching.\n";
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl_icp(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl_icp(new pcl::PointCloud<pcl::PointXYZRGB>());
+
+    pcl::VoxelGrid<pcl::PointXYZRGB> grid;
+    double leaf = Configurations::getInstance()->leaf_size*2;
+    grid.setLeafSize(leaf, leaf, leaf);
+    grid.setInputCloud(p_old_pcl);
+    grid.filter(*p_old_pcl_icp);
+    std::cout << "p_old_pcl_icp: " << *p_old_pcl_icp << "\n";
+    grid.setInputCloud(p_new_pcl);
+    grid.filter(*p_new_pcl_icp);
+    std::cout << "p_new_pcl_icp: " << *p_new_pcl_icp << "\n";
+
     double icp_radius = Configurations::getInstance()->icp_radius;
     int icp_iterations = Configurations::getInstance()->icp_iterations;
     double pos_radius = Configurations::getInstance()->pos_radius;
     double icp_refine_radius = Configurations::getInstance()->icp_refine_radius;
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_pcl;
-    kd_old_pcl.setInputCloud (p_old_pcl);
+    kd_old_pcl.setInputCloud (p_old_pcl_icp);
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_pcl;
-    kd_new_pcl.setInputCloud (p_new_pcl);
+    kd_new_pcl.setInputCloud (p_new_pcl_icp);
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kps;
     kd_new_kps.setInputCloud (p_new_kps);
 
@@ -134,7 +192,7 @@ void icpDetectDescriptor(
         // Old keypoint's neighbours
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
         for (size_t j = 0; j < old_neighbour_index.size(); ++j) {
-            old_neighbours->points.push_back(p_old_pcl->points[old_neighbour_index[j]]);
+            old_neighbours->points.push_back(p_old_pcl_icp->points[old_neighbour_index[j]]);
         }
 
         // Get possible refer keypoints
@@ -157,7 +215,7 @@ void icpDetectDescriptor(
             // New keypoint's neighbours
             pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
             for (size_t k = 0; k < new_neighbour_index.size(); ++k) {
-                new_neighbours->points.push_back(p_new_pcl->points[new_neighbour_index[k]]);
+                new_neighbours->points.push_back(p_new_pcl_icp->points[new_neighbour_index[k]]);
             }
             pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
             icp.setMaximumIterations(icp_iterations);
@@ -191,7 +249,7 @@ void icpDetectDescriptor(
             int refine_best_refer_index = 0;
             float diff_size_ratio = 1;
             for (size_t j = 0; j < refine_index.size(); ++j) {
-                pcl::PointXYZRGB new_similar_point = (p_new_pcl->points)[refine_index[j]];
+                pcl::PointXYZRGB new_similar_point = (p_new_pcl_icp->points)[refine_index[j]];
                 std::vector<int> new_neighbour_index;
                 std::vector<float> new_neighbours_sqd;
                 if (!kd_new_pcl.radiusSearch(new_similar_point, icp_radius, new_neighbour_index, new_neighbours_sqd) > 0) {
@@ -201,7 +259,7 @@ void icpDetectDescriptor(
                 // New keypoint's neighbours
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_neighbours(new pcl::PointCloud<pcl::PointXYZRGB>());
                 for (size_t k = 0; k < new_neighbour_index.size(); ++k) {
-                    new_neighbours->points.push_back(p_new_pcl->points[new_neighbour_index[k]]);
+                    new_neighbours->points.push_back(p_new_pcl_icp->points[new_neighbour_index[k]]);
                 }
                 pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
                 icp.setMaximumIterations(icp_iterations);
@@ -223,7 +281,7 @@ void icpDetectDescriptor(
                     }
                 }
             }
-            pcl::PointXYZRGB nearestPoint = p_new_pcl->points[refine_index[refine_best_refer_index]];
+            pcl::PointXYZRGB nearestPoint = p_new_pcl_icp->points[refine_index[refine_best_refer_index]];
             pcl::PointXYZRGB old_part = old_kpt;
             old_part.r = 255*diff_size_ratio;
             old_part.g = 255*diff_size_ratio;
@@ -261,14 +319,14 @@ void shotDetectDescriptor(
     descr_est.setSearchSurface (p_old_pcl);
     pcl::PointCloud<pcl::SHOT352>::Ptr p_old_shot(new pcl::PointCloud<pcl::SHOT352> ());
     descr_est.compute (*p_old_shot);
-    std::cout << "p_old_shot " << p_old_shot->points.size() << "\n";
+    std::cout << "p_old_shot: " << p_old_shot->points.size() << "\n";
 
     descr_est.setInputCloud (p_new_kps);
     descr_est.setInputNormals (p_new_normal);
     descr_est.setSearchSurface (p_new_pcl);
     pcl::PointCloud<pcl::SHOT352>::Ptr p_new_shot(new pcl::PointCloud<pcl::SHOT352> ());
     descr_est.compute (*p_new_shot);
-    std::cout << "p_new_shot " << p_new_shot->points.size() << "\n";
+    std::cout << "p_new_shot: " << p_new_shot->points.size() << "\n";
 
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kps;
     kd_new_kps.setInputCloud (p_new_kps);
@@ -341,7 +399,7 @@ void fpfhDetectDescriptor(
         }
         old_kpt_idx_in_pcl->push_back(old_neighbour_index[0]);
     }
-    std::cout << "old_kpt_idx_in_pcl " << old_kpt_idx_in_pcl->size() << "\n";
+    std::cout << "old_kpt_idx_in_pcl: " << old_kpt_idx_in_pcl->size() << "\n";
 
     boost::shared_ptr<std::vector<int> > new_kpt_idx_in_pcl(new std::vector<int>(0));
     for (size_t i = 0; i < p_new_kps->points.size(); ++i) {
@@ -354,7 +412,7 @@ void fpfhDetectDescriptor(
         }
         new_kpt_idx_in_pcl->push_back(new_neighbour_index[0]);
     }
-    std::cout << "new_kpt_idx_in_pcl " << new_kpt_idx_in_pcl->size() << "\n";
+    std::cout << "new_kpt_idx_in_pcl: " << new_kpt_idx_in_pcl->size() << "\n";
 
     double fpfh_radius = Configurations::getInstance()->fpfh_radius;
     pcl::FPFHEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33> descr_est;
@@ -365,14 +423,14 @@ void fpfhDetectDescriptor(
     descr_est.setInputNormals (p_old_normal);
     pcl::PointCloud<pcl::FPFHSignature33>::Ptr p_old_fpfh(new pcl::PointCloud<pcl::FPFHSignature33> ());
     descr_est.compute (*p_old_fpfh);
-    std::cout << "p_old_fpfh" << p_old_fpfh->points.size() << "\n";
+    std::cout << "p_old_fpfh: " << p_old_fpfh->points.size() << "\n";
 
     descr_est.setInputCloud (p_new_pcl);
     descr_est.setIndices(new_kpt_idx_in_pcl);
     descr_est.setInputNormals (p_new_normal);
     pcl::PointCloud<pcl::FPFHSignature33>::Ptr p_new_fpfh(new pcl::PointCloud<pcl::FPFHSignature33> ());
     descr_est.compute (*p_new_fpfh);
-    std::cout << "p_new_fpfh" << p_new_fpfh->points.size() << "\n";
+    std::cout << "p_new_fpfh: " << p_new_fpfh->points.size() << "\n";
 
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kps;
     kd_new_kps.setInputCloud (p_new_kps);
@@ -524,6 +582,9 @@ int configValueByOption(int option, char* _p) {
         else if (option == 7) {
             commandOption.interKeypoint2 = _p;
         }
+        else if (option == 8) {
+            commandOption.matchingPairs = _p;
+        }
         return 1;
 error:
         PrintMatchingOption(_p, option);
@@ -567,33 +628,39 @@ int main (int argc, char* argv[]) {
         std::cout << "Error loading old pointcloud!\n";
         exit(-1);
     }
-    std::cout << "p_old_pcl " << *p_old_pcl << "\n";
+    std::cout << "p_old_pcl: " << *p_old_pcl << "\n";
     if (pcl::io::loadPLYFile(commandOption.input2, *p_new_pcl)) {
         std::cout << "Error loading new pointcloud!\n";
         exit(-1);
     }
-    std::cout << "p_new_pcl " << *p_new_pcl << "\n";
+    std::cout << "p_new_pcl: " << *p_new_pcl << "\n";
 
     // Detect key points
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_kps(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_kps(new pcl::PointCloud<pcl::PointXYZRGB>());
     commandOption.keypoint_detect_method.f3(p_old_pcl, p_old_kps, true);
     std::cout << "p_old_kps size: " << p_old_kps->points.size() << "\n";
-    commandOption.keypoint_detect_method.f3(p_old_pcl, p_new_kps, false);
+    commandOption.keypoint_detect_method.f3(p_new_pcl, p_new_kps, false);
     std::cout << "p_new_kps size: " << p_new_kps->points.size() << "\n";
     if (commandOption.inter) {
-        pcl::io::savePLYFile(commandOption.interKeypoint1, *p_old_kps, true);
-        std::cout << "p_old_kps saved.\n";
-        pcl::io::savePLYFile(commandOption.interKeypoint2, *p_new_kps, true);
-        std::cout << "p_new_kps saved.\n";
+        drawKeypoints(commandOption.interKeypoint1, p_old_pcl, p_old_kps);
+        drawKeypoints(commandOption.interKeypoint2, p_new_pcl, p_new_kps);
     }
 
     // Compute descriptor and matching
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts(new pcl::PointCloud<pcl::PointXYZRGB>());
     commandOption.descriptor_detect_methos.f6(p_old_pcl, p_new_pcl, p_old_kps, p_new_kps, p_old_parts, p_new_parts);
-    std::cout << "p_old_parts " << p_old_parts->points.size() << "\n";
-    std::cout << "p_new_parts " << p_new_parts->points.size() << "\n";
+    std::cout << "p_old_parts: " << p_old_parts->points.size() << "\n";
+    std::cout << "p_new_parts: " << p_new_parts->points.size() << "\n";
+    if (commandOption.inter) {
+        std::ofstream ofs_pairs(commandOption.matchingPairs);
+        for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
+            ofs_pairs << p_old_parts->points[i].x << " " << p_old_parts->points[i].y << " " << p_old_parts->points[i].z << " " <<
+                p_new_parts->points[i].x << " " << p_new_parts->points[i].y << " " << p_new_parts->points[i].z << "\n";
+        }
+        ofs_pairs.close();
+    }
 
     // Draw matches;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_matches(new pcl::PointCloud<pcl::PointXYZRGB>());
@@ -632,16 +699,16 @@ int main (int argc, char* argv[]) {
         p_matches->points.push_back(tmp);
     }
     for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
-        if (p_old_parts->points[i].r > 200) {
-            pcl::PointXYZRGB tmp;
-            tmp.r = p_old_parts->points[i].r;
-            tmp.g = p_old_parts->points[i].g;
-            tmp.b = p_old_parts->points[i].b;
-            pcl::PointXYZRGB vec;
-            vec.x = p_new_parts->points[i].x - p_old_parts->points[i].x;
-            vec.y = p_new_parts->points[i].y - p_old_parts->points[i].y;
-            vec.z = p_new_parts->points[i].z - p_old_parts->points[i].z;
-            float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+        pcl::PointXYZRGB tmp;
+        tmp.r = 255;
+        tmp.g = 255;
+        tmp.b = 255;
+        pcl::PointXYZRGB vec;
+        vec.x = p_new_parts->points[i].x - p_old_parts->points[i].x;
+        vec.y = p_new_parts->points[i].y - p_old_parts->points[i].y;
+        vec.z = p_new_parts->points[i].z - p_old_parts->points[i].z;
+        float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+        if (length > 0) {
             vec.x /= length;
             vec.y /= length;
             vec.z /= length;
@@ -661,5 +728,5 @@ int main (int argc, char* argv[]) {
     p_matches->height = 1;
     p_matches->is_dense = 1;
     pcl::io::savePLYFile(commandOption.output, *p_matches, true);
-    std::cout << "Matches saved.\n";
+    std::cout << commandOption.output << " saved.\n";
 }

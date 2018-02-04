@@ -59,6 +59,7 @@ struct CommandOption {
     char* output = NULL;
     char* interKeypoint1 = NULL;
     char* interKeypoint2 = NULL;
+    char* matchingPairs = NULL;
 } commandOption;
 
 /* keypoints detect method */
@@ -112,7 +113,10 @@ const char* options[] = {
             "-ikp1",
 
             // output keypoints 2
-            "-ikp2"
+            "-ikp2",
+
+            // matching pairs
+            "-imp"
 };
 
 #endif

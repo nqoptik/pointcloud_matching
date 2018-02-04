@@ -52,8 +52,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbasedFilteringNoise(pcl::PointCloud<
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr bilateralFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 
 /* Down Sampling */
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingVirtualCenter(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingRealCenter(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingMedian(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingNearestMed(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 
 
 // array reference to function
@@ -62,8 +62,8 @@ FUNCTION functions[] = {
             radiusFilteringNoise,
             colorbasedFilteringNoise,
             bilateralFilteringNoise,
-            downSamplingVirtualCenter,
-            downSamplingRealCenter
+            downSamplingMedian,
+            downSamplingNearestMed
 };
 
 const char* methodName[] = {
@@ -74,8 +74,8 @@ const char* methodName[] = {
             "bilateral",
 
             /* down sampling */
-            "virtual",
-            "real"
+            "median",
+            "nearestmed"
 };
 
 const char* options[] = {

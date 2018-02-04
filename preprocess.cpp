@@ -102,48 +102,47 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr bilateralFilteringNoise(pcl::PointCloud<p
 }
 
 /* Down Sampling */
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingVirtualCenter(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingMedian(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
 
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_real_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_med_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::VoxelGrid<pcl::PointXYZRGB> grid;
     double leaf = Configurations::getInstance()->leaf_size;
     grid.setLeafSize(leaf, leaf, leaf);
     grid.setInputCloud(p);
-    grid.filter(*p_real_pcl);
-    return p_real_pcl;
+    grid.filter(*p_med_pcl);
+    return p_med_pcl;
+}
+
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingNearestMed(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
+
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_med_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::VoxelGrid<pcl::PointXYZRGB> grid;
+    double leaf = Configurations::getInstance()->leaf_size;
+    grid.setLeafSize(leaf, leaf, leaf);
+    grid.setInputCloud(p);
+    grid.filter(*p_med_pcl);
 
     // Down sampling with real point near center
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_p;
     kd_p.setInputCloud(p);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_vir_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
-    for (size_t i = 0; i < p_real_pcl->points.size(); ++i) {
-        pcl::PointXYZRGB centerP = p_real_pcl->points[i];
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_nearestmed_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    for (size_t i = 0; i < p_med_pcl->points.size(); ++i) {
+        pcl::PointXYZRGB centerP = p_med_pcl->points[i];
         std::vector<int> pointIdxNKNSearch;
         std::vector<float> pointNKNSquaredDistance;
         if (kd_p.nearestKSearch (centerP, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0) {
             if (pointNKNSquaredDistance[0] < leaf*leaf) {
-                p_vir_pcl->points.push_back(p->points[pointIdxNKNSearch[0]]);
+                p_nearestmed_pcl->points.push_back(p->points[pointIdxNKNSearch[0]]);
             }
         }
     }
-    if (p_vir_pcl->points.size() != p_real_pcl->points.size()) {
+    if (p_nearestmed_pcl->points.size() != p_med_pcl->points.size()) {
         std::cout << "Need to check down sampling with real piont center.\n";
         exit(1);
     }
-    p_vir_pcl->width = p_vir_pcl->points.size();
-    p_vir_pcl->height = 1;
-    return p_vir_pcl;
-}
-
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingRealCenter(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
-
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_real_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
-    pcl::VoxelGrid<pcl::PointXYZRGB> grid;
-    double leaf = Configurations::getInstance()->leaf_size;
-    grid.setLeafSize(leaf, leaf, leaf);
-    grid.setInputCloud(p);
-    grid.filter(*p_real_pcl);
-    return p_real_pcl;
+    p_nearestmed_pcl->width = p_nearestmed_pcl->points.size();
+    p_nearestmed_pcl->height = 1;
+    return p_nearestmed_pcl;
 }
 
 void PrintMatchingOption (char* para, int option) {
@@ -197,13 +196,13 @@ int configValueByOption(int option, char* _p) {
             }
         }
 
-        // noise, have 3 method
+        // noise, there are 3 methods
         if (option == 0) {
             if (i > 3)
                 goto error;
             commandOption.noise = functions[i];
         }
-        // down sample, have two method
+        // down sample, there are 2 methods
         else if (option == 1) {
             if (i <= 3)
                 goto error;
@@ -246,7 +245,7 @@ int main (int argc, char* argv[]) {
 	int optionIndex = -1;
 	
     Configurations::getInstance()->readConfig();
-	// loop thought option parameter
+	// loop through option parameter
         for (int i = 1; i < argc; i++) {
             if (i % 2 == 1) {
                 optionIndex = getOption (argv[i]);
@@ -297,20 +296,19 @@ int main (int argc, char* argv[]) {
     }
     p_orgCloud->width = p_orgCloud->points.size();
     p_orgCloud->height = 1;
-    std::cout << "ply_file : " << *p_orgCloud << "\n";
-    std::cout << "p_orgCloud " << p_orgCloud->points.size() << "\n";
-    p_orgCloud = commandOption.noise(p_orgCloud);
-    if (commandOption.inter) {
-        pcl::io::savePLYFile(commandOption.interNoise, *p_orgCloud, true);
-        std::cout << "noisefiltering saved.\n";
-    }
-    std::cout << "p_orgCloud " << p_orgCloud->points.size() << "\n";
+    std::cout << "ply_file: " << *p_orgCloud << "\n";
+    std::cout << "p_orgCloud: " << p_orgCloud->points.size() << "\n";
     p_orgCloud = commandOption.down_sample(p_orgCloud);
     if (commandOption.inter) {
         pcl::io::savePLYFile(commandOption.interDownSample, *p_orgCloud, true);
         std::cout << "downsample.ply saved.\n";
     }
-    std::cout << "p_orgCloud " << p_orgCloud->points.size() << "\n";
+    std::cout << "p_orgCloud: " << p_orgCloud->points.size() << "\n";
+    p_orgCloud = commandOption.noise(p_orgCloud);
+    if (commandOption.inter) {
+        pcl::io::savePLYFile(commandOption.interNoise, *p_orgCloud, true);
+        std::cout << "noisefiltering saved.\n";
+    }
+    std::cout << "p_orgCloud: " << p_orgCloud->points.size() << "\n";
     return 0;
-	//todo
 }
