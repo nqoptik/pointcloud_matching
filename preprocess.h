@@ -49,7 +49,7 @@ struct CommandOption {
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr statFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr radiusFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbasedFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr bilateralFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr statcolorFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 
 /* Down Sampling */
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingMedian(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
@@ -61,7 +61,7 @@ FUNCTION functions[] = {
             statFilteringNoise,
             radiusFilteringNoise,
             colorbasedFilteringNoise,
-            bilateralFilteringNoise,
+            statcolorFilteringNoise,
             downSamplingMedian,
             downSamplingNearestMed
 };
@@ -71,7 +71,7 @@ const char* methodName[] = {
             "stat",
             "radius",
             "colorbased",
-            "bilateral",
+            "statcolor",
 
             /* down sampling */
             "median",

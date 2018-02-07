@@ -4,6 +4,7 @@
 /* noise filtering methods*/
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr statFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
 
+    std::cout << "Statistical outliers removal.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_stat_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     for (int loop = 0; loop < 1; ++loop) {
         pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
@@ -26,6 +27,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr statFilteringNoise(pcl::PointCloud<pcl::P
 
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr radiusFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
 
+    std::cout << "Radius outliers removal.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_radius_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     for (int loop = 0; loop < 1; ++loop) {
         pcl::RadiusOutlierRemoval<pcl::PointXYZRGB> ror;
@@ -48,6 +50,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr radiusFilteringNoise(pcl::PointCloud<pcl:
 
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbasedFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
 
+    std::cout << "Color-based outliers removal.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_color_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_p;
     kd_p.setInputCloud(p);
@@ -97,13 +100,19 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbasedFilteringNoise(pcl::PointCloud<
     return p_color_pcl;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr bilateralFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr statcolorFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
 
+    std::cout << "Statistical and color-based outliers removal.\n";
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_statcolor_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    p_statcolor_pcl = statFilteringNoise(p);
+    p_statcolor_pcl = colorbasedFilteringNoise(p_statcolor_pcl);
+    return p_statcolor_pcl;
 }
 
 /* Down Sampling */
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingMedian(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
 
+    std::cout << "Median down sampling.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_med_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::VoxelGrid<pcl::PointXYZRGB> grid;
     double leaf = Configurations::getInstance()->leaf_size;
@@ -115,6 +124,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingMedian(pcl::PointCloud<pcl::P
 
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingNearestMed(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
 
+    std::cout << "Nearest median down sampling.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_med_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::VoxelGrid<pcl::PointXYZRGB> grid;
     double leaf = Configurations::getInstance()->leaf_size;
@@ -298,17 +308,53 @@ int main (int argc, char* argv[]) {
     p_orgCloud->height = 1;
     std::cout << "ply_file: " << *p_orgCloud << "\n";
     std::cout << "p_orgCloud: " << p_orgCloud->points.size() << "\n";
-    p_orgCloud = commandOption.down_sample(p_orgCloud);
-    if (commandOption.inter) {
-        pcl::io::savePLYFile(commandOption.interDownSample, *p_orgCloud, true);
-        std::cout << "downsample.ply saved.\n";
+
+    // Pre downsample
+    std::cout << "Pre down sampling.\n";
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_preds_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::VoxelGrid<pcl::PointXYZRGB> grid;
+    double leaf = Configurations::getInstance()->leaf_size/1.5;
+    grid.setLeafSize(leaf, leaf, leaf);
+    grid.setInputCloud(p_orgCloud);
+    grid.filter(*p_preds_pcl);
+
+    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_p;
+    kd_p.setInputCloud(p_orgCloud);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_after_preds_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    for (size_t i = 0; i < p_preds_pcl->points.size(); ++i) {
+        pcl::PointXYZRGB centerP = p_preds_pcl->points[i];
+        std::vector<int> pointIdxNKNSearch;
+        std::vector<float> pointNKNSquaredDistance;
+        if (kd_p.nearestKSearch (centerP, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0) {
+            if (pointNKNSquaredDistance[0] < leaf*leaf) {
+                p_after_preds_pcl->points.push_back(p_orgCloud->points[pointIdxNKNSearch[0]]);
+            }
+        }
     }
-    std::cout << "p_orgCloud: " << p_orgCloud->points.size() << "\n";
-    p_orgCloud = commandOption.noise(p_orgCloud);
-    if (commandOption.inter) {
-        pcl::io::savePLYFile(commandOption.interNoise, *p_orgCloud, true);
-        std::cout << "noisefiltering saved.\n";
+    if (p_after_preds_pcl->points.size() != p_preds_pcl->points.size()) {
+        std::cout << "Need to check pre downsample.\n";
+        exit(1);
     }
-    std::cout << "p_orgCloud: " << p_orgCloud->points.size() << "\n";
+    p_after_preds_pcl->width = p_after_preds_pcl->points.size();
+    p_after_preds_pcl->height = 1;
+    std::cout << "p_after_preds_pcl: " << p_after_preds_pcl->points.size() << "\n";
+
+    // Filter noise
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_noisefiltering_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    p_noisefiltering_pcl = commandOption.noise(p_after_preds_pcl);
+    if (commandOption.inter) {
+        pcl::io::savePLYFile(commandOption.interNoise, *p_noisefiltering_pcl, true);
+        std::cout << commandOption.interNoise << " saved.\n";
+    }
+    std::cout << "p_noisefiltering_pcl: " << p_noisefiltering_pcl->points.size() << "\n";
+
+    // Down sample
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_downsampling_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
+    p_downsampling_pcl = commandOption.down_sample(p_noisefiltering_pcl);
+    if (commandOption.inter) {
+        pcl::io::savePLYFile(commandOption.interDownSample, *p_downsampling_pcl, true);
+        std::cout << commandOption.interDownSample << " saved.\n";
+    }
+    std::cout << "p_downsampling_pcl: " << p_downsampling_pcl->points.size() << "\n";
     return 0;
 }
