@@ -1,5 +1,39 @@
 #include "CloudProjection.h"
 
+void normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl) {
+
+    double r_avg = 0, g_avg = 0, b_avg = 0;
+    for (size_t i = 0; i < p_pcl->points.size(); ++i) {
+        r_avg += p_pcl->points[i].r;
+        g_avg += p_pcl->points[i].g;
+        b_avg += p_pcl->points[i].b;
+    }
+    r_avg /= p_pcl->points.size();
+    g_avg /= p_pcl->points.size();
+    b_avg /= p_pcl->points.size();
+
+    // Compute colours' standard deviation
+    double r_std = 0, g_std = 0, b_std = 0;
+    for (size_t i = 0; i < p_pcl->points.size(); ++i) {
+        r_std += (r_avg - p_pcl->points[i].r)*(r_avg - p_pcl->points[i].r);
+        g_std += (g_avg - p_pcl->points[i].g)*(g_avg - p_pcl->points[i].g);
+        b_std += (b_avg - p_pcl->points[i].b)*(b_avg - p_pcl->points[i].b);
+    }
+    r_std /= p_pcl->points.size();
+    g_std /= p_pcl->points.size();
+    b_std /= p_pcl->points.size();
+    r_std = sqrt(r_std);
+    g_std = sqrt(g_std);
+    b_std = sqrt(b_std);
+
+    // Synchronize pointclouds' colours
+    for (size_t i = 0; i < p_pcl->points.size(); ++i) {
+        p_pcl->points[i].r = std::max(0.0, std::min(255.0, (100.0 + (p_pcl->points[i].r - r_avg) * 35.0 / r_std)));
+        p_pcl->points[i].g = std::max(0.0, std::min(255.0, (100.0 + (p_pcl->points[i].g - g_avg) * 35.0 / g_std)));
+        p_pcl->points[i].b = std::max(0.0, std::min(255.0, (100.0 + (p_pcl->points[i].b - b_avg) * 35.0 / b_std)));
+    }
+}
+
 CloudProjection::CloudProjection(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl,
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts,
@@ -370,8 +404,8 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, d
     std::cout << "Optical flow pairs: " << trainPoints.size() << "\n";
 
     for (size_t i = 0; i < good_matches.size(); ++i) {
-        //trainPoints.push_back(keypoints_old[good_matches[i].trainIdx].pt);
-       // queryPoints.push_back(keypoints_new[good_matches[i].queryIdx].pt);
+        trainPoints.push_back(keypoints_old[good_matches[i].trainIdx].pt);
+        queryPoints.push_back(keypoints_new[good_matches[i].queryIdx].pt);
     }
     std::cout << "Total pairs: " << trainPoints.size() << "\n";
     cv::flip(old_project.clone(), old_project, 0);
@@ -509,6 +543,8 @@ void CloudProjection::draw_matches() {
 
 void CloudProjection::detect_matches() {
 
+    normalizeColours(p_old_pcl);
+    normalizeColours(p_new_pcl);
     pcl::io::savePLYFile("p_old_pcl.ply", *p_old_pcl, true);
     pcl::io::savePLYFile("p_new_pcl.ply", *p_new_pcl, true);
     draw_matches();

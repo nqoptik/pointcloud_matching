@@ -158,7 +158,7 @@ void icpDetectDescriptor(
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl_icp(new pcl::PointCloud<pcl::PointXYZRGB>());
 
     pcl::VoxelGrid<pcl::PointXYZRGB> grid;
-    double leaf = Configurations::getInstance()->leaf_size*2;
+    double leaf = Configurations::getInstance()->leaf_size*2.5;
     grid.setLeafSize(leaf, leaf, leaf);
     grid.setInputCloud(p_old_pcl);
     grid.filter(*p_old_pcl_icp);
@@ -663,46 +663,51 @@ int main (int argc, char* argv[]) {
     }
 
     // Draw matches;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_draw(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_draw(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::VoxelGrid<pcl::PointXYZRGB> grid;
+    double leaf = Configurations::getInstance()->leaf_size*2;
+    grid.setLeafSize(leaf, leaf, leaf);
+    grid.setInputCloud(p_old_pcl);
+    grid.filter(*p_old_draw);
+    grid.setInputCloud(p_new_pcl);
+    grid.filter(*p_new_draw);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_matches(new pcl::PointCloud<pcl::PointXYZRGB>());
-    for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
+    for (size_t i = 0; i < p_old_draw->points.size(); ++i) {
         pcl::PointXYZRGB tmp;
         if (Configurations::getInstance()->draw_old_colour) {
-            tmp.r = p_old_pcl->points[i].r;
-            tmp.g = p_old_pcl->points[i].g;
-            tmp.b = p_old_pcl->points[i].b;
+            tmp.r = p_old_draw->points[i].r;
+            tmp.g = p_old_draw->points[i].g;
+            tmp.b = p_old_draw->points[i].b;
         }
         else {
             tmp.r = 0;
             tmp.g = 0;
             tmp.b = 255;
         }
-        tmp.x = p_old_pcl->points[i].x;
-        tmp.y = p_old_pcl->points[i].y;
-        tmp.z = p_old_pcl->points[i].z;
+        tmp.x = p_old_draw->points[i].x;
+        tmp.y = p_old_draw->points[i].y;
+        tmp.z = p_old_draw->points[i].z;
         p_matches->points.push_back(tmp);
     }
-    for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
+    for (size_t i = 0; i < p_new_draw->points.size(); ++i) {
         pcl::PointXYZRGB tmp;
         if (Configurations::getInstance()->draw_new_colour) {
-            tmp.r = p_new_pcl->points[i].r;
-            tmp.g = p_new_pcl->points[i].g;
-            tmp.b = p_new_pcl->points[i].b;
+            tmp.r = p_new_draw->points[i].r;
+            tmp.g = p_new_draw->points[i].g;
+            tmp.b = p_new_draw->points[i].b;
         }
         else {
             tmp.r = 255;
             tmp.g = 0;
             tmp.b = 0;
         }
-        tmp.x = p_new_pcl->points[i].x;
-        tmp.y = p_new_pcl->points[i].y;
-        tmp.z = p_new_pcl->points[i].z;
+        tmp.x = p_new_draw->points[i].x;
+        tmp.y = p_new_draw->points[i].y;
+        tmp.z = p_new_draw->points[i].z;
         p_matches->points.push_back(tmp);
     }
     for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
-        pcl::PointXYZRGB tmp;
-        tmp.r = 255;
-        tmp.g = 255;
-        tmp.b = 255;
         pcl::PointXYZRGB vec;
         vec.x = p_new_parts->points[i].x - p_old_parts->points[i].x;
         vec.y = p_new_parts->points[i].y - p_old_parts->points[i].y;
@@ -712,8 +717,12 @@ int main (int argc, char* argv[]) {
             vec.x /= length;
             vec.y /= length;
             vec.z /= length;
-            for (float t = 0; t < 1e10; t += Configurations::getInstance()->leaf_size / 100)
+            for (float t = 0; t < 1e10; t += leaf / 100)
             {
+                pcl::PointXYZRGB tmp;
+                tmp.r = 255*(t/length);
+                tmp.g = 255;
+                tmp.b = 255 - 255*(t/length);
                 if (t > length) {
                     break;
                 }

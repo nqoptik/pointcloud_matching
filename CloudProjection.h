@@ -30,6 +30,8 @@
 
 #include "Configurations.h"
 
+void normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl);
+
 class CloudProjection {
 
 private:
