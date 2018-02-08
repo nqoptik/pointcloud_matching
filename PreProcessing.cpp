@@ -99,6 +99,11 @@ int main (int argc, char** argv) {
     p_orgCloud->width = p_orgCloud->points.size();
     p_orgCloud->height = 1;
     std::cout << "ply_file : " << *p_orgCloud << "\n";
+    std::cout << "X: " << header.GetMinX() << " -> " << header.GetMaxX()  << "\n";
+    std::cout << "Y: " << header.GetMinY() << " -> " << header.GetMaxY()  << "\n";
+    std::cout << "Z: " << header.GetMinZ() << " -> " << header.GetMaxZ()  << "\n";
+    std::cout << "gerchar.\n";
+    getchar();
 
     // Down sampling
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_ds_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());

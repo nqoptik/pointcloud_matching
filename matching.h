@@ -39,6 +39,12 @@
                     "\t-i2 : .ply file\n" \
                     "\t-o : output file\n" \
 
+void drawKeypoints(std::string fileName, pcl::PointCloud<pcl::PointXYZRGB>::Ptr,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+void drawMatchingResults(std::string, pcl::PointCloud<pcl::PointXYZRGB>::Ptr,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr, pcl::PointCloud<pcl::PointXYZRGB>::Ptr,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+
 union FUNCTION {
     void (*f3)(pcl::PointCloud<pcl::PointXYZRGB>::Ptr, pcl::PointCloud<pcl::PointXYZRGB>::Ptr, bool);
 

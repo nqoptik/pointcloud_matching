@@ -49,6 +49,87 @@ void drawKeypoints(std::string fileName, pcl::PointCloud<pcl::PointXYZRGB>::Ptr 
     std::cout << fileName << " saved.\n";
 }
 
+void drawMatchingResults(std::string fileName, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
+
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_draw(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_draw(new pcl::PointCloud<pcl::PointXYZRGB>());
+    pcl::VoxelGrid<pcl::PointXYZRGB> grid;
+    double leaf = Configurations::getInstance()->leaf_size*2;
+    grid.setLeafSize(leaf, leaf, leaf);
+    grid.setInputCloud(p_old_pcl);
+    grid.filter(*p_old_draw);
+    grid.setInputCloud(p_new_pcl);
+    grid.filter(*p_new_draw);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_matches(new pcl::PointCloud<pcl::PointXYZRGB>());
+    for (size_t i = 0; i < p_old_draw->points.size(); ++i) {
+        pcl::PointXYZRGB tmp;
+        if (Configurations::getInstance()->draw_old_colour) {
+            tmp.r = p_old_draw->points[i].r;
+            tmp.g = p_old_draw->points[i].g;
+            tmp.b = p_old_draw->points[i].b;
+        }
+        else {
+            tmp.r = 0;
+            tmp.g = 0;
+            tmp.b = 255;
+        }
+        tmp.x = p_old_draw->points[i].x;
+        tmp.y = p_old_draw->points[i].y;
+        tmp.z = p_old_draw->points[i].z;
+        p_matches->points.push_back(tmp);
+    }
+    for (size_t i = 0; i < p_new_draw->points.size(); ++i) {
+        pcl::PointXYZRGB tmp;
+        if (Configurations::getInstance()->draw_new_colour) {
+            tmp.r = p_new_draw->points[i].r;
+            tmp.g = p_new_draw->points[i].g;
+            tmp.b = p_new_draw->points[i].b;
+        }
+        else {
+            tmp.r = 255;
+            tmp.g = 0;
+            tmp.b = 0;
+        }
+        tmp.x = p_new_draw->points[i].x;
+        tmp.y = p_new_draw->points[i].y;
+        tmp.z = p_new_draw->points[i].z;
+        p_matches->points.push_back(tmp);
+    }
+    for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
+        pcl::PointXYZRGB vec;
+        vec.x = p_new_parts->points[i].x - p_old_parts->points[i].x;
+        vec.y = p_new_parts->points[i].y - p_old_parts->points[i].y;
+        vec.z = p_new_parts->points[i].z - p_old_parts->points[i].z;
+        float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+        if (length > 0) {
+            vec.x /= length;
+            vec.y /= length;
+            vec.z /= length;
+            for (float t = 0; t < 1e10; t += leaf / 100)
+            {
+                pcl::PointXYZRGB tmp;
+                tmp.r = 255*(t/length);
+                tmp.g = 255;
+                tmp.b = 255 - 255*(t/length);
+                if (t > length) {
+                    break;
+                }
+                tmp.x = p_old_parts->points[i].x + t * vec.x;
+                tmp.y = p_old_parts->points[i].y + t * vec.y;
+                tmp.z = p_old_parts->points[i].z + t * vec.z;
+                p_matches->points.push_back(tmp);
+            }
+        }
+    }
+    p_matches->width = p_matches->points.size();
+    p_matches->height = 1;
+    p_matches->is_dense = 1;
+    pcl::io::savePLYFile(fileName, *p_matches, true);
+    std::cout << fileName << " saved.\n";
+}
+
 using namespace std;
 
 /* keypoints detect method */
@@ -235,7 +316,7 @@ void icpDetectDescriptor(
                 }
             }
         }
-        if (best_score < 1) {
+        if (best_score < 1e3) {
             std::cout << "Refine";
             // Get refine points
             pcl::PointXYZRGB similar_kpt = p_new_kps->points[pos_refer_index[best_refer_index]];
@@ -372,7 +453,7 @@ void shotcolorDetectDescriptor(
 
     std::cout << "SHOTCOLOR matching.\n";
     normalizeColours(p_old_pcl);
-    normalizeColours(p_old_pcl);
+    normalizeColours(p_new_pcl);
     pcl::PointCloud<pcl::Normal>::Ptr p_old_normal(new pcl::PointCloud<pcl::Normal>());
     pcl::PointCloud<pcl::Normal>::Ptr p_new_normal(new pcl::PointCloud<pcl::Normal>());
     pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> norm_est;
@@ -739,79 +820,5 @@ int main (int argc, char* argv[]) {
     ofs_pairs.close();
 
     // Draw matches;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_draw(new pcl::PointCloud<pcl::PointXYZRGB>());
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_draw(new pcl::PointCloud<pcl::PointXYZRGB>());
-    pcl::VoxelGrid<pcl::PointXYZRGB> grid;
-    double leaf = Configurations::getInstance()->leaf_size*2;
-    grid.setLeafSize(leaf, leaf, leaf);
-    grid.setInputCloud(p_old_pcl);
-    grid.filter(*p_old_draw);
-    grid.setInputCloud(p_new_pcl);
-    grid.filter(*p_new_draw);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_matches(new pcl::PointCloud<pcl::PointXYZRGB>());
-    for (size_t i = 0; i < p_old_draw->points.size(); ++i) {
-        pcl::PointXYZRGB tmp;
-        if (Configurations::getInstance()->draw_old_colour) {
-            tmp.r = p_old_draw->points[i].r;
-            tmp.g = p_old_draw->points[i].g;
-            tmp.b = p_old_draw->points[i].b;
-        }
-        else {
-            tmp.r = 0;
-            tmp.g = 0;
-            tmp.b = 255;
-        }
-        tmp.x = p_old_draw->points[i].x;
-        tmp.y = p_old_draw->points[i].y;
-        tmp.z = p_old_draw->points[i].z;
-        p_matches->points.push_back(tmp);
-    }
-    for (size_t i = 0; i < p_new_draw->points.size(); ++i) {
-        pcl::PointXYZRGB tmp;
-        if (Configurations::getInstance()->draw_new_colour) {
-            tmp.r = p_new_draw->points[i].r;
-            tmp.g = p_new_draw->points[i].g;
-            tmp.b = p_new_draw->points[i].b;
-        }
-        else {
-            tmp.r = 255;
-            tmp.g = 0;
-            tmp.b = 0;
-        }
-        tmp.x = p_new_draw->points[i].x;
-        tmp.y = p_new_draw->points[i].y;
-        tmp.z = p_new_draw->points[i].z;
-        p_matches->points.push_back(tmp);
-    }
-    for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
-        pcl::PointXYZRGB vec;
-        vec.x = p_new_parts->points[i].x - p_old_parts->points[i].x;
-        vec.y = p_new_parts->points[i].y - p_old_parts->points[i].y;
-        vec.z = p_new_parts->points[i].z - p_old_parts->points[i].z;
-        float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-        if (length > 0) {
-            vec.x /= length;
-            vec.y /= length;
-            vec.z /= length;
-            for (float t = 0; t < 1e10; t += leaf / 100)
-            {
-                pcl::PointXYZRGB tmp;
-                tmp.r = 255*(t/length);
-                tmp.g = 255;
-                tmp.b = 255 - 255*(t/length);
-                if (t > length) {
-                    break;
-                }
-                tmp.x = p_old_parts->points[i].x + t * vec.x;
-                tmp.y = p_old_parts->points[i].y + t * vec.y;
-                tmp.z = p_old_parts->points[i].z + t * vec.z;
-                p_matches->points.push_back(tmp);
-            }
-        }
-    }
-    p_matches->width = p_matches->points.size();
-    p_matches->height = 1;
-    p_matches->is_dense = 1;
-    pcl::io::savePLYFile(commandOption.output, *p_matches, true);
-    std::cout << commandOption.output << " saved.\n";
+    drawMatchingResults(commandOption.output, p_old_pcl, p_new_pcl, p_old_parts, p_new_parts);
 }

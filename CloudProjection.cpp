@@ -431,123 +431,10 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, d
     cv::waitKey(15);
 }
 
-void CloudProjection::draw_matches() {
-
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl_in(new pcl::PointCloud<pcl::PointXYZRGB>());
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl_in(new pcl::PointCloud<pcl::PointXYZRGB>());
-    // Down sampling
-    pcl::VoxelGrid<pcl::PointXYZRGB> grid;
-    double leaf_size = Configurations::getInstance()->leaf_size*2;
-    grid.setLeafSize(leaf_size, leaf_size, leaf_size);
-    grid.setInputCloud(p_old_pcl);
-    grid.filter(*p_old_pcl_in);
-    grid.setInputCloud(p_new_pcl);
-    grid.filter(*p_new_pcl_in);
-
-    std::cout << "Draw matches\n";
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_matches(new pcl::PointCloud<pcl::PointXYZRGB>());
-    for (size_t i = 0; i < p_old_pcl_in->points.size(); ++i) {
-        pcl::PointXYZRGB tmp;
-        if (Configurations::getInstance()->draw_old_colour) {
-            tmp.r = p_old_pcl_in->points[i].r;
-            tmp.g = p_old_pcl_in->points[i].g;
-            tmp.b = p_old_pcl_in->points[i].b;
-        }
-        else {
-            tmp.r = 0;
-            tmp.g = 0;
-            tmp.b = 255;
-        }
-        tmp.x = p_old_pcl_in->points[i].x;
-        tmp.y = p_old_pcl_in->points[i].y;
-        tmp.z = p_old_pcl_in->points[i].z;
-        p_matches->points.push_back(tmp);
-    }
-    for (size_t i = 0; i < p_new_pcl_in->points.size(); ++i) {
-        pcl::PointXYZRGB tmp;
-        if (Configurations::getInstance()->draw_new_colour) {
-            tmp.r = p_new_pcl_in->points[i].r;
-            tmp.g = p_new_pcl_in->points[i].g;
-            tmp.b = p_new_pcl_in->points[i].b;
-        }
-        else {
-            tmp.r = 255;
-            tmp.g = 0;
-            tmp.b = 0;
-        }
-        tmp.x = p_new_pcl_in->points[i].x;
-        tmp.y = p_new_pcl_in->points[i].y;
-        tmp.z = p_new_pcl_in->points[i].z;
-        p_matches->points.push_back(tmp);
-    }
-    for (size_t i = 0; i < match_train_indices.size(); ++i) {
-        pcl::PointXYZRGB nn_old_point = p_old_pcl->points[match_train_indices[i]];
-        pcl::PointXYZRGB nn_new_point = p_new_pcl->points[match_query_indices[i]];
-        pcl::PointXYZRGB vec;
-        vec.x = nn_old_point.x - nn_new_point.x;
-        vec.y = nn_old_point.y - nn_new_point.y;
-        vec.z = nn_old_point.z - nn_new_point.z;
-        float length = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-        vec.x /= length;
-        vec.y /= length;
-        vec.z /= length;
-        for (float t = 0; t < 1e10; t += leaf_size / 20) {
-            if (t > length) {
-                break;
-            }
-            pcl::PointXYZRGB tran;
-            switch (direction_indices[i]) {
-                case 0: {
-                    tran.r = 0;
-                    tran.g = 255;
-                    tran.b = 0;
-                } break;
-                case 1: {
-                    tran.r = 255;
-                    tran.g = 255;
-                    tran.b = 0;
-                } break;
-                case 2: {
-                    tran.r = 0;
-                    tran.g = 255;
-                    tran.b = 255;
-                } break;
-                case 3: {
-                    tran.r = 255;
-                    tran.g = 0;
-                    tran.b = 255;
-                } break;
-                case 4: {
-                    tran.r = 255;
-                    tran.g = 255;
-                    tran.b = 255;
-                } break;
-                case 10: {
-                    tran.r = 0;
-                    tran.g = 0;
-                    tran.b = 0;
-                } break;
-            }
-            tran.x = nn_new_point.x + t * vec.x;
-            tran.y = nn_new_point.y + t * vec.y;
-            tran.z = nn_new_point.z + t * vec.z;
-            p_matches->points.push_back(tran);
-        }
-    }
-    p_matches->width = p_matches->points.size();
-    p_matches->height = 1;
-    p_matches->is_dense = 1;
-    pcl::io::savePLYFile("Matches.ply", *p_matches, true);
-    std::cout << "Matches saved.\n";
-}
-
 void CloudProjection::detect_matches() {
 
     normalizeColours(p_old_pcl);
     normalizeColours(p_new_pcl);
-    pcl::io::savePLYFile("p_old_pcl.ply", *p_old_pcl, true);
-    pcl::io::savePLYFile("p_new_pcl.ply", *p_new_pcl, true);
-    draw_matches();
 
     if (Configurations::getInstance()->pi_theta_x != 0) {
         Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
@@ -593,5 +480,4 @@ void CloudProjection::detect_matches() {
     }
     p_old_parts->width = p_old_parts->points.size();
     p_new_parts->height = 1;
-    draw_matches();
 }

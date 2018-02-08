@@ -46,7 +46,6 @@ private:
     void get_matches_by_direction(Eigen::Matrix4f transform, int direction_index);
     static void get_2d_matches(cv::Mat old_project, cv::Mat new_project, double distance_threshold,
         std::vector<cv::Point2f>& trainPoints, std::vector<cv::Point2f>& queryPoints, int direction_index);
-    void draw_matches();
 
 public:
 
