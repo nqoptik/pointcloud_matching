@@ -48,8 +48,6 @@ Configurations::Configurations() {
 
     pos_radius = 0.03;
 
-    draw_old_kpts = false;
-    draw_new_kpts = false;
     draw_old_colour = false;
     draw_new_colour = false;
 }
@@ -221,16 +219,6 @@ void Configurations::readConfig() {
             in >> val;
             pos_radius = val;
         }
-        else if (option.compare("draw_old_kpts") == 0) {
-            bool val;
-            in >> val;
-            draw_old_kpts = val;
-        }
-        else if (option.compare("draw_new_kpts") == 0) {
-            bool val;
-            in >> val;
-            draw_new_kpts = val;
-        }
         else if (option.compare("draw_old_colour") == 0) {
             bool val;
             in >> val;
@@ -276,8 +264,6 @@ void Configurations::readConfig() {
     std::cout << "pi_theta_x:             " << pi_theta_x << "\n";
     std::cout << "pi_theta_y:             " << pi_theta_y << "\n";
     std::cout << "pos_radius:             " << pos_radius << "\n";
-    std::cout << "draw_old_kpts:          " << draw_old_kpts << "\n";
-    std::cout << "draw_new_kpts:          " << draw_new_kpts << "\n";
     std::cout << "draw_old_colour:        " << draw_old_colour << "\n";
     std::cout << "draw_new_colour:        " << draw_new_colour << "\n";
 }

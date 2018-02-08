@@ -365,6 +365,81 @@ void shotDetectDescriptor(
     }
 }
 
+void shotcolorDetectDescriptor(
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_kps, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_kps,
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
+
+    std::cout << "SHOTCOLOR matching.\n";
+    normalizeColours(p_old_pcl);
+    normalizeColours(p_old_pcl);
+    pcl::PointCloud<pcl::Normal>::Ptr p_old_normal(new pcl::PointCloud<pcl::Normal>());
+    pcl::PointCloud<pcl::Normal>::Ptr p_new_normal(new pcl::PointCloud<pcl::Normal>());
+    pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> norm_est;
+    pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>());
+    norm_est.setSearchMethod(tree);
+    norm_est.setKSearch(10);
+    norm_est.setInputCloud(p_old_pcl);
+    norm_est.compute(*p_old_normal);
+    std::cout << "p_old_normal: " << p_old_normal->points.size() << "\n";
+    norm_est.setInputCloud(p_new_pcl);
+    norm_est.compute(*p_new_normal);
+    std::cout << "p_new_normal: " << p_new_normal->points.size() << "\n";
+
+    double shot_radius = Configurations::getInstance()->shot_radius;
+    pcl::SHOTColorEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::SHOT1344> descr_est;
+    descr_est.setRadiusSearch (shot_radius);
+    descr_est.setInputCloud (p_old_kps);
+    descr_est.setInputNormals (p_old_normal);
+    descr_est.setSearchSurface (p_old_pcl);
+    pcl::PointCloud<pcl::SHOT1344>::Ptr p_old_shot(new pcl::PointCloud<pcl::SHOT1344> ());
+    descr_est.compute (*p_old_shot);
+    std::cout << "p_old_shot: " << p_old_shot->points.size() << "\n";
+
+    descr_est.setInputCloud (p_new_kps);
+    descr_est.setInputNormals (p_new_normal);
+    descr_est.setSearchSurface (p_new_pcl);
+    pcl::PointCloud<pcl::SHOT1344>::Ptr p_new_shot(new pcl::PointCloud<pcl::SHOT1344> ());
+    descr_est.compute (*p_new_shot);
+    std::cout << "p_new_shot: " << p_new_shot->points.size() << "\n";
+
+    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kps;
+    kd_new_kps.setInputCloud (p_new_kps);
+    double pos_radius = Configurations::getInstance()->pos_radius;
+    for (size_t i = 0; i < p_old_kps->points.size(); ++i) {
+        std::cout << "Step " << i << " / " << p_old_kps->points.size() << "\n";
+        pcl::PointXYZRGB old_kpt = p_old_kps->points[i];
+
+        std::vector<int> pos_refer_index;
+        std::vector<float> pos_refer_sqd;
+        if (!kd_new_kps.radiusSearch(old_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
+            std::cout << " !not found possible refer keypoint.\n";
+            continue;
+        }
+        int new_des_idx = -1;
+        float min_des_d = 1e10;
+        for (size_t j = 0; j < pos_refer_index.size(); ++j) {
+            int new_des_idx_ = pos_refer_index[j];
+            float des_d = 0;
+            for (int k = 0; k < 1344; ++k) {
+                des_d += (p_old_shot->points[i].descriptor[k] - p_new_shot->points[new_des_idx_].descriptor[k]) * 
+                    (p_old_shot->points[i].descriptor[k] - p_new_shot->points[new_des_idx_].descriptor[k]);
+            }
+            des_d = sqrt(des_d);
+            if (des_d < min_des_d) {
+                min_des_d = des_d;
+                new_des_idx = new_des_idx_;
+            }
+        }
+        pcl::PointXYZRGB old_part = old_kpt;
+        pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
+        if (new_des_idx != -1) {
+            p_old_parts->points.push_back(old_part);
+            p_new_parts->points.push_back(new_part);
+        }
+    }
+}
+
 void fpfhDetectDescriptor(
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_kps, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_kps,
@@ -552,6 +627,9 @@ int configValueByOption(int option, char* _p) {
             else if (i == 6) {
                 commandOption.descriptor_detect_methos.f6 = &fpfhDetectDescriptor;
             }
+            else if (i == 7) {
+                commandOption.descriptor_detect_methos.f6 = &shotcolorDetectDescriptor;
+            }
         }
         else if (option == 2)
         {
@@ -653,14 +731,12 @@ int main (int argc, char* argv[]) {
     commandOption.descriptor_detect_methos.f6(p_old_pcl, p_new_pcl, p_old_kps, p_new_kps, p_old_parts, p_new_parts);
     std::cout << "p_old_parts: " << p_old_parts->points.size() << "\n";
     std::cout << "p_new_parts: " << p_new_parts->points.size() << "\n";
-    if (commandOption.inter) {
-        std::ofstream ofs_pairs(commandOption.matchingPairs);
-        for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
-            ofs_pairs << p_old_parts->points[i].x << " " << p_old_parts->points[i].y << " " << p_old_parts->points[i].z << " " <<
-                p_new_parts->points[i].x << " " << p_new_parts->points[i].y << " " << p_new_parts->points[i].z << "\n";
-        }
-        ofs_pairs.close();
+    std::ofstream ofs_pairs(commandOption.matchingPairs);
+    for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
+        ofs_pairs << p_old_parts->points[i].x << " " << p_old_parts->points[i].y << " " << p_old_parts->points[i].z << " " <<
+            p_new_parts->points[i].x << " " << p_new_parts->points[i].y << " " << p_new_parts->points[i].z << "\n";
     }
+    ofs_pairs.close();
 
     // Draw matches;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_draw(new pcl::PointCloud<pcl::PointXYZRGB>());
