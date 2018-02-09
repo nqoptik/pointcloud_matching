@@ -21,7 +21,7 @@
 #include <pcl/registration/icp.h>
 
 #define UNVALID -1
-#define ERROR  "Have problem when parsing command option"
+#define ERROR  "There is a problem when parsing command option"
 #define HELP "\nUSAGE: \n" \
                     "\t-kp <option> : keypoints detect method. \n" \
                         "\t\tiss\n" \

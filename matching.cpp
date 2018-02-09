@@ -130,8 +130,6 @@ void drawMatchingResults(std::string fileName, pcl::PointCloud<pcl::PointXYZRGB>
     std::cout << fileName << " saved.\n";
 }
 
-using namespace std;
-
 /* keypoints detect method */
 void issDetectKeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_kps, bool isBefore) {
 
@@ -379,6 +377,7 @@ void shotDetectDescriptor(
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
 
     std::cout << "SHOT matching.\n";
+    // Normal estimation
     pcl::PointCloud<pcl::Normal>::Ptr p_old_normal(new pcl::PointCloud<pcl::Normal>());
     pcl::PointCloud<pcl::Normal>::Ptr p_new_normal(new pcl::PointCloud<pcl::Normal>());
     pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> norm_est;
@@ -392,6 +391,7 @@ void shotDetectDescriptor(
     norm_est.compute(*p_new_normal);
     std::cout << "p_new_normal: " << p_new_normal->points.size() << "\n";
 
+    // SHOT extraction
     double shot_radius = Configurations::getInstance()->shot_radius;
     pcl::SHOTEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::SHOT352> descr_est;
     descr_est.setRadiusSearch (shot_radius);
@@ -409,17 +409,17 @@ void shotDetectDescriptor(
     descr_est.compute (*p_new_shot);
     std::cout << "p_new_shot: " << p_new_shot->points.size() << "\n";
 
+    // Threshold estimation
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kps;
     kd_new_kps.setInputCloud (p_new_kps);
     double pos_radius = Configurations::getInstance()->pos_radius;
+    std::vector<float> des_distances;
     for (size_t i = 0; i < p_old_kps->points.size(); ++i) {
-        std::cout << "Step " << i << " / " << p_old_kps->points.size() << "\n";
         pcl::PointXYZRGB old_kpt = p_old_kps->points[i];
 
         std::vector<int> pos_refer_index;
         std::vector<float> pos_refer_sqd;
         if (!kd_new_kps.radiusSearch(old_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
-            std::cout << " !not found possible refer keypoint.\n";
             continue;
         }
         int new_des_idx = -1;
@@ -440,6 +440,44 @@ void shotDetectDescriptor(
         pcl::PointXYZRGB old_part = old_kpt;
         pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
         if (new_des_idx != -1) {
+            des_distances.push_back(min_des_d);
+        }
+    }
+    float des_distance_avg = 0;
+    for (size_t i = 0; i < des_distances.size(); ++i) {
+        des_distance_avg += des_distances[i];
+    }
+    des_distance_avg /= des_distances.size();
+    float des_distance_threshold = des_distance_avg;
+    std::cout << "des_distance_threshold: " << des_distance_threshold << "\n";
+
+    // Matching
+    for (size_t i = 0; i < p_old_kps->points.size(); ++i) {
+        pcl::PointXYZRGB old_kpt = p_old_kps->points[i];
+
+        std::vector<int> pos_refer_index;
+        std::vector<float> pos_refer_sqd;
+        if (!kd_new_kps.radiusSearch(old_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
+            continue;
+        }
+        int new_des_idx = -1;
+        float min_des_d = 1e10;
+        for (size_t j = 0; j < pos_refer_index.size(); ++j) {
+            int new_des_idx_ = pos_refer_index[j];
+            float des_d = 0;
+            for (int k = 0; k < 352; ++k) {
+                des_d += (p_old_shot->points[i].descriptor[k] - p_new_shot->points[new_des_idx_].descriptor[k]) * 
+                    (p_old_shot->points[i].descriptor[k] - p_new_shot->points[new_des_idx_].descriptor[k]);
+            }
+            des_d = sqrt(des_d);
+            if (des_d < min_des_d) {
+                min_des_d = des_d;
+                new_des_idx = new_des_idx_;
+            }
+        }
+        pcl::PointXYZRGB old_part = old_kpt;
+        pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
+        if (min_des_d < des_distance_threshold) {
             p_old_parts->points.push_back(old_part);
             p_new_parts->points.push_back(new_part);
         }
@@ -454,6 +492,7 @@ void shotcolorDetectDescriptor(
     std::cout << "SHOTCOLOR matching.\n";
     normalizeColours(p_old_pcl);
     normalizeColours(p_new_pcl);
+    // Normal estimation
     pcl::PointCloud<pcl::Normal>::Ptr p_old_normal(new pcl::PointCloud<pcl::Normal>());
     pcl::PointCloud<pcl::Normal>::Ptr p_new_normal(new pcl::PointCloud<pcl::Normal>());
     pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> norm_est;
@@ -467,6 +506,7 @@ void shotcolorDetectDescriptor(
     norm_est.compute(*p_new_normal);
     std::cout << "p_new_normal: " << p_new_normal->points.size() << "\n";
 
+    // SHOTCOLOR extraction
     double shot_radius = Configurations::getInstance()->shot_radius;
     pcl::SHOTColorEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::SHOT1344> descr_est;
     descr_est.setRadiusSearch (shot_radius);
@@ -484,17 +524,17 @@ void shotcolorDetectDescriptor(
     descr_est.compute (*p_new_shot);
     std::cout << "p_new_shot: " << p_new_shot->points.size() << "\n";
 
+    // Threshold estimation
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kps;
     kd_new_kps.setInputCloud (p_new_kps);
     double pos_radius = Configurations::getInstance()->pos_radius;
+    std::vector<float> des_distances;
     for (size_t i = 0; i < p_old_kps->points.size(); ++i) {
-        std::cout << "Step " << i << " / " << p_old_kps->points.size() << "\n";
         pcl::PointXYZRGB old_kpt = p_old_kps->points[i];
 
         std::vector<int> pos_refer_index;
         std::vector<float> pos_refer_sqd;
         if (!kd_new_kps.radiusSearch(old_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
-            std::cout << " !not found possible refer keypoint.\n";
             continue;
         }
         int new_des_idx = -1;
@@ -515,6 +555,44 @@ void shotcolorDetectDescriptor(
         pcl::PointXYZRGB old_part = old_kpt;
         pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
         if (new_des_idx != -1) {
+            des_distances.push_back(min_des_d);
+        }
+    }
+    float des_distance_avg = 0;
+    for (size_t i = 0; i < des_distances.size(); ++i) {
+        des_distance_avg += des_distances[i];
+    }
+    des_distance_avg /= des_distances.size();
+    float des_distance_threshold = des_distance_avg;
+    std::cout << "des_distance_threshold: " << des_distance_threshold << "\n";
+
+    //Matching
+    for (size_t i = 0; i < p_old_kps->points.size(); ++i) {
+        pcl::PointXYZRGB old_kpt = p_old_kps->points[i];
+
+        std::vector<int> pos_refer_index;
+        std::vector<float> pos_refer_sqd;
+        if (!kd_new_kps.radiusSearch(old_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
+            continue;
+        }
+        int new_des_idx = -1;
+        float min_des_d = 1e10;
+        for (size_t j = 0; j < pos_refer_index.size(); ++j) {
+            int new_des_idx_ = pos_refer_index[j];
+            float des_d = 0;
+            for (int k = 0; k < 1344; ++k) {
+                des_d += (p_old_shot->points[i].descriptor[k] - p_new_shot->points[new_des_idx_].descriptor[k]) * 
+                    (p_old_shot->points[i].descriptor[k] - p_new_shot->points[new_des_idx_].descriptor[k]);
+            }
+            des_d = sqrt(des_d);
+            if (des_d < min_des_d) {
+                min_des_d = des_d;
+                new_des_idx = new_des_idx_;
+            }
+        }
+        pcl::PointXYZRGB old_part = old_kpt;
+        pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
+        if (min_des_d < des_distance_threshold) {
             p_old_parts->points.push_back(old_part);
             p_new_parts->points.push_back(new_part);
         }
@@ -527,6 +605,7 @@ void fpfhDetectDescriptor(
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
 
     std::cout << "FPFH matching.\n";
+    // Normal estimation
     pcl::PointCloud<pcl::Normal>::Ptr p_old_normal(new pcl::PointCloud<pcl::Normal>());
     pcl::PointCloud<pcl::Normal>::Ptr p_new_normal(new pcl::PointCloud<pcl::Normal>());
     pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> norm_est;
@@ -540,6 +619,7 @@ void fpfhDetectDescriptor(
     norm_est.compute(*p_new_normal);
     std::cout << "p_new_normal: " << p_new_normal->points.size() << "\n";
 
+    // Take keypoints' index
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_pcl;
     kd_old_pcl.setInputCloud (p_old_pcl);
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_pcl;
@@ -570,6 +650,7 @@ void fpfhDetectDescriptor(
     }
     std::cout << "new_kpt_idx_in_pcl: " << new_kpt_idx_in_pcl->size() << "\n";
 
+    // FPFH estimation
     double fpfh_radius = Configurations::getInstance()->fpfh_radius;
     pcl::FPFHEstimationOMP<pcl::PointXYZRGB, pcl::Normal, pcl::FPFHSignature33> descr_est;
     norm_est.setSearchMethod(tree);
@@ -588,17 +669,17 @@ void fpfhDetectDescriptor(
     descr_est.compute (*p_new_fpfh);
     std::cout << "p_new_fpfh: " << p_new_fpfh->points.size() << "\n";
 
+    // Threshold estimation
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kps;
     kd_new_kps.setInputCloud (p_new_kps);
     double pos_radius = Configurations::getInstance()->pos_radius;
+    std::vector<float> des_distances;
     for (size_t i = 0; i < p_old_kps->points.size(); ++i) {
-        std::cout << "Step " << i << " / " << p_old_kps->points.size() << "\n";
         pcl::PointXYZRGB old_kpt = p_old_kps->points[i];
 
         std::vector<int> pos_refer_index;
         std::vector<float> pos_refer_sqd;
         if (!kd_new_kps.radiusSearch(old_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
-            std::cout << " !not found possible refer keypoint.\n";
             continue;
         }
         int new_des_idx = -1;
@@ -619,6 +700,44 @@ void fpfhDetectDescriptor(
         pcl::PointXYZRGB old_part = old_kpt;
         pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
         if (new_des_idx != -1) {
+            des_distances.push_back(min_des_d);
+        }
+    }
+    float des_distance_avg = 0;
+    for (size_t i = 0; i < des_distances.size(); ++i) {
+        des_distance_avg += des_distances[i];
+    }
+    des_distance_avg /= des_distances.size();
+    float des_distance_threshold = des_distance_avg;
+    std::cout << "des_distance_threshold: " << des_distance_threshold << "\n";
+
+    //Matching
+    for (size_t i = 0; i < p_old_kps->points.size(); ++i) {
+        pcl::PointXYZRGB old_kpt = p_old_kps->points[i];
+
+        std::vector<int> pos_refer_index;
+        std::vector<float> pos_refer_sqd;
+        if (!kd_new_kps.radiusSearch(old_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
+            continue;
+        }
+        int new_des_idx = -1;
+        float min_des_d = 1e10;
+        for (size_t j = 0; j < pos_refer_index.size(); ++j) {
+            int new_des_idx_ = pos_refer_index[j];
+            float des_d = 0;
+            for (int k = 0; k < 33; ++k) {
+                des_d += (p_old_fpfh->points[i].histogram[k] - p_new_fpfh->points[new_des_idx_].histogram[k]) * 
+                    (p_old_fpfh->points[i].histogram[k] - p_new_fpfh->points[new_des_idx_].histogram[k]);
+            }
+            des_d = sqrt(des_d);
+            if (des_d < min_des_d) {
+                min_des_d = des_d;
+                new_des_idx = new_des_idx_;
+            }
+        }
+        pcl::PointXYZRGB old_part = old_kpt;
+        pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
+        if (min_des_d < des_distance_threshold) {
             p_old_parts->points.push_back(old_part);
             p_new_parts->points.push_back(new_part);
         }
@@ -627,22 +746,22 @@ void fpfhDetectDescriptor(
 
 void PrintMatchingOption (char* para, int option) {
     if (para == NULL || option >= sizeof(para)/sizeof(para[0])) {
-        cout << ERROR <<  endl;
-        cout << HELP << endl;
+        std::cout << ERROR << "\n";
+        std::cout << HELP << "\n";
         return;
     }
 
-    cout << "not exists " << para << " for " << options[option] << endl;
+    std::cout << "not exists " << para << " for " << options[option] << "\n";
 }
 
 int getOption (char* _p) {
     if (_p == NULL) {
-        cout << ERROR << endl;
-        cout << HELP << endl;
+        std::cout << ERROR << "\n";
+        std::cout << HELP << "\n";
         return UNVALID;
     }
 
-    string para(_p);
+    std::string para(_p);
     int optionNum = sizeof(options)/sizeof(options[0]);
     // loop and compare
     for (int i = 0; i < optionNum; i++) {
@@ -651,17 +770,17 @@ int getOption (char* _p) {
         }
     }
 
-    cout << "not exists " << para << " options" << endl;
+    std::cout << "not exists " << para << " options" << "\n";
     return UNVALID;
 }
 
 
 int configValueByOption(int option, char* _p) {
-        string para(_p);
+        std::string para(_p);
 
         if (_p == NULL  || para.compare("") == 0 || option >= sizeof(options)/sizeof(options[0])) {
-            cout << ERROR << endl;
-            cout << HELP << endl;
+            std::cout << ERROR << "\n";
+            std::cout << HELP << "\n";
             return UNVALID;
 	}
 	
@@ -676,7 +795,7 @@ int configValueByOption(int option, char* _p) {
             }
         }
 
-        // noise, have 3 method
+        // noise, there are 3 methods
         if (option == 0) {
             if (i > 2)
                 goto error;
@@ -692,7 +811,7 @@ int configValueByOption(int option, char* _p) {
             }
 
         }
-        // down sample, have two method
+        // down sample, there are two methods
         else if (option == 1) {
             if (i <= 2)
                 goto error;
@@ -762,15 +881,15 @@ int main (int argc, char* argv[]) {
 
                 // crash program when param is not exists
                 if (optionIndex == -1) {
-                    cout << ERROR << endl;
-                    cout << HELP << endl;
+                    std::cout << ERROR << "\n";
+                    std::cout << HELP << "\n";
                     return UNVALID;
                 }
             }
             else {
                 if (optionIndex == -1 || configValueByOption(optionIndex, argv[i]) == -1) {
-                    cout << ERROR << endl;
-                    cout << HELP << endl;
+                    std::cout << ERROR << "\n";
+                    std::cout << HELP << "\n";
                     return UNVALID;
                 }
 
