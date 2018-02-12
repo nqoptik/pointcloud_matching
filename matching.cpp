@@ -181,9 +181,9 @@ void harris3dDetechkeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::
     harris3d.setRefine(false);
     harris3d.setInputCloud(p_pcl);
     if (isBefore) {
-        for (float hariss_octave = 1.0; hariss_octave <= 1.0; hariss_octave += 1.0) {
+        for (float hariss_octave = 1.0; hariss_octave <= 2.0; hariss_octave += 1.0) {
             pcl::PointCloud<pcl::PointXYZI>::Ptr p_xyzi_kps(new pcl::PointCloud<pcl::PointXYZI>);
-            harris3d.setRadius(harris3d_radius*hariss_octave*2);
+            harris3d.setRadius(harris3d_radius*hariss_octave);
             harris3d.compute (*p_xyzi_kps);
             std::cout << "p_xyzi_kps: " << p_xyzi_kps->points.size() << "\n";
             for (size_t i = 0; i < p_xyzi_kps->points.size(); ++i) {
@@ -410,6 +410,8 @@ void shotDetectDescriptor(
     std::cout << "p_new_shot: " << p_new_shot->points.size() << "\n";
 
     // Threshold estimation
+    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_kps;
+    kd_old_kps.setInputCloud (p_old_kps);
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kps;
     kd_new_kps.setInputCloud (p_new_kps);
     double pos_radius = Configurations::getInstance()->pos_radius;
@@ -428,7 +430,7 @@ void shotDetectDescriptor(
             int new_des_idx_ = pos_refer_index[j];
             float des_d = 0;
             for (int k = 0; k < 352; ++k) {
-                des_d += (p_old_shot->points[i].descriptor[k] - p_new_shot->points[new_des_idx_].descriptor[k]) * 
+                des_d += (p_old_shot->points[i].descriptor[k] - p_new_shot->points[new_des_idx_].descriptor[k]) *
                     (p_old_shot->points[i].descriptor[k] - p_new_shot->points[new_des_idx_].descriptor[k]);
             }
             des_d = sqrt(des_d);
@@ -475,11 +477,32 @@ void shotDetectDescriptor(
                 new_des_idx = new_des_idx_;
             }
         }
-        pcl::PointXYZRGB old_part = old_kpt;
-        pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
         if (min_des_d < des_distance_threshold) {
-            p_old_parts->points.push_back(old_part);
-            p_new_parts->points.push_back(new_part);
+            pcl::PointXYZRGB new_kpt = p_new_kps->points[new_des_idx];
+            if (!kd_old_kps.radiusSearch(new_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
+                continue;
+            }
+            int old_des_idx = -1;
+            float min_des_d_old = 1e10;
+            for (size_t j = 0; j < pos_refer_index.size(); ++j) {
+                int old_des_idx_ = pos_refer_index[j];
+                float des_d = 0;
+                for (int k = 0; k < 352; ++k) {
+                    des_d += (p_old_shot->points[old_des_idx_].descriptor[k] - p_new_shot->points[new_des_idx].descriptor[k]) *
+                        (p_old_shot->points[old_des_idx_].descriptor[k] - p_new_shot->points[new_des_idx].descriptor[k]);
+                }
+                des_d = sqrt(des_d);
+                if (des_d < min_des_d_old) {
+                    min_des_d_old = des_d;
+                    old_des_idx = old_des_idx_;
+                }
+            }
+            if (old_des_idx == i) {
+                pcl::PointXYZRGB old_part = old_kpt;
+                pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
+                p_old_parts->points.push_back(old_part);
+                p_new_parts->points.push_back(new_part);
+            }
         }
     }
 }
@@ -525,6 +548,8 @@ void shotcolorDetectDescriptor(
     std::cout << "p_new_shot: " << p_new_shot->points.size() << "\n";
 
     // Threshold estimation
+    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_kps;
+    kd_old_kps.setInputCloud (p_old_kps);
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kps;
     kd_new_kps.setInputCloud (p_new_kps);
     double pos_radius = Configurations::getInstance()->pos_radius;
@@ -590,11 +615,32 @@ void shotcolorDetectDescriptor(
                 new_des_idx = new_des_idx_;
             }
         }
-        pcl::PointXYZRGB old_part = old_kpt;
-        pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
         if (min_des_d < des_distance_threshold) {
-            p_old_parts->points.push_back(old_part);
-            p_new_parts->points.push_back(new_part);
+            pcl::PointXYZRGB new_kpt = p_new_kps->points[new_des_idx];
+            if (!kd_old_kps.radiusSearch(new_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
+                continue;
+            }
+            int old_des_idx = -1;
+            float min_des_d_old = 1e10;
+            for (size_t j = 0; j < pos_refer_index.size(); ++j) {
+                int old_des_idx_ = pos_refer_index[j];
+                float des_d = 0;
+                for (int k = 0; k < 1344; ++k) {
+                    des_d += (p_old_shot->points[old_des_idx_].descriptor[k] - p_new_shot->points[new_des_idx].descriptor[k]) *
+                        (p_old_shot->points[old_des_idx_].descriptor[k] - p_new_shot->points[new_des_idx].descriptor[k]);
+                }
+                des_d = sqrt(des_d);
+                if (des_d < min_des_d_old) {
+                    min_des_d_old = des_d;
+                    old_des_idx = old_des_idx_;
+                }
+            }
+            if (old_des_idx == i) {
+                pcl::PointXYZRGB old_part = old_kpt;
+                pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
+                p_old_parts->points.push_back(old_part);
+                p_new_parts->points.push_back(new_part);
+            }
         }
     }
 }
@@ -670,6 +716,8 @@ void fpfhDetectDescriptor(
     std::cout << "p_new_fpfh: " << p_new_fpfh->points.size() << "\n";
 
     // Threshold estimation
+    pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_old_kps;
+    kd_old_kps.setInputCloud (p_old_kps);
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_new_kps;
     kd_new_kps.setInputCloud (p_new_kps);
     double pos_radius = Configurations::getInstance()->pos_radius;
@@ -688,7 +736,7 @@ void fpfhDetectDescriptor(
             int new_des_idx_ = pos_refer_index[j];
             float des_d = 0;
             for (int k = 0; k < 33; ++k) {
-                des_d += (p_old_fpfh->points[i].histogram[k] - p_new_fpfh->points[new_des_idx_].histogram[k]) * 
+                des_d += (p_old_fpfh->points[i].histogram[k] - p_new_fpfh->points[new_des_idx_].histogram[k]) *
                     (p_old_fpfh->points[i].histogram[k] - p_new_fpfh->points[new_des_idx_].histogram[k]);
             }
             des_d = sqrt(des_d);
@@ -735,11 +783,32 @@ void fpfhDetectDescriptor(
                 new_des_idx = new_des_idx_;
             }
         }
-        pcl::PointXYZRGB old_part = old_kpt;
-        pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];
         if (min_des_d < des_distance_threshold) {
-            p_old_parts->points.push_back(old_part);
-            p_new_parts->points.push_back(new_part);
+            pcl::PointXYZRGB new_kpt = p_new_kps->points[new_des_idx];
+            if (!kd_old_kps.radiusSearch(new_kpt, pos_radius, pos_refer_index, pos_refer_sqd) > 0) {
+                continue;
+            }
+            int old_des_idx = -1;
+            float min_des_d_old = 1e10;
+            for (size_t j = 0; j < pos_refer_index.size(); ++j) {
+                int old_des_idx_ = pos_refer_index[j];
+                float des_d = 0;
+                for (int k = 0; k < 33; ++k) {
+                    des_d += (p_old_fpfh->points[old_des_idx_].histogram[k] - p_new_fpfh->points[new_des_idx].histogram[k]) *
+                        (p_old_fpfh->points[old_des_idx_].histogram[k] - p_new_fpfh->points[new_des_idx].histogram[k]);
+                }
+                des_d = sqrt(des_d);
+                if (des_d < min_des_d_old) {
+                    min_des_d_old = des_d;
+                    old_des_idx = old_des_idx_;
+                }
+            }
+            if (old_des_idx == i) {
+                pcl::PointXYZRGB old_part = old_kpt;
+                pcl::PointXYZRGB new_part = p_new_kps->points[new_des_idx];            
+                p_old_parts->points.push_back(old_part);
+                p_new_parts->points.push_back(new_part);
+            }
         }
     }
 }
