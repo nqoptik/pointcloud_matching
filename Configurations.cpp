@@ -6,10 +6,6 @@ Configurations::Configurations() {
 
     leaf_size = 0.001;
 
-    offset_x = 0.0;
-    offset_y = 0.0;
-    offset_z = 0.0;
-
     sor_neighbours = 50;
     sor_stdev_thresh = 1.0;
     sor_iterations = 5;
@@ -68,21 +64,6 @@ void Configurations::readConfig() {
             double val;
             in >> val;
             leaf_size = val;
-        }
-        else if (option.compare("offset_x") == 0) {
-            double val;
-            in >> val;
-            offset_x = val;
-        }
-        else if (option.compare("offset_y") == 0) {
-            double val;
-            in >> val;
-            offset_y = val;
-        }
-        else if (option.compare("offset_z") == 0) {
-            double val;
-            in >> val;
-            offset_z = val;
         }
         else if (option.compare("sor_neighbours") == 0) {
             int val;
@@ -234,9 +215,6 @@ void Configurations::readConfig() {
 
     // Print configurations
     std::cout << "leaf_size:              " << leaf_size << "\n";
-    std::cout << "offset_x:               " << offset_x << "\n";
-    std::cout << "offset_y:               " << offset_y << "\n";
-    std::cout << "offset_z:               " << offset_z << "\n";
     std::cout << "sor_neighbours:         " << sor_neighbours << "\n";
     std::cout << "sor_stdev_thresh:       " << sor_stdev_thresh << "\n";
     std::cout << "sor_iterations:         " << sor_iterations << "\n";

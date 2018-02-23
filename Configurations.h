@@ -17,9 +17,6 @@ public:
     ~Configurations();
 
     double leaf_size;
-    double offset_x;
-    double offset_y;
-    double offset_z;
 
     int sor_neighbours;
     double sor_stdev_thresh;

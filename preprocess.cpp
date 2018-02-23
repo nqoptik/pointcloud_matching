@@ -323,16 +323,13 @@ int main (int argc, char* argv[]) {
     liblas::Header const& header = reader.GetHeader();
     std::cout << "las_file size: " << header.GetPointRecordsCount() << "\n";
 
-    double offset_x = Configurations::getInstance()->offset_x;
-    double offset_y = Configurations::getInstance()->offset_y;
-    double offset_z = Configurations::getInstance()->offset_z;
     while (reader.ReadNextPoint()) {
 
         liblas::Point const& p = reader.GetPoint();
         pcl::PointXYZRGB cur_point;
-        cur_point.x = p.GetX() - offset_x;
-        cur_point.y = p.GetY() - offset_y;
-        cur_point.z = p.GetZ() - offset_z;
+        cur_point.x = p.GetX();
+        cur_point.y = p.GetY();
+        cur_point.z = p.GetZ();
         cur_point.b = p.GetColor().GetBlue()/256;
         cur_point.g = p.GetColor().GetGreen()/256;
         cur_point.r = p.GetColor().GetRed()/256;
