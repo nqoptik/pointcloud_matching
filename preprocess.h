@@ -86,7 +86,7 @@ const char* options[] = {
             "-d",
 
             // intermediate
-            "-inter", // defaule is no id not exists
+            "-inter", // default is no id not exists
 
             // input file
             "-i",

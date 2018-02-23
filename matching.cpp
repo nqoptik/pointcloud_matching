@@ -173,7 +173,7 @@ void susanDetectKeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::Poi
     susan_detector.compute(*p_kps);
 }
 
-void harris3dDetechkeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_kps, bool isBefore) {
+void harris3dDetectkeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_kps, bool isBefore) {
 
     std::cout << "Harris 3d keypoint detection.\n";
     double harris3d_radius = Configurations::getInstance()->harris3d_radius;
@@ -216,7 +216,7 @@ void harris3dDetechkeypoints(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::
     p_kps->height = 1;
 }
 
-void twoDimensionDetechKeypoints(
+void twoDimensionDetectKeypoints(
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_kps, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_kps,
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
@@ -876,7 +876,7 @@ int configValueByOption(int option, char* _p) {
                 commandOption.keypoint_detect_method.f3 = &susanDetectKeypoints;
             }
             else if (i == 2) {
-                commandOption.keypoint_detect_method.f3 = &harris3dDetechkeypoints;
+                commandOption.keypoint_detect_method.f3 = &harris3dDetectkeypoints;
             }
 
         }
@@ -885,7 +885,7 @@ int configValueByOption(int option, char* _p) {
             if (i <= 2)
                 goto error;
             if (i == 3) {
-                commandOption.descriptor_detect_methos.f6 = &twoDimensionDetechKeypoints;
+                commandOption.descriptor_detect_methos.f6 = &twoDimensionDetectKeypoints;
             }
             else if (i == 4) {
                 commandOption.descriptor_detect_methos.f6 = &icpDetectDescriptor;
@@ -939,32 +939,33 @@ error:
 }
 
 int main (int argc, char* argv[]) {
+
 	int optionIndex = -1;
 	
     Configurations::getInstance()->readConfig();
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
 	// loop thought option parameter
-        for (int i = 1; i < argc; i++) {
-            if (i % 2 == 1) {
-                optionIndex = getOption (argv[i]);
+    for (int i = 1; i < argc; i++) {
+        if (i % 2 == 1) {
+            optionIndex = getOption (argv[i]);
 
-                // crash program when param is not exists
-                if (optionIndex == -1) {
-                    std::cout << ERROR << "\n";
-                    std::cout << HELP << "\n";
-                    return UNVALID;
-                }
+            // crash program when param is not exists
+            if (optionIndex == -1) {
+                std::cout << ERROR << "\n";
+                std::cout << HELP << "\n";
+                return UNVALID;
             }
-            else {
-                if (optionIndex == -1 || configValueByOption(optionIndex, argv[i]) == -1) {
-                    std::cout << ERROR << "\n";
-                    std::cout << HELP << "\n";
-                    return UNVALID;
-                }
+        }
+        else {
+            if (optionIndex == -1 || configValueByOption(optionIndex, argv[i]) == -1) {
+                std::cout << ERROR << "\n";
+                std::cout << HELP << "\n";
+                return UNVALID;
+            }
 
-                // reset
-                optionIndex = -1;
-            }
+            // reset
+            optionIndex = -1;
+        }
 	}
 
     // Load point clouds
