@@ -32,7 +32,7 @@
                         "\t\tY/y or Yes/yes\n" \
                         "\t\tN/n or No/no\n" \
                     "\t-i <input_file>\n" \
-                    "\t-o <output_file>\n"
+                    "\t-ofs <offset_file>\n"
 
 typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr (*FUNCTION)(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 struct CommandOption {
@@ -40,7 +40,7 @@ struct CommandOption {
     FUNCTION down_sample = NULL;
     bool inter = false;
     char* input = NULL;
-    char* output = NULL;
+    char* offset = NULL;
     char* interNoise = NULL;
     char* interDownSample = NULL;
 } commandOption;
@@ -92,7 +92,7 @@ const char* options[] = {
             "-i",
 
             // output file
-            "-o",
+            "-ofs",
 
             //char* interNoise = NULL;
             "-in",

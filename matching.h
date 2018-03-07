@@ -66,6 +66,8 @@ struct CommandOption {
     char* interKeypoint1 = NULL;
     char* interKeypoint2 = NULL;
     char* matchingPairs = NULL;
+    char* offset1 = NULL;
+    char* offset2 = NULL;
 } commandOption;
 
 /* keypoints detect method */
@@ -128,7 +130,13 @@ const char* options[] = {
             "-ikp2",
 
             // matching pairs
-            "-mp"
+            "-mp",
+
+            // offset 1
+            "-ofs1",
+
+            // offset 2
+            "-ofs2"
 };
 
 #endif

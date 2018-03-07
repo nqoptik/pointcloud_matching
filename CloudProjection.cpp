@@ -183,7 +183,7 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int di
         }
     }
     std::cout << "low high " << low_size << " " << high_size << "\n";
-    if (low_size < 500) return;
+    if (low_size < 200) return;
     double distance_threshold = d_min / low_size;
     int x_size = floor(dx/distance_threshold) + 1;
     int y_size = floor(dy/distance_threshold) + 1;

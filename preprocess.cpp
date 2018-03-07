@@ -268,7 +268,7 @@ int configValueByOption(int option, char* _p) {
              commandOption.input = _p;
         }
         else if (option == 4) {
-            commandOption.output = _p;
+            commandOption.offset = _p;
         }
         else if (option == 5) {
             commandOption.interNoise = _p;
@@ -322,13 +322,24 @@ int main (int argc, char* argv[]) {
     liblas::Header const& header = reader.GetHeader();
     std::cout << "las_file size: " << header.GetPointRecordsCount() << "\n";
 
+    double offset_x, offset_y, offset_z;
+    offset_x = header.GetMinX();
+    offset_y = header.GetMinY();
+    offset_z = header.GetMinZ();
+    std::ofstream ofs_offset(commandOption.offset);
+    ofs_offset << std::fixed << offset_x << " " << std::fixed << offset_y << " " << std::fixed << offset_z;
+    ofs_offset.close();
+    std::cout << "offset_x: " << offset_x << "\n";
+    std::cout << "offset_y: " << offset_y << "\n";
+    std::cout << "offset_z: " << offset_z << "\n";
+
     while (reader.ReadNextPoint()) {
 
         liblas::Point const& p = reader.GetPoint();
         pcl::PointXYZRGB cur_point;
-        cur_point.x = p.GetX();
-        cur_point.y = p.GetY();
-        cur_point.z = p.GetZ();
+        cur_point.x = p.GetX() - offset_x;
+        cur_point.y = p.GetY() - offset_y;
+        cur_point.z = p.GetZ() - offset_z;
         cur_point.b = p.GetColor().GetBlue()/256;
         cur_point.g = p.GetColor().GetGreen()/256;
         cur_point.r = p.GetColor().GetRed()/256;

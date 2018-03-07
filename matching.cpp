@@ -932,6 +932,12 @@ int configValueByOption(int option, char* _p) {
         else if (option == 8) {
             commandOption.matchingPairs = _p;
         }
+        else if (option == 9) {
+            commandOption.offset1 = _p;
+        }
+        else if (option == 10) {
+            commandOption.offset2 = _p;
+        }
         return 1;
 error:
         PrintMatchingOption(_p, option);
@@ -983,6 +989,27 @@ int main (int argc, char* argv[]) {
     }
     std::cout << "p_new_pcl: " << *p_new_pcl << "\n";
 
+    double offset1_x, offset1_y, offset1_z;
+    double offset2_x, offset2_y, offset2_z;
+    double offset_x, offset_y, offset_z;
+    std::ifstream ifs_ofs1(commandOption.offset1);
+    ifs_ofs1 >> std::fixed >> offset1_x;
+    ifs_ofs1 >> std::fixed >> offset1_y;
+    ifs_ofs1 >> std::fixed >> offset1_z;
+    ifs_ofs1.close();
+    std::ifstream ifs_ofs2(commandOption.offset2);
+    ifs_ofs2 >> std::fixed >> offset2_x;
+    ifs_ofs2 >> std::fixed >> offset2_y;
+    ifs_ofs2 >> std::fixed >> offset2_z;
+    ifs_ofs2.close();
+    offset_x = offset2_x - offset1_x;
+    offset_y = offset2_y - offset1_y;
+    offset_z = offset2_z - offset1_z;
+    for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
+        p_new_pcl->points[i].x += offset_x;
+        p_new_pcl->points[i].y += offset_y;
+        p_new_pcl->points[i].z += offset_z;
+    }
     // Detect key points
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_kps(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_kps(new pcl::PointCloud<pcl::PointXYZRGB>());
