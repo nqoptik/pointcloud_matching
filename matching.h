@@ -1,6 +1,8 @@
 #ifndef _MATCHING_H_
 #define _MATCHING_H_
 
+#define PCL_NO_PRECOMPILE
+
 #include <iostream>
 #include <string>
 
