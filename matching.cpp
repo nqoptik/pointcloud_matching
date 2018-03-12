@@ -53,48 +53,40 @@ void drawMatchingResults(std::string fileName, pcl::PointCloud<pcl::PointXYZRGB>
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts,
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
 
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_draw(new pcl::PointCloud<pcl::PointXYZRGB>());
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_draw(new pcl::PointCloud<pcl::PointXYZRGB>());
-    pcl::VoxelGrid<pcl::PointXYZRGB> grid;
     double leaf = Configurations::getInstance()->leaf_size*2;
-    grid.setLeafSize(leaf, leaf, leaf);
-    grid.setInputCloud(p_old_pcl);
-    grid.filter(*p_old_draw);
-    grid.setInputCloud(p_new_pcl);
-    grid.filter(*p_new_draw);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_matches(new pcl::PointCloud<pcl::PointXYZRGB>());
-    for (size_t i = 0; i < p_old_draw->points.size(); ++i) {
+    for (size_t i = 0; i < p_old_pcl->points.size(); ++i) {
         pcl::PointXYZRGB tmp;
         if (Configurations::getInstance()->draw_old_colour) {
-            tmp.r = p_old_draw->points[i].r;
-            tmp.g = p_old_draw->points[i].g;
-            tmp.b = p_old_draw->points[i].b;
+            tmp.r = p_old_pcl->points[i].r;
+            tmp.g = p_old_pcl->points[i].g;
+            tmp.b = p_old_pcl->points[i].b;
         }
         else {
             tmp.r = 0;
             tmp.g = 0;
             tmp.b = 255;
         }
-        tmp.x = p_old_draw->points[i].x;
-        tmp.y = p_old_draw->points[i].y;
-        tmp.z = p_old_draw->points[i].z;
+        tmp.x = p_old_pcl->points[i].x;
+        tmp.y = p_old_pcl->points[i].y;
+        tmp.z = p_old_pcl->points[i].z;
         p_matches->points.push_back(tmp);
     }
-    for (size_t i = 0; i < p_new_draw->points.size(); ++i) {
+    for (size_t i = 0; i < p_new_pcl->points.size(); ++i) {
         pcl::PointXYZRGB tmp;
         if (Configurations::getInstance()->draw_new_colour) {
-            tmp.r = p_new_draw->points[i].r;
-            tmp.g = p_new_draw->points[i].g;
-            tmp.b = p_new_draw->points[i].b;
+            tmp.r = p_new_pcl->points[i].r;
+            tmp.g = p_new_pcl->points[i].g;
+            tmp.b = p_new_pcl->points[i].b;
         }
         else {
             tmp.r = 255;
             tmp.g = 0;
             tmp.b = 0;
         }
-        tmp.x = p_new_draw->points[i].x;
-        tmp.y = p_new_draw->points[i].y;
-        tmp.z = p_new_draw->points[i].z;
+        tmp.x = p_new_pcl->points[i].x;
+        tmp.y = p_new_pcl->points[i].y;
+        tmp.z = p_new_pcl->points[i].z;
         p_matches->points.push_back(tmp);
     }
     for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
@@ -1029,6 +1021,7 @@ int main (int argc, char* argv[]) {
     std::cout << "p_old_parts: " << p_old_parts->points.size() << "\n";
     std::cout << "p_new_parts: " << p_new_parts->points.size() << "\n";
     std::ofstream ofs_pairs(commandOption.matchingPairs);
+	ofs_pairs << std::fixed << offset1_x << " " << std::fixed << offset1_y << " " << std::fixed << offset1_z << "\n";
     for (size_t i = 0; i < p_old_parts->points.size(); ++i) {
         ofs_pairs << p_old_parts->points[i].x << " " << p_old_parts->points[i].y << " " << p_old_parts->points[i].z << " " <<
             p_new_parts->points[i].x << " " << p_new_parts->points[i].y << " " << p_new_parts->points[i].z << "\n";

@@ -20,26 +20,26 @@
       <UniqueIdentifier>{bf7048af-c588-4157-b498-9b81e2a5cbac}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Configurations">
-      <UniqueIdentifier>{4cd24921-cc03-4ec5-a5ea-c04e1f139d5d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\ProProcess">
       <UniqueIdentifier>{b189729b-ec45-4f06-9b18-9bc6e8d20b24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\PreProcess">
+      <UniqueIdentifier>{4cd24921-cc03-4ec5-a5ea-c04e1f139d5d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\preprocess.cpp">
-      <Filter>Source Files\Configurations</Filter>
+      <Filter>Source Files\PreProcess</Filter>
     </ClCompile>
     <ClCompile Include="..\Configurations.cpp">
-      <Filter>Source Files\ProProcess</Filter>
+      <Filter>Source Files\Configurations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\preprocess.h">
-      <Filter>Source Files\Configurations</Filter>
+      <Filter>Source Files\PreProcess</Filter>
     </ClInclude>
     <ClInclude Include="..\Configurations.h">
-      <Filter>Source Files\ProProcess</Filter>
+      <Filter>Source Files\Configurations</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
