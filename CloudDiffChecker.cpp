@@ -481,18 +481,18 @@ void CloudDiffChecker::drawTransformation() {
 
 	std::vector<pcl::PointXYZRGB> ply_scene_cloud;
 	pcl::PointXYZRGB pclxyzrgb;
-	pclxyzrgb.r = 255;
+	pclxyzrgb.r = 0;
 	pclxyzrgb.g = 0;
-	pclxyzrgb.b = 0;
+	pclxyzrgb.b = 255;
 	for (size_t i = 0; i < (*pOld).points.size(); i++) {
 		pclxyzrgb.x = (*pOld).points[i].x;
 		pclxyzrgb.y = (*pOld).points[i].y;
 		pclxyzrgb.z = (*pOld).points[i].z;
 		ply_scene_cloud.push_back(pclxyzrgb);
 	}
-	pclxyzrgb.r = 0;
+	pclxyzrgb.r = 255;
 	pclxyzrgb.g = 0;
-	pclxyzrgb.b = 255;
+	pclxyzrgb.b = 0;
 	for (size_t i = 0; i < (*pNew).points.size(); i++) {
 		pclxyzrgb.x = (*pNew).points[i].x;
 		pclxyzrgb.y = (*pNew).points[i].y;
