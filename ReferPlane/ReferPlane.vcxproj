@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{9E17A547-F1B4-476D-A237-D29DC7081072}</ProjectGuid>
+    <ProjectGuid>{FFCF9334-7715-425F-BEDD-EEE49062EF58}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Matching</RootNamespace>
+    <RootNamespace>ReferPlane</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -151,14 +151,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\CloudProjection.cpp" />
-    <ClCompile Include="..\Configurations.cpp" />
-    <ClCompile Include="..\matching.cpp" />
+    <ClCompile Include="..\CloudDiffChecker.cpp" />
+    <ClCompile Include="..\ReferPlane.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\CloudProjection.h" />
-    <ClInclude Include="..\Configurations.h" />
-    <ClInclude Include="..\matching.h" />
+    <ClInclude Include="..\CloudDiffChecker.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

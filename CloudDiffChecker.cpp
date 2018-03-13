@@ -1,10 +1,10 @@
 #include "CloudDiffChecker.h"
 
 CloudDiffChecker::CloudDiffChecker(pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_pcl,
-		pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_pcl,
-		pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts,
-		pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts,
-		char* matching_results_file) {
+	pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_pcl,
+	pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts,
+	pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts,
+	char* matching_results_file) {
 
 	this->pOld = p_old_pcl;
 	this->pNew = p_new_pcl;
@@ -220,7 +220,7 @@ void CloudDiffChecker::getCloudParameters() {
 }
 
 void CloudDiffChecker::griddingDiff() {
-	std::cout << "griddingDiff" << "\n";
+	std::cout << "griddingDiff.\n";
 	std::vector<std::vector<pcl::PointXYZ> > pOldDiff_grid(x_grid_count * y_grid_count, std::vector<pcl::PointXYZ>());
 	std::vector<std::vector<pcl::PointXYZ> > pNewDiff_grid(x_grid_count * y_grid_count, std::vector<pcl::PointXYZ>());
 	for (size_t i = 0; i < (*pNewDiff).points.size(); i++) {
@@ -245,7 +245,7 @@ void CloudDiffChecker::griddingDiff() {
 			grid_visualization.at<uchar>(y_index, x_index) = 255;
 		}
 	}
-	std::cout << "griddingDiff dome " << "\n";
+	std::cout << "griddingDiff done!\n";
 	//dilate(grid_visualization, grid_visualization, cv::Mat(), cv::Point(-1, -1), 1, 1, 1);
 
 	/* Get cluster's index */
@@ -329,7 +329,6 @@ void CloudDiffChecker::griddingDiff() {
 		pNew_Clouds_resized[i]->width = (*(pNew_Clouds_resized[i])).points.size();
 		pNew_Clouds_resized[i]->height = 1;
 		pNew_Clouds_resized[i]->is_dense = false;
-		std::cout << i << " -> " << (*(pOld_Clouds_resized[i])).points.size() << " " << (*(pNew_Clouds_resized[i])).points.size() << "\n";
 	}
 
 	/* Fit old planes */
@@ -355,7 +354,7 @@ void CloudDiffChecker::griddingDiff() {
 		planeCoefficients[i].o_inliers = inliers.size();
 		planeCoefficients[i].o_total = (*(pOld_Clouds_resized[i])).points.size();
 	}
-	std::cout << "Fit old planes, done!" << "\n";
+	std::cout << "Fit old planes, done!\n";
 
 	/* Fit new planes */
 	for (size_t i = 0; i < contours.size(); i++) {
@@ -379,7 +378,7 @@ void CloudDiffChecker::griddingDiff() {
 		planeCoefficients[i].n_inliers = inliers.size();
 		planeCoefficients[i].n_total = (*(pNew_Clouds_resized[i])).points.size();
 	}
-	std::cout << "Fit new planes, done!" << "\n";
+	std::cout << "Fit new planes, done!\n";
 }
 
 void CloudDiffChecker::getReferPlane() {
@@ -419,7 +418,7 @@ void CloudDiffChecker::getReferPlane() {
 			}
 		}
 	}
-	std::cout << "Get refer planes, done!" << "\n";
+	std::cout << "Get refer planes, done!\n";
 }
 
 void CloudDiffChecker::getProjections() {
@@ -475,7 +474,7 @@ void CloudDiffChecker::getProjections() {
 	pNewProj->width = (*pNewProj).points.size();
 	pNewProj->height = 1;
 	pNewProj->is_dense = false;
-	std::cout << "Get projections, done!" << "\n";
+	std::cout << "Get projections, done!\n";
 }
 
 void CloudDiffChecker::drawTransformation() {
@@ -609,4 +608,5 @@ void CloudDiffChecker::drawTransformation() {
 	trans->width = ply_scene_cloud.size();
 	trans->height = 1;
 	pcl::io::savePLYFile(matching_results_file, *trans, true);
+	std::cout << matching_results_file << " saved.\n";
 }
