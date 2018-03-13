@@ -6,6 +6,8 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <cmath>
+#include <string>
 #include <pcl/io/ply_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/features/normal_3d_omp.h>
@@ -57,15 +59,18 @@ class CloudDiffChecker {
 
 private:
 
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pOld;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pNew;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pOldDiff;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pNewDiff;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr pOld;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr pNew;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr pOldDiff;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr pNewDiff;
 	std::vector<PlaneCoefficients> planeCoefficients;
 	std::vector<int> clusterIndices;
 	std::vector<ReferPlane> referPlanes;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pOldProj;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr pNewProj;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr pOldProj;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr pNewProj;
+	char* matching_results_file;
 	double old_res, new_res;
 	float min_moving_distance;
 	float x_min, x_max;
@@ -80,20 +85,24 @@ private:
 
 public:
 
-	CloudDiffChecker(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pOld, pcl::PointCloud<pcl::PointXYZRGB>::Ptr pNew);
+	CloudDiffChecker(pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_pcl,
+		pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_pcl,
+		pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts,
+		pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts,
+		char* matching_results_file);
 	~CloudDiffChecker();
 
-	static double computeCloudResolution(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr &cloud);
+	static double computeCloudResolution(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud);
 	void determineDiffRegions();
 	void getCloudParameters();
 	void griddingDiff();
 	void getReferPlane();
 	void getProjections();
 	void drawTransformation();
-	static float distance(pcl::PointXYZRGB p1, pcl::PointXYZRGB p2);
-	static float squaredDistance(pcl::PointXYZRGB p1, pcl::PointXYZRGB p2);
-	static pcl::PointXYZRGB projectionOntoPlane(pcl::PointXYZRGB project_point, pcl::PointXYZRGB plane_point, pcl::PointXYZRGB plane_normal);
-	static pcl::PointXYZRGB lineOntoPlane(pcl::PointXYZRGB point, pcl::PointXYZRGB normal, float A, float B, float C, float D);
+	static float distance(pcl::PointXYZ p1, pcl::PointXYZ p2);
+	static float squaredDistance(pcl::PointXYZ p1, pcl::PointXYZ p2);
+	static pcl::PointXYZ projectionOntoPlane(pcl::PointXYZ project_point, pcl::PointXYZ plane_point, pcl::PointXYZ plane_normal);
+	static pcl::PointXYZ lineOntoPlane(pcl::PointXYZ point, pcl::PointXYZ normal, float A, float B, float C, float D);
 };
 
 #endif /* _CLOUDDIFFCHECKER_H_ */

@@ -1,11 +1,18 @@
 #include "CloudDiffChecker.h"
 
-CloudDiffChecker::CloudDiffChecker(pcl::PointCloud<pcl::PointXYZRGB>::Ptr pOld, pcl::PointCloud<pcl::PointXYZRGB>::Ptr pNew) {
+CloudDiffChecker::CloudDiffChecker(pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_pcl,
+		pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_pcl,
+		pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts,
+		pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts,
+		char* matching_results_file) {
 
-	this->pOld = pOld;
-	this->pNew = pNew;
-	pOldDiff = (pcl::PointCloud<pcl::PointXYZRGB>::Ptr)(new pcl::PointCloud<pcl::PointXYZRGB>());
-	pNewDiff = (pcl::PointCloud<pcl::PointXYZRGB>::Ptr)(new pcl::PointCloud<pcl::PointXYZRGB>());
+	this->pOld = p_old_pcl;
+	this->pNew = p_new_pcl;
+	this->p_old_parts = p_old_parts;
+	this->p_new_parts = p_new_parts;
+	this->matching_results_file = matching_results_file;
+	pOldDiff = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
+	pNewDiff = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
 	old_res = 1.0;
 	new_res = 1.0;
 	min_moving_distance = 100.0f;
@@ -32,7 +39,7 @@ CloudDiffChecker::~CloudDiffChecker() {
 
 }
 
-float CloudDiffChecker::distance(pcl::PointXYZRGB p1, pcl::PointXYZRGB p2) {
+float CloudDiffChecker::distance(pcl::PointXYZ p1, pcl::PointXYZ p2) {
 
 	float dx = p1.x - p2.x;
 	float dy = p1.y - p2.y;
@@ -40,7 +47,7 @@ float CloudDiffChecker::distance(pcl::PointXYZRGB p1, pcl::PointXYZRGB p2) {
 	return sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-float CloudDiffChecker::squaredDistance(pcl::PointXYZRGB p1, pcl::PointXYZRGB p2) {
+float CloudDiffChecker::squaredDistance(pcl::PointXYZ p1, pcl::PointXYZ p2) {
 
 	float dx = p1.x - p2.x;
 	float dy = p1.y - p2.y;
@@ -48,38 +55,38 @@ float CloudDiffChecker::squaredDistance(pcl::PointXYZRGB p1, pcl::PointXYZRGB p2
 	return (dx * dx + dy * dy + dz * dz);
 }
 
-pcl::PointXYZRGB CloudDiffChecker::projectionOntoPlane(pcl::PointXYZRGB project_point, pcl::PointXYZRGB plane_point, pcl::PointXYZRGB plane_normal) {
+pcl::PointXYZ CloudDiffChecker::projectionOntoPlane(pcl::PointXYZ project_point, pcl::PointXYZ plane_point, pcl::PointXYZ plane_normal) {
 
 	float t_upper = plane_normal.x * (plane_point.x - project_point.x) + plane_normal.y * (plane_point.y - project_point.y) + plane_normal.z * (plane_point.z - project_point.z);
 	float t_lower = plane_normal.x * plane_normal.x + plane_normal.y * plane_normal.y + plane_normal.z * plane_normal.z;
 	float t = t_upper / t_lower;
-	pcl::PointXYZRGB point;
+	pcl::PointXYZ point;
 	point.x = project_point.x + t * plane_normal.x;
 	point.y = project_point.y + t * plane_normal.y;
 	point.z = project_point.z + t * plane_normal.z;
 	return point;
 }
 
-pcl::PointXYZRGB CloudDiffChecker::lineOntoPlane(pcl::PointXYZRGB point, pcl::PointXYZRGB normal, float A, float B, float C, float D) {
+pcl::PointXYZ CloudDiffChecker::lineOntoPlane(pcl::PointXYZ point, pcl::PointXYZ normal, float A, float B, float C, float D) {
 
 	float t_upper = -(A * point.x + B * point.y + C * point.z + D);
 	float t_lower = A * normal.x + B * normal.y + C * normal.z;
 	float t = t_upper / t_lower;
-	pcl::PointXYZRGB intersec;
+	pcl::PointXYZ intersec;
 	intersec.x = point.x + t * normal.x;
 	intersec.y = point.y + t * normal.y;
 	intersec.z = point.z + t * normal.z;
 	return intersec;
 }
 
-double CloudDiffChecker::computeCloudResolution(const pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr &cloud) {
+double CloudDiffChecker::computeCloudResolution(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud) {
 
 	double resolution = 0.0;
 	int n_points = 0;
 	int n_resolution;
 	std::vector<int> indices(2);
 	std::vector<float> sqr_distances(2);
-	pcl::search::KdTree<pcl::PointXYZRGB> tree;
+	pcl::search::KdTree<pcl::PointXYZ> tree;
 	tree.setInputCloud(cloud);
 	for (size_t i = 0; i < cloud->size(); ++i) {
 		if (!pcl_isfinite((*cloud)[i].x)) {
@@ -101,10 +108,10 @@ void CloudDiffChecker::determineDiffRegions() {
 
 	(*pOldDiff).resize(0);
 	(*pNewDiff).resize(0);
-	pcl::KdTreeFLANN<pcl::PointXYZRGB> kdtree_New;
+	pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_New;
 	kdtree_New.setInputCloud(pNew);
 	for (size_t i = 0; i < (*pOld).points.size(); i++) {
-		pcl::PointXYZRGB searchPoint = (*pOld).points[i];
+		pcl::PointXYZ searchPoint = (*pOld).points[i];
 		std::vector<int> pointIdxRadiusSearch;
 		std::vector<float> pointRadiusSquaredDistance;
 		float radius = min_moving_distance;
@@ -117,10 +124,10 @@ void CloudDiffChecker::determineDiffRegions() {
 	(*pOldDiff).is_dense = false;
 	std::cout << "Old diff size: " << (*pOldDiff).points.size() << "\n";
 
-	pcl::KdTreeFLANN<pcl::PointXYZRGB> kdtree_Old;
+	pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_Old;
 	kdtree_Old.setInputCloud(pOld);
 	for (size_t i = 0; i < (*pNew).points.size(); i++) {
-		pcl::PointXYZRGB searchPoint = (*pNew).points[i];
+		pcl::PointXYZ searchPoint = (*pNew).points[i];
 		std::vector<int> pointIdxRadiusSearch;
 		std::vector<float> pointRadiusSquaredDistance;
 		float radius = min_moving_distance;
@@ -214,19 +221,19 @@ void CloudDiffChecker::getCloudParameters() {
 
 void CloudDiffChecker::griddingDiff() {
 	std::cout << "griddingDiff" << "\n";
-	std::vector<std::vector<pcl::PointXYZRGB> > pOldDiff_grid(x_grid_count * y_grid_count, std::vector<pcl::PointXYZRGB>());
-	std::vector<std::vector<pcl::PointXYZRGB> > pNewDiff_grid(x_grid_count * y_grid_count, std::vector<pcl::PointXYZRGB>());
+	std::vector<std::vector<pcl::PointXYZ> > pOldDiff_grid(x_grid_count * y_grid_count, std::vector<pcl::PointXYZ>());
+	std::vector<std::vector<pcl::PointXYZ> > pNewDiff_grid(x_grid_count * y_grid_count, std::vector<pcl::PointXYZ>());
 	for (size_t i = 0; i < (*pNewDiff).points.size(); i++) {
 		int x_grid_index = MIN(std::floor(((*pNewDiff).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
 		int y_grid_index = MIN(std::floor(((*pNewDiff).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
 		pNewDiff_grid[y_grid_index * x_grid_count + x_grid_index].push_back(
-			pcl::PointXYZRGB((*pNewDiff).points[i].x, (*pNewDiff).points[i].y, (*pNewDiff).points[i].z));
+			pcl::PointXYZ((*pNewDiff).points[i].x, (*pNewDiff).points[i].y, (*pNewDiff).points[i].z));
 	}
 	for (size_t i = 0; i < (*pOldDiff).points.size(); i++) {
 		int x_grid_index = MIN(std::floor(((*pOldDiff).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
 		int y_grid_index = MIN(std::floor(((*pOldDiff).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
 		pOldDiff_grid[y_grid_index * x_grid_count + x_grid_index].push_back(
-			pcl::PointXYZRGB((*pOldDiff).points[i].x, (*pOldDiff).points[i].y, (*pOldDiff).points[i].z));
+			pcl::PointXYZ((*pOldDiff).points[i].x, (*pOldDiff).points[i].y, (*pOldDiff).points[i].z));
 	}
 
 	cv::Mat grid_visualization = cv::Mat::zeros(y_grid_count, x_grid_count, CV_8UC1);
@@ -263,19 +270,12 @@ void CloudDiffChecker::griddingDiff() {
 		}
 	}
 
-	//contoursMat *= 15;
-	//cv::resize(contoursMat, contoursMat, cv::Size(), 5, 5, cv::INTER_NEAREST);
-	//cv::resize(grid_visualization, grid_visualization, cv::Size(), 5, 5, cv::INTER_NEAREST);
-	//cv::imshow("contoursMat", contoursMat);
-	//cv::imshow("grid_visualization", grid_visualization);
-	//cv::waitKey();
-
 	/* Index point to fit plane */
-	std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> pOld_Clouds(contours.size());
-	std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> pNew_Clouds(contours.size());
+	std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> pOld_Clouds(contours.size());
+	std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> pNew_Clouds(contours.size());
 	for (size_t i = 0; i < contours.size(); i++) {
-		pOld_Clouds[i] = (pcl::PointCloud<pcl::PointXYZRGB>::Ptr)(new pcl::PointCloud<pcl::PointXYZRGB>());
-		pNew_Clouds[i] = (pcl::PointCloud<pcl::PointXYZRGB>::Ptr)(new pcl::PointCloud<pcl::PointXYZRGB>());
+		pOld_Clouds[i] = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
+		pNew_Clouds[i] = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
 	}
 
 	for (size_t i = 0; i < pNewDiff_grid.size(); i++) {
@@ -295,14 +295,13 @@ void CloudDiffChecker::griddingDiff() {
 		pNew_Clouds[i]->width = (*(pNew_Clouds[i])).points.size();
 		pNew_Clouds[i]->height = 1;
 		pNew_Clouds[i]->is_dense = false;
-		std::cout << i << " -> " << (*(pOld_Clouds[i])).points.size() << " " << (*(pNew_Clouds[i])).points.size() << "\n";
 	}
 
-	std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> pOld_Clouds_resized(contours.size());
-	std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> pNew_Clouds_resized(contours.size());
+	std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> pOld_Clouds_resized(contours.size());
+	std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> pNew_Clouds_resized(contours.size());
 	for (size_t i = 0; i < contours.size(); i++) {
-		pOld_Clouds_resized[i] = (pcl::PointCloud<pcl::PointXYZRGB>::Ptr)(new pcl::PointCloud<pcl::PointXYZRGB>());
-		pNew_Clouds_resized[i] = (pcl::PointCloud<pcl::PointXYZRGB>::Ptr)(new pcl::PointCloud<pcl::PointXYZRGB>());
+		pOld_Clouds_resized[i] = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
+		pNew_Clouds_resized[i] = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
 	}
 	for (size_t i = 0; i < pNewDiff_grid.size(); i++) {
 		if (clusterIndices[i] >= 0) {
@@ -337,8 +336,8 @@ void CloudDiffChecker::griddingDiff() {
 	planeCoefficients = std::vector<PlaneCoefficients>(contours.size(), PlaneCoefficients());
 	for (size_t i = 0; i < contours.size(); i++) {
 		std::vector<int> inliers;
-		pcl::SampleConsensusModelPlane<pcl::PointXYZRGB>::Ptr old_plane(new pcl::SampleConsensusModelPlane<pcl::PointXYZRGB>(pOld_Clouds_resized[i]));
-		pcl::RandomSampleConsensus<pcl::PointXYZRGB> ransac(old_plane);
+		pcl::SampleConsensusModelPlane<pcl::PointXYZ>::Ptr old_plane(new pcl::SampleConsensusModelPlane<pcl::PointXYZ>(pOld_Clouds_resized[i]));
+		pcl::RandomSampleConsensus<pcl::PointXYZ> ransac(old_plane);
 		ransac.setDistanceThreshold(ransacDistanceThreshold);
 		ransac.computeModel();
 		Eigen::VectorXf coeff;
@@ -361,8 +360,8 @@ void CloudDiffChecker::griddingDiff() {
 	/* Fit new planes */
 	for (size_t i = 0; i < contours.size(); i++) {
 		std::vector<int> inliers;
-		pcl::SampleConsensusModelPlane<pcl::PointXYZRGB>::Ptr new_plane(new pcl::SampleConsensusModelPlane<pcl::PointXYZRGB>(pNew_Clouds_resized[i]));
-		pcl::RandomSampleConsensus<pcl::PointXYZRGB> ransac(new_plane);
+		pcl::SampleConsensusModelPlane<pcl::PointXYZ>::Ptr new_plane(new pcl::SampleConsensusModelPlane<pcl::PointXYZ>(pNew_Clouds_resized[i]));
+		pcl::RandomSampleConsensus<pcl::PointXYZ> ransac(new_plane);
 		ransac.setDistanceThreshold(ransacDistanceThreshold);
 		ransac.computeModel();
 		Eigen::VectorXf coeff;
@@ -425,18 +424,18 @@ void CloudDiffChecker::getReferPlane() {
 
 void CloudDiffChecker::getProjections() {
 
-	pOldProj = (pcl::PointCloud<pcl::PointXYZRGB>::Ptr)(new pcl::PointCloud<pcl::PointXYZRGB>());
-	pNewProj = (pcl::PointCloud<pcl::PointXYZRGB>::Ptr)(new pcl::PointCloud<pcl::PointXYZRGB>());
+	pOldProj = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
+	pNewProj = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
 
 	for (size_t i = 0; i < (*pOld).points.size(); i++) {
 		int x_grid_index = MIN(std::floor(((*pOld).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
 		int y_grid_index = MIN(std::floor(((*pOld).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
 		int grid_index = y_grid_index * x_grid_count + x_grid_index;
 		int clusterIndex = clusterIndices[grid_index];
-		pcl::PointXYZRGB projection;
+		pcl::PointXYZ projection;
 		if (clusterIndex >= 0) {
-			pcl::PointXYZRGB point = (*pOld).points[i];
-			pcl::PointXYZRGB normal;
+			pcl::PointXYZ point = (*pOld).points[i];
+			pcl::PointXYZ normal;
 			normal.x = referPlanes[clusterIndex].r_a;
 			normal.y = referPlanes[clusterIndex].r_b;
 			normal.z = referPlanes[clusterIndex].r_c;
@@ -454,10 +453,10 @@ void CloudDiffChecker::getProjections() {
 		int y_grid_index = MIN(std::floor(((*pNew).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
 		int grid_index = y_grid_index * x_grid_count + x_grid_index;
 		int clusterIndex = clusterIndices[grid_index];
-		pcl::PointXYZRGB projection;
+		pcl::PointXYZ projection;
 		if (clusterIndex >= 0) {
-			pcl::PointXYZRGB point = (*pNew).points[i];
-			pcl::PointXYZRGB normal;
+			pcl::PointXYZ point = (*pNew).points[i];
+			pcl::PointXYZ normal;
 			normal.x = referPlanes[clusterIndex].r_a;
 			normal.y = referPlanes[clusterIndex].r_b;
 			normal.z = referPlanes[clusterIndex].r_c;
@@ -496,20 +495,15 @@ void CloudDiffChecker::drawTransformation() {
 	pclxyzrgb.g = 0;
 	pclxyzrgb.b = 255;
 	for (size_t i = 0; i < (*pNew).points.size(); i++) {
-		int x_grid_index = MIN(std::floor(((*pNew).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
-		int y_grid_index = MIN(std::floor(((*pNew).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
-		int grid_index = y_grid_index * x_grid_count + x_grid_index;
 		pclxyzrgb.x = (*pNew).points[i].x;
 		pclxyzrgb.y = (*pNew).points[i].y;
 		pclxyzrgb.z = (*pNew).points[i].z;
-		if (clusterIndices[grid_index] >= 0) {
-			ply_scene_cloud.push_back(pclxyzrgb);
-		}
+		ply_scene_cloud.push_back(pclxyzrgb);
 	}
 
-	pcl::KdTreeFLANN<pcl::PointXYZRGB> kdtree_OldProj;
+	pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_OldProj;
 	kdtree_OldProj.setInputCloud(pOldProj);
-	pcl::KdTreeFLANN<pcl::PointXYZRGB> kdtree_NewProj;
+	pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_NewProj;
 	kdtree_NewProj.setInputCloud(pNewProj);
 
 	for (size_t i = 0; i < clusterIndices.size(); i++) {
@@ -518,34 +512,7 @@ void CloudDiffChecker::drawTransformation() {
 			int y_index = i / x_grid_count;
 			float centroid_x = x_min + x_index * grid_step_length + grid_step_length / 2;
 			float centroid_y = y_min + y_index * grid_step_length + grid_step_length / 2;
-			/* Draw old planes */
-			pclxyzrgb.r = 0;
-			pclxyzrgb.g = 255;
-			pclxyzrgb.b = 0;
-			for (float x = x_min + x_index * grid_step_length; x < x_min + x_index * grid_step_length + grid_step_length; x += grid_step_length / 100) {
-				for (float y = y_min + y_index * grid_step_length; y < y_min + y_index * grid_step_length + grid_step_length; y += grid_step_length / 100) {
-					float z = -(planeCoefficients[clusterIndices[i]].o_a * x + planeCoefficients[clusterIndices[i]].o_b * y +
-						planeCoefficients[clusterIndices[i]].o_d) / planeCoefficients[clusterIndices[i]].o_c;
-					pclxyzrgb.x = x;
-					pclxyzrgb.y = y;
-					pclxyzrgb.z = z;
-					//ply_scene_cloud.push_back(pclxyzrgb);
-				}
-			}
-			/* Draw new planes */
-			pclxyzrgb.r = 255;
-			pclxyzrgb.g = 255;
-			pclxyzrgb.b = 0;
-			for (float x = x_min + x_index * grid_step_length; x < x_min + x_index * grid_step_length + grid_step_length; x += grid_step_length / 100) {
-				for (float y = y_min + y_index * grid_step_length; y < y_min + y_index * grid_step_length + grid_step_length; y += grid_step_length / 100) {
-					float z = -(planeCoefficients[clusterIndices[i]].n_a * x + planeCoefficients[clusterIndices[i]].n_b * y +
-						planeCoefficients[clusterIndices[i]].n_d) / planeCoefficients[clusterIndices[i]].n_c;
-					pclxyzrgb.x = x;
-					pclxyzrgb.y = y;
-					pclxyzrgb.z = z;
-					//ply_scene_cloud.push_back(pclxyzrgb);
-				}
-			}
+
 			/* Draw transform vectors */
 			pclxyzrgb.r = 255;
 			pclxyzrgb.g = 255;
@@ -554,7 +521,7 @@ void CloudDiffChecker::drawTransformation() {
 				for (float y = y_min + y_index * grid_step_length; y < y_min + y_index * grid_step_length + grid_step_length; y += grid_step_length / 2) {
 					float z = -(referPlanes[clusterIndices[i]].r_a * x + referPlanes[clusterIndices[i]].r_b * y +
 						referPlanes[clusterIndices[i]].r_d) / referPlanes[clusterIndices[i]].r_c;
-					pcl::PointXYZRGB searchPoint;
+					pcl::PointXYZ searchPoint;
 					searchPoint.x = x;
 					searchPoint.y = y;
 					searchPoint.z = z;
@@ -562,7 +529,7 @@ void CloudDiffChecker::drawTransformation() {
 					std::vector<float> pointRadiusSquaredDistance;
 					int min_size_proj = 0;
 					float radius = grid_step_length / 2;
-					pcl::PointXYZRGB old_terminal(0, 0, 0);
+					pcl::PointXYZ old_terminal(0, 0, 0);
 					float old_stdv = 0;
 					if ((kdtree_OldProj.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0)) {
 						for (size_t j = 0; j < pointIdxRadiusSearch.size(); j++) {
@@ -574,7 +541,7 @@ void CloudDiffChecker::drawTransformation() {
 						old_terminal.y /= pointIdxRadiusSearch.size();
 						old_terminal.z /= pointIdxRadiusSearch.size();
 						for (size_t j = 0; j < pointIdxRadiusSearch.size(); j++) {
-							pcl::PointXYZRGB oldPoint = (*pOld).points[pointIdxRadiusSearch[j]];
+							pcl::PointXYZ oldPoint = (*pOld).points[pointIdxRadiusSearch[j]];
 							old_stdv += squaredDistance(old_terminal, oldPoint);
 						}
 						min_size_proj = pointIdxRadiusSearch.size();
@@ -583,7 +550,7 @@ void CloudDiffChecker::drawTransformation() {
 					}
 					pointIdxRadiusSearch.clear();
 					pointRadiusSquaredDistance.clear();
-					pcl::PointXYZRGB new_terminal(0, 0, 0);
+					pcl::PointXYZ new_terminal(0, 0, 0);
 					float new_stdv = 0;
 					if ((kdtree_NewProj.radiusSearch(searchPoint, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance) > 0)) {
 						for (size_t j = 0; j < pointIdxRadiusSearch.size(); j++) {
@@ -595,7 +562,7 @@ void CloudDiffChecker::drawTransformation() {
 						new_terminal.y /= pointIdxRadiusSearch.size();
 						new_terminal.z /= pointIdxRadiusSearch.size();
 						for (size_t j = 0; j < pointIdxRadiusSearch.size(); j++) {
-							pcl::PointXYZRGB newPoint = (*pNew).points[pointIdxRadiusSearch[j]];
+							pcl::PointXYZ newPoint = (*pNew).points[pointIdxRadiusSearch[j]];
 							new_stdv += squaredDistance(new_terminal, newPoint);
 						}
 						new_stdv /= pointIdxRadiusSearch.size();
@@ -606,7 +573,9 @@ void CloudDiffChecker::drawTransformation() {
 					}
 
 					if (old_terminal.x != 0 && new_terminal.x != 0 && old_stdv < d_max / 250 && new_stdv < d_max / 250 && min_size_proj > 1) {
-						pcl::PointXYZRGB vec;
+						p_old_parts->points.push_back(old_terminal);
+						p_new_parts->points.push_back(new_terminal);
+						pcl::PointXYZ vec;
 						vec.x = new_terminal.x - old_terminal.x;
 						vec.y = new_terminal.y - old_terminal.y;
 						vec.z = new_terminal.z - old_terminal.z;
@@ -628,6 +597,10 @@ void CloudDiffChecker::drawTransformation() {
 			}
 		}
 	}
+	p_old_parts->width = p_old_parts->points.size();
+	p_old_parts->height = 1;
+	p_new_parts->width = p_new_parts->points.size();
+	p_new_parts->height = 1;
 	std::cout << "ply_scene_cloud.size() = " << ply_scene_cloud.size() << "\n";
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr trans(new pcl::PointCloud<pcl::PointXYZRGB>());
 	for (size_t i = 0; i < ply_scene_cloud.size(); ++i) {
@@ -635,5 +608,5 @@ void CloudDiffChecker::drawTransformation() {
 	}
 	trans->width = ply_scene_cloud.size();
 	trans->height = 1;
-	pcl::io::savePLYFile("Transformations.ply", *trans, true);
+	pcl::io::savePLYFile(matching_results_file, *trans, true);
 }
