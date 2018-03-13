@@ -10,7 +10,8 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
 add_executable (PreProcess preprocess.cpp preprocess.h Configurations.cpp Configurations.h)
-add_executable (Matching matching.cpp matching.h Configurations.cpp Configurations.h CloudProjection.h CloudProjection.cpp)
+add_executable (Matching matching.cpp matching.h Configurations.cpp Configurations.h CloudProjection.h CloudProjection.cpp CloudDiffChecker.h CloudDiffChecker.cpp)
 
-target_link_libraries (PreProcess ${PCL_LIBRARIES} ${OpenCV_LIBS} las)
+target_link_libraries (PreProcess ${PCL_LIBRARIES} las)
 target_link_libraries (Matching ${PCL_LIBRARIES} ${OpenCV_LIBS})
+

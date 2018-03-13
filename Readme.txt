@@ -1,4 +1,4 @@
-Environtments:
+Environments:
 	Ubuntu 16.04 LTS 64-bit
 
 Requirements:
@@ -15,7 +15,7 @@ Build:
 		cmake ..
 		make
 	Copy "config.ini" to build/
-	There are 8 config files correspoinding to 8 datasets;
+	There are 8 config files corresponding to 8 datasets;
 	If you want to run with dataset 1, you need to copy the content of the "config_1.ini" file and paste it to "config.ini" file.
 
 Executors:

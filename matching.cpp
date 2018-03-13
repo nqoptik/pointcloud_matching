@@ -3,6 +3,7 @@
 #include "matching.h"
 #include "Configurations.h"
 #include "CloudProjection.h"
+#include "CloudDiffChecker.h"
 
 void drawKeypoints(std::string fileName, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl,
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_kps) {
@@ -1002,6 +1003,8 @@ int main (int argc, char* argv[]) {
         p_new_pcl->points[i].y += offset_y;
         p_new_pcl->points[i].z += offset_z;
     }
+
+    CloudDiffChecker CloudDiffCheckerInstance(p_old_pcl, p_new_pcl);
     // Detect key points
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_kps(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_kps(new pcl::PointCloud<pcl::PointXYZRGB>());
