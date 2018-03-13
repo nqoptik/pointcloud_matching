@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef _PREPROCESS_H_
 #define _PREPROCESS_H_
 
@@ -17,6 +19,8 @@
 #include <pcl/filters/uniform_sampling.h>
 #include <pcl/kdtree/kdtree_flann.h>
 
+#include "Configurations.h"
+
 #define UNVALID -1
 #define ERROR  "There is a problem when parsing command option"
 #define HELP "\nUSAGE: " \
@@ -34,15 +38,15 @@
                     "\t-i <input_file>\n" \
                     "\t-ofs <offset_file>\n"
 
-typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr (*FUNCTION)(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr(*FUNCTION)(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 struct CommandOption {
-    FUNCTION noise = NULL;
-    FUNCTION down_sample = NULL;
-    bool inter = false;
-    char* input = NULL;
-    char* offset = NULL;
-    char* interNoise = NULL;
-    char* interDownSample = NULL;
+	FUNCTION noise = NULL;
+	FUNCTION down_sample = NULL;
+	bool inter = false;
+	char* input = NULL;
+	char* offset = NULL;
+	char* interNoise = NULL;
+	char* interDownSample = NULL;
 } commandOption;
 
 /* noise filtering methods*/
@@ -58,47 +62,47 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingNearestMed(pcl::PointCloud<pc
 
 // array reference to function
 FUNCTION functions[] = {
-            statFilteringNoise,
-            radiusFilteringNoise,
-            colorbasedFilteringNoise,
-            statcolorFilteringNoise,
-            downSamplingMedian,
-            downSamplingNearestMed
+	statFilteringNoise,
+	radiusFilteringNoise,
+	colorbasedFilteringNoise,
+	statcolorFilteringNoise,
+	downSamplingMedian,
+	downSamplingNearestMed
 };
 
 const char* methodName[] = {
-            /* noise filter */
-            "stat",
-            "radius",
-            "colorbased",
-            "statcolor",
+	/* noise filter */
+	"stat",
+	"radius",
+	"colorbased",
+	"statcolor",
 
-            /* down sampling */
-            "median",
-            "nearestmed"
+	/* down sampling */
+	"median",
+	"nearestmed"
 };
 
 const char* options[] = {
-            // noise filtering
-            "-n",
+	// noise filtering
+	"-n",
 
-            // down sampling
-            "-d",
+	// down sampling
+	"-d",
 
-            // intermediate
-            "-inter", // default is no id not exists
+	// intermediate
+	"-inter", // default is no id not exists
 
-            // input file
-            "-i",
+	// input file
+	"-i",
 
-            // output file
-            "-ofs",
+	// output file
+	"-ofs",
 
-            //char* interNoise = NULL;
-            "-in",
+	//char* interNoise = NULL;
+	"-in",
 
-            //char* interDownSample = NULL;
-            "-ids"
+	//char* interDownSample = NULL;
+	"-ids"
 };
 
 #endif

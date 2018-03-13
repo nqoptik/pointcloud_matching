@@ -22,6 +22,9 @@
     <Filter Include="Source Files\CloudProjection">
       <UniqueIdentifier>{a0e68897-fa71-48a1-9bee-6278deeaa1cd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\CloudDiffChecker">
+      <UniqueIdentifier>{53a624ba-2f01-469c-9ae6-c012053f4995}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Configurations.cpp">
@@ -33,6 +36,9 @@
     <ClCompile Include="..\CloudProjection.cpp">
       <Filter>Source Files\CloudProjection</Filter>
     </ClCompile>
+    <ClCompile Include="..\CloudDiffChecker.cpp">
+      <Filter>Source Files\CloudDiffChecker</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Configurations.h">
@@ -43,6 +49,9 @@
     </ClInclude>
     <ClInclude Include="..\CloudProjection.h">
       <Filter>Source Files\CloudProjection</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CloudDiffChecker.h">
+      <Filter>Source Files\CloudDiffChecker</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

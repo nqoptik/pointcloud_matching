@@ -3,7 +3,6 @@
 #ifndef _CLOUDPROJECTION_H_
 #define _CLOUDPROJECTION_H_
 
-
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -36,25 +35,25 @@ class CloudProjection {
 
 private:
 
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts;
-    std::vector<size_t> match_train_indices;
-    std::vector<size_t> match_query_indices;
-    std::vector<int> direction_indices;
-    void get_matches_by_direction(Eigen::Matrix4f transform, int direction_index);
-    static void get_2d_matches(cv::Mat old_project, cv::Mat new_project, double distance_threshold,
-        std::vector<cv::Point2f>& trainPoints, std::vector<cv::Point2f>& queryPoints, int direction_index);
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl;
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl;
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts;
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts;
+	std::vector<size_t> match_train_indices;
+	std::vector<size_t> match_query_indices;
+	std::vector<int> direction_indices;
+	void get_matches_by_direction(Eigen::Matrix4f transform, int direction_index);
+	static void get_2d_matches(cv::Mat old_project, cv::Mat new_project, double distance_threshold,
+		std::vector<cv::Point2f>& trainPoints, std::vector<cv::Point2f>& queryPoints, int direction_index);
 
 public:
 
-    CloudProjection(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl,
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts,
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts);
-    ~CloudProjection();
-    void detect_matches();
+	CloudProjection(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl,
+		pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
+		pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts,
+		pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts);
+	~CloudProjection();
+	void detect_matches();
 };
 
 #endif /* _CLOUDPROJECTION_H_ */

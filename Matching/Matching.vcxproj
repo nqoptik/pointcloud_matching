@@ -147,15 +147,17 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>../../thirdparty/pcl_1_8_1/lib;../../thirdparty/boost_1_64/lib;../../thirdparty/FLANN/lib;../../thirdparty/opencv2413/build/x64/vc14/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>flann_s.lib;flann_cpp_s.lib;flann_cpp.lib;flann.lib;pcl_search_release.lib;pcl_kdtree_release.lib;pcl_filters_release.lib;pcl_features_release.lib;pcl_common_release.lib;pcl_io_release.lib;opencv_nonfree2413.lib;opencv_core2413.lib;opencv_features2d2413.lib;opencv_flann2413.lib;opencv_highgui2413.lib;opencv_imgproc2413.lib;opencv_video2413.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>flann_s.lib;flann_cpp_s.lib;flann_cpp.lib;flann.lib;pcl_search_release.lib;pcl_kdtree_release.lib;pcl_filters_release.lib;pcl_features_release.lib;pcl_common_release.lib;pcl_sample_consensus_release.lib;pcl_io_release.lib;opencv_nonfree2413.lib;opencv_core2413.lib;opencv_features2d2413.lib;opencv_flann2413.lib;opencv_highgui2413.lib;opencv_imgproc2413.lib;opencv_video2413.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\CloudDiffChecker.cpp" />
     <ClCompile Include="..\CloudProjection.cpp" />
     <ClCompile Include="..\Configurations.cpp" />
     <ClCompile Include="..\matching.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\CloudDiffChecker.h" />
     <ClInclude Include="..\CloudProjection.h" />
     <ClInclude Include="..\Configurations.h" />
     <ClInclude Include="..\matching.h" />
