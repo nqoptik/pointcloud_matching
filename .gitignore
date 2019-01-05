@@ -20,6 +20,7 @@
 *.obj
 *.pdb
 *.png
+*.jpg
 *.pnm
 *.pyc
 *.pyo
@@ -38,9 +39,8 @@
 *.sdf
 *.aux
 *.out
-*.png
-*.jpg
 *.user
 *.opendb
 *.csv
-*.las
+build/*
+*/build/*
