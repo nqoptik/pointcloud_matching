@@ -10,65 +10,62 @@
 #include <sstream>
 
 class Configurations {
+   public:
+    Configurations();
+    ~Configurations();
 
-public:
+    double leaf_size;
 
-	Configurations();
-	~Configurations();
+    int sor_neighbours;
+    double sor_stdev_thresh;
+    int sor_iterations;
 
-	double leaf_size;
+    double ror_radius;
+    int ror_min_neighbours;
+    int ror_iterations;
 
-	int sor_neighbours;
-	double sor_stdev_thresh;
-	int sor_iterations;
+    int cl_based_neighbours;
+    double cl_based_stdev_thresh;
+    int cl_based_iterations;
 
-	double ror_radius;
-	int ror_min_neighbours;
-	int ror_iterations;
+    double iss_old_salient_radius;
+    double iss_old_nonmax_radius;
+    int iss_old_min_neighbours;
+    double iss_new_salient_radius;
+    double iss_new_nonmax_radius;
+    int iss_new_min_neighbours;
 
-	int cl_based_neighbours;
-	double cl_based_stdev_thresh;
-	int cl_based_iterations;
+    double susan_old_radius;
+    double susan_new_radius;
 
-	double iss_old_salient_radius;
-	double iss_old_nonmax_radius;
-	int iss_old_min_neighbours;
-	double iss_new_salient_radius;
-	double iss_new_nonmax_radius;
-	int iss_new_min_neighbours;
+    double harris3d_radius;
 
-	double susan_old_radius;
-	double susan_new_radius;
+    double icp_radius;
+    int icp_iterations;
+    double icp_refine_radius;
 
-	double harris3d_radius;
+    double shot_radius;
 
-	double icp_radius;
-	int icp_iterations;
-	double icp_refine_radius;
+    double fpfh_radius;
 
-	double shot_radius;
+    float OF_error_threshold;
+    double pi_theta_x;
+    double pi_theta_y;
 
-	double fpfh_radius;
+    double pos_radius;
+    bool draw_old_kpts;
+    bool draw_new_kpts;
+    bool draw_old_colour;
+    bool draw_new_colour;
 
-	float OF_error_threshold;
-	double pi_theta_x;
-	double pi_theta_y;
+    void readConfig();
 
-	double pos_radius;
-	bool draw_old_kpts;
-	bool draw_new_kpts;
-	bool draw_old_colour;
-	bool draw_new_colour;
+    static Configurations* getInstance() {
+        return _instance;
+    }
 
-	void readConfig();
-
-	static Configurations* getInstance() {
-		return _instance;
-	}
-
-private:
-
-	static Configurations* _instance;
+   private:
+    static Configurations* _instance;
 };
 
 #endif /* _CONFIGUTATIONS_H_ */

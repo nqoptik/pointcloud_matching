@@ -21,88 +21,81 @@
 #include <opencv2/ml/ml.hpp>
 
 struct PlaneCoefficients {
+    float o_a, o_b, o_c, o_d, o_inliers, o_total;
+    float n_a, n_b, n_c, n_d, n_inliers, n_total;
 
-	float o_a, o_b, o_c, o_d, o_inliers, o_total;
-	float n_a, n_b, n_c, n_d, n_inliers, n_total;
-
-	PlaneCoefficients(float o_a = 0, float o_b = 0, float o_c = 0, float o_d = 0, float o_inliers = 0, float o_total = 0,
-		float n_a = 0, float n_b = 0, float n_c = 0, float n_d = 0, float n_inliers = 0, float n_total = 0) {
-
-		this->o_a = o_a;
-		this->o_b = o_b;
-		this->o_c = o_c;
-		this->o_d = o_d;
-		this->o_inliers = o_inliers;
-		this->o_total = o_total;
-		this->n_a = n_a;
-		this->n_b = n_b;
-		this->n_c = n_c;
-		this->n_d = n_d;
-		this->n_inliers = n_inliers;
-		this->n_total = n_total;
-	}
+    PlaneCoefficients(float o_a = 0, float o_b = 0, float o_c = 0, float o_d = 0, float o_inliers = 0, float o_total = 0, float n_a = 0, float n_b = 0, float n_c = 0, float n_d = 0, float n_inliers = 0, float n_total = 0) {
+        this->o_a = o_a;
+        this->o_b = o_b;
+        this->o_c = o_c;
+        this->o_d = o_d;
+        this->o_inliers = o_inliers;
+        this->o_total = o_total;
+        this->n_a = n_a;
+        this->n_b = n_b;
+        this->n_c = n_c;
+        this->n_d = n_d;
+        this->n_inliers = n_inliers;
+        this->n_total = n_total;
+    }
 };
 
 struct ReferPlane {
+    float r_a, r_b, r_c, r_d;
 
-	float r_a, r_b, r_c, r_d;
-
-	ReferPlane(float r_a = 0, float r_b = 0, float r_c = 0, float r_d = 0) {
-		this->r_a = r_a;
-		this->r_b = r_b;
-		this->r_c = r_c;
-		this->r_d = r_d;
-	}
+    ReferPlane(float r_a = 0, float r_b = 0, float r_c = 0, float r_d = 0) {
+        this->r_a = r_a;
+        this->r_b = r_b;
+        this->r_c = r_c;
+        this->r_d = r_d;
+    }
 };
 
 class CloudDiffChecker {
+   private:
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pOld;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pNew;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pOldDiff;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pNewDiff;
+    std::vector<PlaneCoefficients> planeCoefficients;
+    std::vector<int> clusterIndices;
+    std::vector<ReferPlane> referPlanes;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pOldProj;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pNewProj;
+    char* matching_results_file;
+    double old_res, new_res;
+    float min_moving_distance;
+    float x_min, x_max;
+    float y_min, y_max;
+    float z_min, z_max;
+    float d_max;
+    int grid_count;
+    int min_points_in_grid;
+    int x_grid_count, y_grid_count;
+    float grid_step_length;
+    float ransacDistanceThreshold;
 
-private:
+   public:
+    CloudDiffChecker(pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_pcl,
+                     pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_pcl,
+                     pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts,
+                     pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts,
+                     char* matching_results_file);
+    ~CloudDiffChecker();
 
-	pcl::PointCloud<pcl::PointXYZ>::Ptr pOld;
-	pcl::PointCloud<pcl::PointXYZ>::Ptr pNew;
-	pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts;
-	pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts;
-	pcl::PointCloud<pcl::PointXYZ>::Ptr pOldDiff;
-	pcl::PointCloud<pcl::PointXYZ>::Ptr pNewDiff;
-	std::vector<PlaneCoefficients> planeCoefficients;
-	std::vector<int> clusterIndices;
-	std::vector<ReferPlane> referPlanes;
-	pcl::PointCloud<pcl::PointXYZ>::Ptr pOldProj;
-	pcl::PointCloud<pcl::PointXYZ>::Ptr pNewProj;
-	char* matching_results_file;
-	double old_res, new_res;
-	float min_moving_distance;
-	float x_min, x_max;
-	float y_min, y_max;
-	float z_min, z_max;
-	float d_max;
-	int grid_count;
-	int min_points_in_grid;
-	int x_grid_count, y_grid_count;
-	float grid_step_length;
-	float ransacDistanceThreshold;
-
-public:
-
-	CloudDiffChecker(pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_pcl,
-		pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_pcl,
-		pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts,
-		pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts,
-		char* matching_results_file);
-	~CloudDiffChecker();
-
-	static double computeCloudResolution(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud);
-	void determineDiffRegions();
-	void getCloudParameters();
-	void griddingDiff();
-	void getReferPlane();
-	void getProjections();
-	void drawTransformation();
-	static float distance(pcl::PointXYZ p1, pcl::PointXYZ p2);
-	static float squaredDistance(pcl::PointXYZ p1, pcl::PointXYZ p2);
-	static pcl::PointXYZ projectionOntoPlane(pcl::PointXYZ project_point, pcl::PointXYZ plane_point, pcl::PointXYZ plane_normal);
-	static pcl::PointXYZ lineOntoPlane(pcl::PointXYZ point, pcl::PointXYZ normal, float A, float B, float C, float D);
+    static double computeCloudResolution(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloud);
+    void determineDiffRegions();
+    void getCloudParameters();
+    void griddingDiff();
+    void getReferPlane();
+    void getProjections();
+    void drawTransformation();
+    static float distance(pcl::PointXYZ p1, pcl::PointXYZ p2);
+    static float squaredDistance(pcl::PointXYZ p1, pcl::PointXYZ p2);
+    static pcl::PointXYZ projectionOntoPlane(pcl::PointXYZ project_point, pcl::PointXYZ plane_point, pcl::PointXYZ plane_normal);
+    static pcl::PointXYZ lineOntoPlane(pcl::PointXYZ point, pcl::PointXYZ normal, float A, float B, float C, float D);
 };
 
 #endif /* _CLOUDDIFFCHECKER_H_ */
