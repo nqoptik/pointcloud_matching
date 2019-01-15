@@ -1,4 +1,4 @@
-#include "CloudProjection.h"
+#include "pointcloud_matching/CloudProjection.h"
 
 void normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl) {
     double r_avg = 0, g_avg = 0, b_avg = 0;

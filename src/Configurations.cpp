@@ -1,4 +1,4 @@
-#include "Configurations.h"
+#include "pointcloud_matching/Configurations.h"
 
 Configurations* Configurations::_instance = new Configurations();
 

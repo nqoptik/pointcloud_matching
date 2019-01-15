@@ -1,4 +1,4 @@
-#include "CloudDiffChecker.h"
+#include "pointcloud_matching/CloudDiffChecker.h"
 
 int main(int argc, char* argv[]) {
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
