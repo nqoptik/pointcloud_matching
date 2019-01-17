@@ -320,18 +320,17 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int di
 
 void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, double distance_threshold, std::vector<cv::Point2f>& trainPoints, std::vector<cv::Point2f>& queryPoints, int direction_index) {
     //Detect key points using SIFT
-    cv::SiftFeatureDetector detector;
+    cv::Ptr<cv::Feature2D> f2d = cv::xfeatures2d::SIFT::create();
     std::vector<cv::KeyPoint> keypoints_old, keypoints_new;
-    detector.detect(old_project, keypoints_old);
+    f2d->detect(old_project, keypoints_old);
     std::cout << "keypoints_old's size " << keypoints_old.size() << "\n";
-    detector.detect(new_project, keypoints_new);
+    f2d->detect(new_project, keypoints_new);
     std::cout << "keypoints_new's size " << keypoints_new.size() << "\n";
 
     //Compute descriptors using SIFT
-    cv::SiftDescriptorExtractor extractor;
     cv::Mat descriptors_old, descriptors_new;
-    extractor.compute(old_project, keypoints_old, descriptors_old);
-    extractor.compute(new_project, keypoints_new, descriptors_new);
+    f2d->compute(old_project, keypoints_old, descriptors_old);
+    f2d->compute(new_project, keypoints_new, descriptors_new);
     int win_size = Configurations::getInstance()->pos_radius / distance_threshold;
 
     cv::FlannBasedMatcher matcher;

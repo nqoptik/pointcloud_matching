@@ -200,8 +200,8 @@ void CloudDiffChecker::getCloudParameters() {
         grid_step_length = d_y / grid_count;
     }
     std::cout << "grid_step_length = " << grid_step_length << "\n";
-    x_grid_count = std::ceil(d_x / grid_step_length);
-    y_grid_count = std::ceil(d_y / grid_step_length);
+    x_grid_count = ceil(d_x / grid_step_length);
+    y_grid_count = ceil(d_y / grid_step_length);
     std::cout << "x_grid_count = " << x_grid_count << "\n";
     std::cout << "y_grid_count = " << y_grid_count << "\n";
 
@@ -214,14 +214,14 @@ void CloudDiffChecker::griddingDiff() {
     std::vector<std::vector<pcl::PointXYZ>> pOldDiff_grid(x_grid_count * y_grid_count, std::vector<pcl::PointXYZ>());
     std::vector<std::vector<pcl::PointXYZ>> pNewDiff_grid(x_grid_count * y_grid_count, std::vector<pcl::PointXYZ>());
     for (size_t i = 0; i < (*pNewDiff).points.size(); i++) {
-        int x_grid_index = MIN(std::floor(((*pNewDiff).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
-        int y_grid_index = MIN(std::floor(((*pNewDiff).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
+        int x_grid_index = MIN(floor(((*pNewDiff).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
+        int y_grid_index = MIN(floor(((*pNewDiff).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
         pNewDiff_grid[y_grid_index * x_grid_count + x_grid_index].push_back(
             pcl::PointXYZ((*pNewDiff).points[i].x, (*pNewDiff).points[i].y, (*pNewDiff).points[i].z));
     }
     for (size_t i = 0; i < (*pOldDiff).points.size(); i++) {
-        int x_grid_index = MIN(std::floor(((*pOldDiff).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
-        int y_grid_index = MIN(std::floor(((*pOldDiff).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
+        int x_grid_index = MIN(floor(((*pOldDiff).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
+        int y_grid_index = MIN(floor(((*pOldDiff).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
         pOldDiff_grid[y_grid_index * x_grid_count + x_grid_index].push_back(
             pcl::PointXYZ((*pOldDiff).points[i].x, (*pOldDiff).points[i].y, (*pOldDiff).points[i].z));
     }
@@ -415,8 +415,8 @@ void CloudDiffChecker::getProjections() {
     pNewProj = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
 
     for (size_t i = 0; i < (*pOld).points.size(); i++) {
-        int x_grid_index = MIN(std::floor(((*pOld).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
-        int y_grid_index = MIN(std::floor(((*pOld).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
+        int x_grid_index = MIN(floor(((*pOld).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
+        int y_grid_index = MIN(floor(((*pOld).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
         int grid_index = y_grid_index * x_grid_count + x_grid_index;
         int clusterIndex = clusterIndices[grid_index];
         pcl::PointXYZ projection;
@@ -435,8 +435,8 @@ void CloudDiffChecker::getProjections() {
         (*pOldProj).points.push_back(projection);
     }
     for (size_t i = 0; i < (*pNew).points.size(); i++) {
-        int x_grid_index = MIN(std::floor(((*pNew).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
-        int y_grid_index = MIN(std::floor(((*pNew).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
+        int x_grid_index = MIN(floor(((*pNew).points[i].x - x_min) / grid_step_length), x_grid_count - 1);
+        int y_grid_index = MIN(floor(((*pNew).points[i].y - y_min) / grid_step_length), y_grid_count - 1);
         int grid_index = y_grid_index * x_grid_count + x_grid_index;
         int clusterIndex = clusterIndices[grid_index];
         pcl::PointXYZ projection;

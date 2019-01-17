@@ -19,7 +19,7 @@
 #include <pcl/filters/uniform_sampling.h>
 #include <pcl/kdtree/kdtree_flann.h>
 
-#include "Configurations.h"
+#include "pointcloud_matching/Configurations.h"
 
 #define UNVALID -1
 #define ERROR "There is a problem when parsing command option"

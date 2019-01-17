@@ -24,10 +24,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/nonfree/features2d.hpp>
+#include <opencv2/xfeatures2d.hpp>
 #include <opencv2/video/tracking.hpp>
 
-#include "Configurations.h"
+#include "pointcloud_matching/Configurations.h"
 
 void normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl);
 

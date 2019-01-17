@@ -25,9 +25,9 @@
 #include <pcl/features/fpfh_omp.h>
 #include <pcl/registration/icp.h>
 
-#include "Configurations.h"
-#include "CloudProjection.h"
-#include "CloudDiffChecker.h"
+#include "pointcloud_matching/Configurations.h"
+#include "pointcloud_matching/CloudProjection.h"
+#include "pointcloud_matching/CloudDiffChecker.h"
 
 #define UNVALID -1
 #define ERROR "There is a problem when parsing command option"
