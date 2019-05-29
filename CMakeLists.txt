@@ -7,37 +7,16 @@ project(pointcloud_matching)
 find_package(PCL 1.8.1 REQUIRED)
 find_package(OpenCV REQUIRED)
 
-include_directories(
-    ${PCL_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}/include
-)
+include_directories(${PCL_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include)
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable(PreProcess
-    src/preprocess.cpp
-    src/Configurations.cpp
-)
-target_link_libraries(PreProcess
-    ${PCL_LIBRARIES}
-    las
-)
+add_executable(Matching src/CloudProjection.cpp src/Configurations.cpp
+                        src/matching.cpp)
+target_link_libraries(Matching ${OpenCV_LIBS} ${PCL_LIBRARIES})
 
-add_executable(Matching
-    src/matching.cpp
-    src/Configurations.cpp
-    src/CloudProjection.cpp
-)
-target_link_libraries(Matching
-    ${PCL_LIBRARIES}
-    ${OpenCV_LIBS}
-)
+add_executable(PreProcess src/Configurations.cpp src/preprocess.cpp)
+target_link_libraries(PreProcess ${PCL_LIBRARIES} las)
 
-add_executable(ReferPlane
-    src/ReferPlane.cpp
-    src/CloudDiffChecker.cpp
-)
-target_link_libraries(ReferPlane
-    ${PCL_LIBRARIES}
-    ${OpenCV_LIBS}
-)
+add_executable(ReferPlane src/CloudDiffChecker.cpp src/ReferPlane.cpp)
+target_link_libraries(ReferPlane ${OpenCV_LIBS} ${PCL_LIBRARIES})
