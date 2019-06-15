@@ -1,7 +1,5 @@
-#pragma once
-
-#ifndef _CONFIGUTATIONS_H_
-#define _CONFIGUTATIONS_H_
+#ifndef CONFIGUTATIONS_HPP
+#define CONFIGUTATIONS_HPP
 
 #include <iostream>
 #include <fstream>
@@ -68,4 +66,4 @@ class Configurations {
     static Configurations* _instance;
 };
 
-#endif /* _CONFIGUTATIONS_H_ */
+#endif  // CONFIGUTATIONS_HPP

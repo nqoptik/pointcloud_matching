@@ -11,12 +11,12 @@ include_directories(${PCL_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include)
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable(Matching src/CloudProjection.cpp src/Configurations.cpp
+add_executable(matching src/cloud_projection.cpp src/configurations.cpp
                         src/matching.cpp)
-target_link_libraries(Matching ${OpenCV_LIBS} ${PCL_LIBRARIES})
+target_link_libraries(matching ${OpenCV_LIBS} ${PCL_LIBRARIES})
 
-add_executable(PreProcess src/Configurations.cpp src/preprocess.cpp)
-target_link_libraries(PreProcess ${PCL_LIBRARIES} las)
+add_executable(pre_process src/configurations.cpp src/preprocess.cpp)
+target_link_libraries(pre_process ${PCL_LIBRARIES} las)
 
-add_executable(ReferPlane src/CloudDiffChecker.cpp src/ReferPlane.cpp)
-target_link_libraries(ReferPlane ${OpenCV_LIBS} ${PCL_LIBRARIES})
+add_executable(refer_plane src/cloud_diff_checker.cpp src/refer_plane.cpp)
+target_link_libraries(refer_plane ${OpenCV_LIBS} ${PCL_LIBRARIES})

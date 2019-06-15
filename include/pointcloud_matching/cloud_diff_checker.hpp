@@ -1,7 +1,5 @@
-#pragma once
-
-#ifndef _CLOUDDIFFCHECKER_H_
-#define _CLOUDDIFFCHECKER_H_
+#ifndef CLOUD_DIFF_CHECKER_HPP
+#define CLOUD_DIFF_CHECKER_HPP
 
 #include <iostream>
 #include <vector>
@@ -98,4 +96,4 @@ class CloudDiffChecker {
     static pcl::PointXYZ lineOntoPlane(pcl::PointXYZ point, pcl::PointXYZ normal, float A, float B, float C, float D);
 };
 
-#endif /* _CLOUDDIFFCHECKER_H_ */
+#endif  // CLOUD_DIFF_CHECKER_HPP

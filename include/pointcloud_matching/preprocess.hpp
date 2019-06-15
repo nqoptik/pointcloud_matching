@@ -1,7 +1,5 @@
-#pragma once
-
-#ifndef _PREPROCESS_H_
-#define _PREPROCESS_H_
+#ifndef PREPROCESS_HPP
+#define PREPROCESS_HPP
 
 #include <iostream>
 #include <string>
@@ -19,7 +17,7 @@
 #include <pcl/filters/uniform_sampling.h>
 #include <pcl/kdtree/kdtree_flann.h>
 
-#include "pointcloud_matching/Configurations.h"
+#include "pointcloud_matching/configurations.hpp"
 
 #define UNVALID -1
 #define ERROR "There is a problem when parsing command option"
@@ -102,4 +100,4 @@ const char* options[] = {
     //char* interDownSample = NULL;
     "-ids"};
 
-#endif
+#endif  // PREPROCESS_HPP

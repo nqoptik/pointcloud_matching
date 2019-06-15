@@ -1,4 +1,4 @@
-#include "pointcloud_matching/preprocess.h"
+#include "pointcloud_matching/preprocess.hpp"
 
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSampleNearestMed(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p,
                                                             double leaf_size) {

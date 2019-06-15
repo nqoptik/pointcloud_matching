@@ -1,7 +1,5 @@
-#pragma once
-
-#ifndef _CLOUDPROJECTION_H_
-#define _CLOUDPROJECTION_H_
+#ifndef CLOUD_PROJECTION_HPP
+#define CLOUD_PROJECTION_HPP
 
 #include <iostream>
 #include <fstream>
@@ -27,7 +25,7 @@
 #include <opencv2/xfeatures2d.hpp>
 #include <opencv2/video/tracking.hpp>
 
-#include "pointcloud_matching/Configurations.h"
+#include "pointcloud_matching/configurations.hpp"
 
 void normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl);
 
@@ -52,4 +50,4 @@ class CloudProjection {
     void detect_matches();
 };
 
-#endif /* _CLOUDPROJECTION_H_ */
+#endif  // CLOUD_PROJECTION_HPP

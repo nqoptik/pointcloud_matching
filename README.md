@@ -48,12 +48,12 @@ make
 
 ## Run project
 
-### 1. PreProcess
-PreProcess will read pointcloud from las file, filter noise, down sample save remaining points to ply file.
+### 1. pre_process
+pre_process will read pointcloud from las file, filter noise, down sample save remaining points to ply file.
 
-Run PreProcess:
+Run pre_process:
 ```
-./PreProcess -i <input_las_file> -n <noise_filltering_method> -d <down_sampling_method> -inter <bool> -in <noise_filtered_file> -ids <down_sampled_file> -ofs <offset_file>
+./pre_process -i <input_las_file> -n <noise_filltering_method> -d <down_sampling_method> -inter <bool> -in <noise_filtered_file> -ids <down_sampled_file> -ofs <offset_file>
 ```
 
 in which:
@@ -77,23 +77,23 @@ in which:
 
 Examples:
 ```
-./PreProcess -i data_1_before.las -n stat -d median -inter Yes -in data_1_before_stat.ply -ids data_1_before_stat_median.ply -ofs data_1_before_offset.txt
+./pre_process -i data_1_before.las -n stat -d median -inter Yes -in data_1_before_stat.ply -ids data_1_before_stat_median.ply -ofs data_1_before_offset.txt
 ```
 
 ```
-./PreProcess -i data_1_before.las -n statcolor -d nearestmed -inter Yes -in data_1_before_statcolor.ply -ids data_1_before_statcolor_nearestmed.ply -ofs data_1_before_offset.txt
+./pre_process -i data_1_before.las -n statcolor -d nearestmed -inter Yes -in data_1_before_statcolor.ply -ids data_1_before_statcolor_nearestmed.ply -ofs data_1_before_offset.txt
 ```
 
 ```
-./PreProcess -i data_1_after.las -n statcolor -d nearestmed -inter Yes -in data_1_after_statcolor.ply -ids data_1_after_statcolor_nearestmed.ply -ofs data_1_after_offset.txt
+./pre_process -i data_1_after.las -n statcolor -d nearestmed -inter Yes -in data_1_after_statcolor.ply -ids data_1_after_statcolor_nearestmed.ply -ofs data_1_after_offset.txt
 ```
 
-### 2. Matching
+### 2. matching
 It will determine all transformations from the old pointcloud to the new one using matching algorithms.
 
-Run Matching:
+Run matching:
 ```
-./Matching -kp <keypoint_method> -des <descriptor_method> -i1 <ply_pointcloud_input_1> -i2 <ply_pointcloud_input_2> -ikp1 <ply_keypoint_1_file> -ikp2 <ply_keypoint_2_file> -o <ouput_file> -inter <bool> -mp <matchingpairs_point2point_file> -ofs1 <offset_file_1> -ofs2 <offset_file_2>
+./matching -kp <keypoint_method> -des <descriptor_method> -i1 <ply_pointcloud_input_1> -i2 <ply_pointcloud_input_2> -ikp1 <ply_keypoint_1_file> -ikp2 <ply_keypoint_2_file> -o <ouput_file> -inter <bool> -mp <matchingpairs_point2point_file> -ofs1 <offset_file_1> -ofs2 <offset_file_2>
 ```
 
 in which:
@@ -123,20 +123,20 @@ in which:
 
 Example:
 ```
-./Matching -i1 data_1_before_statcolor_nearestmed.ply -i2 data_1_after_statcolor_nearestmed.ply -kp harris3D -des shot -inter Yes -ikp1 data_1_before_statcolor_nearestmed_harris3D.ply -ikp2 data_1_after_statcolor_nearestmed_harris3D.ply -o data_1_statcolor_nearestmed_harris3D_shot.ply -mp data_1_statcolor_nearestmed_harris3D_shot.txt -ofs1 data_1_before_offset.txt -ofs2 data_1_after_offset.txt
+./matching -i1 data_1_before_statcolor_nearestmed.ply -i2 data_1_after_statcolor_nearestmed.ply -kp harris3D -des shot -inter Yes -ikp1 data_1_before_statcolor_nearestmed_harris3D.ply -ikp2 data_1_after_statcolor_nearestmed_harris3D.ply -o data_1_statcolor_nearestmed_harris3D_shot.ply -mp data_1_statcolor_nearestmed_harris3D_shot.txt -ofs1 data_1_before_offset.txt -ofs2 data_1_after_offset.txt
 ```
 
 If you want to run 2d matching method for, there is no need of keypoint detection, so you can type any of the keypoint_method in the command line:
 ```
-./Matching -i1 data_1_before_statcolor_nearestmed.ply -i2 data_1_after_statcolor_nearestmed.ply -kp susan -des 2dmethod -inter No -o data_1_statcolor_nearestmed_0_2dmethod.ply -mp data_1_statcolor_nearestmed_0_2dmethod.txt -ofs1 data_1_before_offset.txt -ofs2 data_1_after_offset.txt
+./matching -i1 data_1_before_statcolor_nearestmed.ply -i2 data_1_after_statcolor_nearestmed.ply -kp susan -des 2dmethod -inter No -o data_1_statcolor_nearestmed_0_2dmethod.ply -mp data_1_statcolor_nearestmed_0_2dmethod.txt -ofs1 data_1_before_offset.txt -ofs2 data_1_after_offset.txt
 ```
 
-### 3. ReferPlane
-ReferPlane will determine all transformations from the old pointcloud to the new one using refer plane algorithm.
+### 3. refer_plane
+refer_plane will determine all transformations from the old pointcloud to the new one using refer plane algorithm.
 
-Run ReferPlane:
+Run refer_plane:
 ```
-./ReferPlane <before_pointcloud> <after_pointcloud> <offset_file_1> <offset_file_2> <matching_result_file> <matchingpairs_point2point_file>
+./refer_plane <before_pointcloud> <after_pointcloud> <offset_file_1> <offset_file_2> <matching_result_file> <matchingpairs_point2point_file>
 ```
 
 in which:
@@ -151,7 +151,7 @@ matchingpairs_point2point_file: .txt file
 
 Example:
 ```
-./ReferPlane data_1_before_statcolor_nearestmed.ply data_1_after_statcolor_nearestmed.ply data_1_statcolor_nearestmed_referPlane.ply data_1_statcolor_nearestmed_referPlane.txt data_1_before_offset.txt data_1_after_offset.txt
+./refer_plane data_1_before_statcolor_nearestmed.ply data_1_after_statcolor_nearestmed.ply data_1_statcolor_nearestmed_referPlane.ply data_1_statcolor_nearestmed_referPlane.txt data_1_before_offset.txt data_1_after_offset.txt
 ```
 
 Note: argument vectors need to be written in the right order as above.

@@ -1,4 +1,4 @@
-#include "pointcloud_matching/CloudDiffChecker.h"
+#include "pointcloud_matching/cloud_diff_checker.hpp"
 
 CloudDiffChecker::CloudDiffChecker(pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_pcl,
                                    pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_pcl,

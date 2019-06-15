@@ -1,7 +1,5 @@
-#pragma once
-
-#ifndef _MATCHING_H_
-#define _MATCHING_H_
+#ifndef MATCHING_HPP
+#define MATCHING_HPP
 
 #define PCL_NO_PRECOMPILE
 
@@ -25,9 +23,9 @@
 #include <pcl/features/fpfh_omp.h>
 #include <pcl/registration/icp.h>
 
-#include "pointcloud_matching/Configurations.h"
-#include "pointcloud_matching/CloudProjection.h"
-#include "pointcloud_matching/CloudDiffChecker.h"
+#include "pointcloud_matching/configurations.hpp"
+#include "pointcloud_matching/cloud_projection.hpp"
+#include "pointcloud_matching/cloud_diff_checker.hpp"
 
 #define UNVALID -1
 #define ERROR "There is a problem when parsing command option"
@@ -134,4 +132,4 @@ const char* options[] = {
     // offset 2
     "-ofs2"};
 
-#endif
+#endif  // MATCHING_HPP

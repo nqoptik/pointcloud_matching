@@ -1,4 +1,4 @@
-#include "pointcloud_matching/matching.h"
+#include "pointcloud_matching/matching.hpp"
 
 void drawKeypoints(std::string fileName, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl, pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_kps) {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr drawKP(new pcl::PointCloud<pcl::PointXYZRGB>());
