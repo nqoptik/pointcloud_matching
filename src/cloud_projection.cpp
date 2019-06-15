@@ -33,17 +33,17 @@ void normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl) {
     }
 }
 
-CloudProjection::CloudProjection(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl,
-                                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
-                                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts,
-                                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts) {
-    this->p_old_pcl = p_old_pcl;
-    this->p_new_pcl = p_new_pcl;
-    this->p_old_parts = p_old_parts;
-    this->p_new_parts = p_new_parts;
-    match_train_indices.clear();
-    match_query_indices.clear();
-    direction_indices.clear();
+CloudProjection::CloudProjection(pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pcl_ptr,
+                                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pcl_ptr,
+                                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
+                                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr) {
+    old_pcl_ptr_ = old_pcl_ptr;
+    new_pcl_ptr_ = new_pcl_ptr;
+    old_parts_ptr_ = old_parts_ptr;
+    new_parts_ptr_ = new_parts_ptr;
+    match_train_indices_.clear();
+    match_query_indices_.clear();
+    direction_indices_.clear();
 }
 
 CloudProjection::~CloudProjection() {
@@ -53,8 +53,8 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int di
     // Rotate both pointclouds
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_rotated_old_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_rotated_new_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
-    pcl::transformPointCloud(*p_old_pcl, *p_rotated_old_pcl, transform);
-    pcl::transformPointCloud(*p_new_pcl, *p_rotated_new_pcl, transform);
+    pcl::transformPointCloud(*old_pcl_ptr_, *p_rotated_old_pcl, transform);
+    pcl::transformPointCloud(*new_pcl_ptr_, *p_rotated_new_pcl, transform);
 
     // Estimate normal for rotated pointclouds
     pcl::PointCloud<pcl::Normal>::Ptr p_rotated_old_normal(new pcl::PointCloud<pcl::Normal>());
@@ -301,8 +301,8 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int di
         if (length > Configurations::getInstance()->pos_radius) {
             continue;
         }
-        match_train_indices.push_back(old_best_nn_index);
-        match_query_indices.push_back(new_best_nn_index);
+        match_train_indices_.push_back(old_best_nn_index);
+        match_query_indices_.push_back(new_best_nn_index);
         pcl::Normal old_normal = p_rotated_old_normal->points[old_best_nn_index];
         float old_normal_xy = sqrt(old_normal.normal_x * old_normal.normal_x + old_normal.normal_y * old_normal.normal_y);
         float old_normal_z = fabs(old_normal.normal_z);
@@ -311,9 +311,9 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int di
         float new_normal_z = fabs(new_normal.normal_z);
         if (old_normal_z / old_normal_xy > 0.5 &&
             new_normal_z / new_normal_xy > 0.5) {
-            direction_indices.push_back(direction_index);
+            direction_indices_.push_back(direction_index);
         } else {
-            direction_indices.push_back(10);
+            direction_indices_.push_back(10);
         }
     }
 }
@@ -436,8 +436,8 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, d
 }
 
 void CloudProjection::detect_matches() {
-    normalizeColours(p_old_pcl);
-    normalizeColours(p_new_pcl);
+    normalizeColours(old_pcl_ptr_);
+    normalizeColours(new_pcl_ptr_);
 
     if (Configurations::getInstance()->pi_theta_x != 0) {
         Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
@@ -472,15 +472,15 @@ void CloudProjection::detect_matches() {
         get_matches_by_direction(transform, 4);
     }
     get_matches_by_direction(Eigen::Matrix4f::Identity(), 0);
-    std::cout << "Total 3D matches " << match_train_indices.size() << "\n";
-    for (size_t i = 0; i < match_train_indices.size(); ++i) {
-        pcl::PointXYZRGB nn_old_point = p_old_pcl->points[match_train_indices[i]];
-        pcl::PointXYZRGB nn_new_point = p_new_pcl->points[match_query_indices[i]];
-        if (direction_indices[i] != 10) {
-            p_old_parts->points.push_back(nn_old_point);
-            p_new_parts->points.push_back(nn_new_point);
+    std::cout << "Total 3D matches " << match_train_indices_.size() << "\n";
+    for (size_t i = 0; i < match_train_indices_.size(); ++i) {
+        pcl::PointXYZRGB nn_old_point = old_pcl_ptr_->points[match_train_indices_[i]];
+        pcl::PointXYZRGB nn_new_point = new_pcl_ptr_->points[match_query_indices_[i]];
+        if (direction_indices_[i] != 10) {
+            old_parts_ptr_->points.push_back(nn_old_point);
+            new_parts_ptr_->points.push_back(nn_new_point);
         }
     }
-    p_old_parts->width = p_old_parts->points.size();
-    p_new_parts->height = 1;
+    old_parts_ptr_->width = old_parts_ptr_->points.size();
+    new_parts_ptr_->height = 1;
 }

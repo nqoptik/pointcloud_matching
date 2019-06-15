@@ -31,22 +31,22 @@ void normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl);
 
 class CloudProjection {
    private:
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts;
-    std::vector<size_t> match_train_indices;
-    std::vector<size_t> match_query_indices;
-    std::vector<int> direction_indices;
-    void get_matches_by_direction(Eigen::Matrix4f transform, int direction_index);
-    static void get_2d_matches(cv::Mat old_project, cv::Mat new_project, double distance_threshold, std::vector<cv::Point2f>& trainPoints, std::vector<cv::Point2f>& queryPoints, int direction_index);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pcl_ptr_;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pcl_ptr_;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr_;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr_;
+    std::vector<size_t> match_train_indices_;
+    std::vector<size_t> match_query_indices_;
+    std::vector<int> direction_indices_;
 
    public:
-    CloudProjection(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_pcl,
-                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_pcl,
-                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_old_parts,
-                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_new_parts);
+    CloudProjection(pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pcl_ptr,
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pcl_ptr,
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
+                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr);
     ~CloudProjection();
+    void get_matches_by_direction(Eigen::Matrix4f transform, int direction_index);
+    static void get_2d_matches(cv::Mat old_project, cv::Mat new_project, double distance_threshold, std::vector<cv::Point2f>& trainPoints, std::vector<cv::Point2f>& queryPoints, int direction_index);
     void detect_matches();
 };
 

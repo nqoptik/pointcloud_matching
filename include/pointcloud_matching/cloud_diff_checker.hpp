@@ -51,35 +51,35 @@ struct ReferPlane {
 
 class CloudDiffChecker {
    private:
-    pcl::PointCloud<pcl::PointXYZ>::Ptr pOld;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr pNew;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr pOldDiff;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr pNewDiff;
-    std::vector<PlaneCoefficients> planeCoefficients;
-    std::vector<int> clusterIndices;
-    std::vector<ReferPlane> referPlanes;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr pOldProj;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr pNewProj;
-    char* matching_results_file;
-    double old_res, new_res;
-    float min_moving_distance;
-    float x_min, x_max;
-    float y_min, y_max;
-    float z_min, z_max;
-    float d_max;
-    int grid_count;
-    int min_points_in_grid;
-    int x_grid_count, y_grid_count;
-    float grid_step_length;
-    float ransacDistanceThreshold;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr old_pcl_ptr_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr new_pcl_ptr_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr old_parts_ptr_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr new_parts_ptr_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr old_diff_ptr_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr new_diff_ptr_;
+    std::vector<PlaneCoefficients> plane_coefficients_;
+    std::vector<int> cluster_indices_;
+    std::vector<ReferPlane> refer_planes_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr old_projection_ptr_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr new_projection_ptr_;
+    char* matching_results_file_;
+    double old_res_, new_res_;
+    float min_moving_distance_;
+    float x_min_, x_max_;
+    float y_min_, y_max_;
+    float z_min_, z_max_;
+    float d_max_;
+    int grid_count_;
+    int min_points_in_grid_;
+    int x_grid_count_, y_grid_count_;
+    float grid_step_length_;
+    float ransac_distance_threshold_;
 
    public:
-    CloudDiffChecker(pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_pcl,
-                     pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_pcl,
-                     pcl::PointCloud<pcl::PointXYZ>::Ptr p_old_parts,
-                     pcl::PointCloud<pcl::PointXYZ>::Ptr p_new_parts,
+    CloudDiffChecker(pcl::PointCloud<pcl::PointXYZ>::Ptr old_pcl_ptr,
+                     pcl::PointCloud<pcl::PointXYZ>::Ptr new_pcl_ptr,
+                     pcl::PointCloud<pcl::PointXYZ>::Ptr old_parts_ptr,
+                     pcl::PointCloud<pcl::PointXYZ>::Ptr new_parts_ptr,
                      char* matching_results_file);
     ~CloudDiffChecker();
 

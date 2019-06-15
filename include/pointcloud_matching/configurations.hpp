@@ -59,11 +59,11 @@ class Configurations {
     void readConfig();
 
     static Configurations* getInstance() {
-        return _instance;
+        return instance_;
     }
 
    private:
-    static Configurations* _instance;
+    static Configurations* instance_;
 };
 
 #endif  // CONFIGUTATIONS_HPP

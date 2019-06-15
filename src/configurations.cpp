@@ -1,6 +1,6 @@
 #include "pointcloud_matching/configurations.hpp"
 
-Configurations* Configurations::_instance = new Configurations();
+Configurations* Configurations::instance_ = new Configurations();
 
 Configurations::Configurations() {
     leaf_size = 0.001;
