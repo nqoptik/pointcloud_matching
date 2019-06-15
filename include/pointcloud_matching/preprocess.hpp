@@ -49,23 +49,23 @@ struct CommandOption {
 } commandOption;
 
 /* noise filtering methods*/
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr statFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr radiusFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbasedFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr statcolorFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbased_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr statcolor_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 
 /* Down Sampling */
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingMedian(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingNearestMed(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_down_sampling(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_median_down_sampling(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 
 // array reference to function
 FUNCTION functions[] = {
-    statFilteringNoise,
-    radiusFilteringNoise,
-    colorbasedFilteringNoise,
-    statcolorFilteringNoise,
-    downSamplingMedian,
-    downSamplingNearestMed};
+    stat_filtering_noise,
+    radius_filtering_noise,
+    colorbased_filtering_noise,
+    statcolor_filtering_noise,
+    median_down_sampling,
+    nearest_median_down_sampling};
 
 const char* methodName[] = {
     /* noise filter */

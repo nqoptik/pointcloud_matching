@@ -1,7 +1,7 @@
 #include "pointcloud_matching/preprocess.hpp"
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSampleNearestMed(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p,
-                                                            double leaf_size) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_median_down_sampling(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p,
+                                                                    double leaf_size) {
     std::cout << "Nearest median down sampling.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_med_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::VoxelGrid<pcl::PointXYZRGB> grid;
@@ -33,59 +33,59 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSampleNearestMed(pcl::PointCloud<pcl:
 }
 
 /* noise filtering methods*/
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr statFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
     std::cout << "Statistical outliers removal.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_stat_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     for (int loop = 0; loop < 1; ++loop) {
         pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
         sor.setInputCloud(p);
-        sor.setMeanK(Configurations::getInstance()->sor_neighbours);
-        sor.setStddevMulThresh(Configurations::getInstance()->sor_stdev_thresh);
+        sor.setMeanK(Configurations::get_instance()->sor_neighbours);
+        sor.setStddevMulThresh(Configurations::get_instance()->sor_stdev_thresh);
         sor.filter(*p_stat_pcl);
         std::cout << "Loop: " << loop << " remaining cloud: " << p_stat_pcl->points.size() << "\n";
     }
-    for (int loop = 1; loop < Configurations::getInstance()->sor_iterations; ++loop) {
+    for (int loop = 1; loop < Configurations::get_instance()->sor_iterations; ++loop) {
         pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> sor;
         sor.setInputCloud(p_stat_pcl);
-        sor.setMeanK(Configurations::getInstance()->sor_neighbours);
-        sor.setStddevMulThresh(Configurations::getInstance()->sor_stdev_thresh);
+        sor.setMeanK(Configurations::get_instance()->sor_neighbours);
+        sor.setStddevMulThresh(Configurations::get_instance()->sor_stdev_thresh);
         sor.filter(*p_stat_pcl);
         std::cout << "Loop: " << loop << " remaining cloud: " << p_stat_pcl->points.size() << "\n";
     }
     return p_stat_pcl;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr radiusFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
     std::cout << "Radius outliers removal.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_radius_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     for (int loop = 0; loop < 1; ++loop) {
         pcl::RadiusOutlierRemoval<pcl::PointXYZRGB> ror;
         ror.setInputCloud(p);
-        ror.setRadiusSearch(Configurations::getInstance()->ror_radius);
-        ror.setMinNeighborsInRadius(Configurations::getInstance()->ror_min_neighbours);
+        ror.setRadiusSearch(Configurations::get_instance()->ror_radius);
+        ror.setMinNeighborsInRadius(Configurations::get_instance()->ror_min_neighbours);
         ror.filter(*p_radius_pcl);
         std::cout << "Loop: " << loop << " remaining cloud: " << p_radius_pcl->points.size() << "\n";
     }
-    for (int loop = 1; loop < Configurations::getInstance()->ror_iterations; ++loop) {
+    for (int loop = 1; loop < Configurations::get_instance()->ror_iterations; ++loop) {
         pcl::RadiusOutlierRemoval<pcl::PointXYZRGB> ror;
         ror.setInputCloud(p_radius_pcl);
-        ror.setRadiusSearch(Configurations::getInstance()->ror_radius);
-        ror.setMinNeighborsInRadius(Configurations::getInstance()->ror_min_neighbours);
+        ror.setRadiusSearch(Configurations::get_instance()->ror_radius);
+        ror.setMinNeighborsInRadius(Configurations::get_instance()->ror_min_neighbours);
         ror.filter(*p_radius_pcl);
         std::cout << "Loop: " << loop << " remaining cloud: " << p_radius_pcl->points.size() << "\n";
     }
     return p_radius_pcl;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbasedFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbased_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
     std::cout << "Color-based outliers removal.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_color_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_p;
     kd_p.setInputCloud(p);
     for (size_t i = 0; i < p->points.size(); ++i) {
         pcl::PointXYZRGB nearP = p->points[i];
-        int K = Configurations::getInstance()->cl_based_neighbours;
-        double cl_stdev_thresh = Configurations::getInstance()->cl_based_stdev_thresh;
+        int K = Configurations::get_instance()->cl_based_neighbours;
+        double cl_stdev_thresh = Configurations::get_instance()->cl_based_stdev_thresh;
         std::vector<int> pointIdxNKNSearch;
         std::vector<float> pointNKNSquaredDistance;
         if (kd_p.nearestKSearch(nearP, K, pointIdxNKNSearch, pointNKNSquaredDistance) > 0) {
@@ -127,31 +127,31 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbasedFilteringNoise(pcl::PointCloud<
     return p_color_pcl;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr statcolorFilteringNoise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr statcolor_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
     std::cout << "Statistical and color-based outliers removal.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_statcolor_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
-    p_statcolor_pcl = statFilteringNoise(p);
-    p_statcolor_pcl = colorbasedFilteringNoise(p_statcolor_pcl);
+    p_statcolor_pcl = stat_filtering_noise(p);
+    p_statcolor_pcl = colorbased_filtering_noise(p_statcolor_pcl);
     return p_statcolor_pcl;
 }
 
 /* Down Sampling */
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingMedian(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_down_sampling(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
     std::cout << "Median down sampling.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_med_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::VoxelGrid<pcl::PointXYZRGB> grid;
-    double leaf = Configurations::getInstance()->leaf_size;
+    double leaf = Configurations::get_instance()->leaf_size;
     grid.setLeafSize(leaf, leaf, leaf);
     grid.setInputCloud(p);
     grid.filter(*p_med_pcl);
     return p_med_pcl;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingNearestMed(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_median_down_sampling(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p) {
     std::cout << "Nearest median down sampling.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_med_pcl(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::VoxelGrid<pcl::PointXYZRGB> grid;
-    double leaf = Configurations::getInstance()->leaf_size;
+    double leaf = Configurations::get_instance()->leaf_size;
     grid.setLeafSize(leaf, leaf, leaf);
     grid.setInputCloud(p);
     grid.filter(*p_med_pcl);
@@ -179,7 +179,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr downSamplingNearestMed(pcl::PointCloud<pc
     return p_nearestmed_pcl;
 }
 
-void PrintMatchingOption(char* para, int option) {
+void print_matching_option(char* para, int option) {
     if (para == NULL || option >= sizeof(para) / sizeof(para[0])) {
         std::cout << ERROR << "\n";
         std::cout << HELP << "\n";
@@ -189,7 +189,7 @@ void PrintMatchingOption(char* para, int option) {
     std::cout << "not exists " << para << " for " << options[option] << "\n";
 }
 
-int getOption(char* _p) {
+int get_option(char* _p) {
     if (_p == NULL) {
         std::cout << ERROR << "\n";
         std::cout << HELP << "\n";
@@ -209,7 +209,7 @@ int getOption(char* _p) {
     return UNVALID;
 }
 
-int configValueByOption(int option, char* _p) {
+int config_value_by_option(int option, char* _p) {
     std::string para(_p);
 
     if (_p == NULL || para.compare("") == 0 || option >= sizeof(options) / sizeof(options[0])) {
@@ -262,18 +262,18 @@ int configValueByOption(int option, char* _p) {
 
     return 1;
 error:
-    PrintMatchingOption(_p, option);
+    print_matching_option(_p, option);
     return UNVALID;
 }
 
 int main(int argc, char* argv[]) {
     int optionIndex = -1;
 
-    Configurations::getInstance()->readConfig();
+    Configurations::get_instance()->read_config();
     // loop through option parameter
     for (int i = 1; i < argc; i++) {
         if (i % 2 == 1) {
-            optionIndex = getOption(argv[i]);
+            optionIndex = get_option(argv[i]);
 
             // crash program when param is not exists
             if (optionIndex == -1) {
@@ -282,7 +282,7 @@ int main(int argc, char* argv[]) {
                 return UNVALID;
             }
         } else {
-            if (optionIndex == -1 || configValueByOption(optionIndex, argv[i]) == -1) {
+            if (optionIndex == -1 || config_value_by_option(optionIndex, argv[i]) == -1) {
                 std::cout << ERROR << "\n";
                 std::cout << HELP << "\n";
                 return UNVALID;
@@ -332,8 +332,8 @@ int main(int argc, char* argv[]) {
 
     // Pre downsample
     std::cout << "Pre down sampling.\n";
-    double leaf = Configurations::getInstance()->leaf_size / 1.5;
-    p_orgCloud = downSampleNearestMed(p_orgCloud, leaf);
+    double leaf = Configurations::get_instance()->leaf_size / 1.5;
+    p_orgCloud = nearest_median_down_sampling(p_orgCloud, leaf);
     std::cout << "p_orgCloud after pre down sampling: " << p_orgCloud->points.size() << "\n";
 
     // Filter noise

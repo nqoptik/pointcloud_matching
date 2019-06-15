@@ -27,7 +27,7 @@
 
 #include "pointcloud_matching/configurations.hpp"
 
-void normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl);
+void normalise_colours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl);
 
 class CloudProjection {
    private:

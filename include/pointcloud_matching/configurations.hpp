@@ -56,9 +56,9 @@ class Configurations {
     bool draw_old_colour;
     bool draw_new_colour;
 
-    void readConfig();
+    void read_config();
 
-    static Configurations* getInstance() {
+    static Configurations* get_instance() {
         return instance_;
     }
 

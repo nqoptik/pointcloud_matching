@@ -83,17 +83,17 @@ class CloudDiffChecker {
                      char* matching_results_file);
     ~CloudDiffChecker();
 
-    static double computeCloudResolution(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloud);
-    void determineDiffRegions();
-    void getCloudParameters();
-    void griddingDiff();
-    void getReferPlane();
-    void getProjections();
-    void drawTransformation();
+    static double compute_cloud_resolution(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloud);
+    void determine_diff_regions();
+    void get_cloud_parameters();
+    void gridding_diff();
+    void get_refer_plane();
+    void get_projections();
+    void draw_transformation();
     static float distance(pcl::PointXYZ p1, pcl::PointXYZ p2);
-    static float squaredDistance(pcl::PointXYZ p1, pcl::PointXYZ p2);
-    static pcl::PointXYZ projectionOntoPlane(pcl::PointXYZ project_point, pcl::PointXYZ plane_point, pcl::PointXYZ plane_normal);
-    static pcl::PointXYZ lineOntoPlane(pcl::PointXYZ point, pcl::PointXYZ normal, float A, float B, float C, float D);
+    static float squared_distance(pcl::PointXYZ p1, pcl::PointXYZ p2);
+    static pcl::PointXYZ project_onto_plane(pcl::PointXYZ project_point, pcl::PointXYZ plane_point, pcl::PointXYZ plane_normal);
+    static pcl::PointXYZ line_onto_plane(pcl::PointXYZ point, pcl::PointXYZ normal, float A, float B, float C, float D);
 };
 
 #endif  // CLOUD_DIFF_CHECKER_HPP

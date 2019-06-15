@@ -1,6 +1,6 @@
 #include "pointcloud_matching/cloud_projection.hpp"
 
-void normalizeColours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl) {
+void normalise_colours(pcl::PointCloud<pcl::PointXYZRGB>::Ptr p_pcl) {
     double r_avg = 0, g_avg = 0, b_avg = 0;
     for (size_t i = 0; i < p_pcl->points.size(); ++i) {
         r_avg += p_pcl->points[i].r;
@@ -298,7 +298,7 @@ void CloudProjection::get_matches_by_direction(Eigen::Matrix4f transform, int di
         double dy = nn_old_point.y - nn_new_point.y;
         double dz = nn_old_point.z - nn_new_point.z;
         float length = sqrt(dx * dx + dy * dy + dz * dz);
-        if (length > Configurations::getInstance()->pos_radius) {
+        if (length > Configurations::get_instance()->pos_radius) {
             continue;
         }
         match_train_indices_.push_back(old_best_nn_index);
@@ -331,7 +331,7 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, d
     cv::Mat descriptors_old, descriptors_new;
     f2d->compute(old_project, keypoints_old, descriptors_old);
     f2d->compute(new_project, keypoints_new, descriptors_new);
-    int win_size = Configurations::getInstance()->pos_radius / distance_threshold;
+    int win_size = Configurations::get_instance()->pos_radius / distance_threshold;
 
     cv::FlannBasedMatcher matcher;
     std::vector<std::vector<cv::DMatch>> matches;
@@ -389,7 +389,7 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, d
     if (tmp_corners.size() > 0) {
         cornerSubPix(old_project_gray, tmp_corners, subPixWinSize, cv::Size(-1, -1), termcrit);
     }
-    float OF_error_threshold = Configurations::getInstance()->OF_error_threshold;
+    float OF_error_threshold = Configurations::get_instance()->OF_error_threshold;
     for (size_t i = 0; i < corners.size(); ++i) {
         float dx_err = corners[i].x - tmp_corners[i].x;
         float dy_err = corners[i].y - tmp_corners[i].y;
@@ -436,35 +436,35 @@ void CloudProjection::get_2d_matches(cv::Mat old_project, cv::Mat new_project, d
 }
 
 void CloudProjection::detect_matches() {
-    normalizeColours(old_pcl_ptr_);
-    normalizeColours(new_pcl_ptr_);
+    normalise_colours(old_pcl_ptr_);
+    normalise_colours(new_pcl_ptr_);
 
-    if (Configurations::getInstance()->pi_theta_x != 0) {
+    if (Configurations::get_instance()->pi_theta_x != 0) {
         Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
-        float theta = M_PI * Configurations::getInstance()->pi_theta_x;
+        float theta = M_PI * Configurations::get_instance()->pi_theta_x;
         transform(1, 1) = cos(theta);
         transform(1, 2) = -sin(theta);
         transform(2, 1) = sin(theta);
         transform(2, 2) = cos(theta);
         get_matches_by_direction(transform, 1);
 
-        theta = -M_PI * Configurations::getInstance()->pi_theta_x;
+        theta = -M_PI * Configurations::get_instance()->pi_theta_x;
         transform(1, 1) = cos(theta);
         transform(1, 2) = -sin(theta);
         transform(2, 1) = sin(theta);
         transform(2, 2) = cos(theta);
         get_matches_by_direction(transform, 2);
     }
-    if (Configurations::getInstance()->pi_theta_y != 0) {
+    if (Configurations::get_instance()->pi_theta_y != 0) {
         Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
-        float theta = M_PI * Configurations::getInstance()->pi_theta_y;
+        float theta = M_PI * Configurations::get_instance()->pi_theta_y;
         transform(0, 0) = cos(theta);
         transform(2, 0) = sin(theta);
         transform(0, 2) = -sin(theta);
         transform(2, 2) = cos(theta);
         get_matches_by_direction(transform, 3);
 
-        theta = -M_PI * Configurations::getInstance()->pi_theta_y;
+        theta = -M_PI * Configurations::get_instance()->pi_theta_y;
         transform(0, 0) = cos(theta);
         transform(2, 0) = sin(theta);
         transform(0, 2) = -sin(theta);

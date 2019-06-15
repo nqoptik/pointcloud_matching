@@ -50,7 +50,7 @@ Configurations::Configurations() {
 Configurations::~Configurations() {
 }
 
-void Configurations::readConfig() {
+void Configurations::read_config() {
     std::ifstream ifs("config.ini");
     std::string line;
     while (std::getline(ifs, line)) {
