@@ -19,7 +19,7 @@
 
 #include "pointcloud_matching/configurations.hpp"
 
-#define UNVALID -1
+#define INVALID -1
 #define ERROR "There is a problem when parsing command option"
 #define HELP                       \
     "\nUSAGE: "                    \
@@ -40,64 +40,67 @@
 typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr (*FUNCTION)(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 struct CommandOption {
     FUNCTION noise = NULL;
-    FUNCTION down_sample = NULL;
+    FUNCTION down_sampling = NULL;
     bool inter = false;
     char* input = NULL;
     char* offset = NULL;
-    char* interNoise = NULL;
-    char* interDownSample = NULL;
-} commandOption;
+    char* inter_noise = NULL;
+    char* inter_down_sampling = NULL;
+} command_option;
 
-/* noise filtering methods*/
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr colorbased_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr statcolor_filtering_noise(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling_with_leaf_size(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pcl_ptr,
+                                                                            const double leaf_size);
 
-/* Down Sampling */
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_down_sampling(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_median_down_sampling(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+// The noise filtering functions
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pcl_ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pcl_ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr color_based_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pcl_ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_color_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pcl_ptr);
 
-// array reference to function
+// The down sampling functions
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pcl_ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pcl_ptr);
+
+// The array reference function
 FUNCTION functions[] = {
     stat_filtering_noise,
     radius_filtering_noise,
-    colorbased_filtering_noise,
-    statcolor_filtering_noise,
+    color_based_filtering_noise,
+    stat_color_filtering_noise,
     median_down_sampling,
-    nearest_median_down_sampling};
+    nearest_down_sampling};
 
-const char* methodName[] = {
-    /* noise filter */
+const char* method_name[] = {
+    // The noise filtering methods
     "stat",
     "radius",
     "colorbased",
     "statcolor",
 
-    /* down sampling */
+    // The down sampling methods
     "median",
     "nearestmed"};
 
 const char* options[] = {
-    // noise filtering
+    // The noise filtering option
     "-n",
 
-    // down sampling
+    // The down sampling option
     "-d",
 
-    // intermediate
-    "-inter",  // default is no id not exists
+    // The intermediate option
+    "-inter",
 
-    // input file
+    // The input file option
     "-i",
 
-    // output file
+    // The output file option
     "-ofs",
 
-    //char* interNoise = NULL;
+    // The intermediate noise option
     "-in",
 
-    //char* interDownSample = NULL;
+    // The intermediate downsampling option
     "-ids"};
 
 #endif  // PREPROCESS_HPP
