@@ -151,7 +151,7 @@ matchingpairs_point2point_file: .txt file
 
 Example:
 ```
-./refer_plane data_1_before_statcolor_nearestmed.ply data_1_after_statcolor_nearestmed.ply data_1_statcolor_nearestmed_referPlane.ply data_1_statcolor_nearestmed_referPlane.txt data_1_before_offset.txt data_1_after_offset.txt
+./refer_plane data_1_before_statcolor_nearestmed.ply data_1_after_statcolor_nearestmed.ply data_1_before_offset.txt data_1_after_offset.txt data_1_statcolor_nearestmed_referPlane.ply data_1_statcolor_nearestmed_referPlane.txt
 ```
 
 Note: argument vectors need to be written in the right order as above.
