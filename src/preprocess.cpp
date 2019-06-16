@@ -3,15 +3,21 @@
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling_with_leaf_size(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pcl_ptr,
                                                                             const double leaf_size) {
     std::cout << "Nearest median down sampling.\n";
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
+
+    // Initialise the voxel grid
     pcl::VoxelGrid<pcl::PointXYZRGB> voxel_grid;
     voxel_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
     voxel_grid.setInputCloud(input_pcl_ptr);
+
+    // Down sample the pointcloud
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     voxel_grid.filter(*median_pcl_ptr);
 
-    // Down sampling with real point near centre
+    // Initialise the KdTreeFLANN search for the pointcloud
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_tree_flann;
     kd_tree_flann.setInputCloud(input_pcl_ptr);
+
+    // Get the closest points
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     for (size_t i = 0; i < median_pcl_ptr->points.size(); ++i) {
         pcl::PointXYZRGB centre_point = median_pcl_ptr->points[i];
@@ -79,8 +85,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_filtering_noise(const pcl::PointCl
 
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr color_based_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pcl_ptr) {
     std::cout << "Color-based outliers removal.\n";
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr color_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
+
+    // Initialise the KdTreeFLANN search for the pointcloud
     pcl::KdTreeFLANN<pcl::PointXYZRGB> kd_tree_flann;
+
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr color_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     kd_tree_flann.setInputCloud(input_pcl_ptr);
     for (size_t i = 0; i < input_pcl_ptr->points.size(); ++i) {
         pcl::PointXYZRGB near_point = input_pcl_ptr->points[i];
@@ -138,10 +147,14 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_color_filtering_noise(const pcl::Poi
 // The down sampling functions
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pcl_ptr) {
     std::cout << "Median down sampling.\n";
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
+
+    // Initialise the voxel grid
     pcl::VoxelGrid<pcl::PointXYZRGB> voxel_grid;
     double leaf_size = Configurations::get_instance()->leaf_size;
     voxel_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
+
+    // Down sample the pointcloud
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     voxel_grid.setInputCloud(input_pcl_ptr);
     voxel_grid.filter(*median_pcl_ptr);
     return median_pcl_ptr;
@@ -252,7 +265,7 @@ int main(int argc, char* argv[]) {
         if (i % 2 == 1) {
             option_index = get_option(argv[i]);
 
-            // Crash program when param is not exists
+            // Crash program when parameters do not exist
             if (option_index == -1) {
                 std::cout << ERROR << "\n";
                 std::cout << HELP << "\n";
@@ -270,8 +283,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr origin_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
-
+    // Get the input file name
     std::string las_file = command_option.input;
     std::ifstream ifs;
     ifs.open(las_file.c_str(), std::ios::in | std::ios::binary);
@@ -280,6 +292,7 @@ int main(int argc, char* argv[]) {
     liblas::Header const& header = reader.GetHeader();
     std::cout << "las_file size: " << header.GetPointRecordsCount() << "\n";
 
+    // Get the offset values
     double offset_x, offset_y, offset_z;
     offset_x = header.GetMinX();
     offset_y = header.GetMinY();
@@ -291,6 +304,8 @@ int main(int argc, char* argv[]) {
     std::cout << "offset_y: " << offset_y << "\n";
     std::cout << "offset_z: " << offset_z << "\n";
 
+    // Load the original pointcloud
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr origin_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     while (reader.ReadNextPoint()) {
         liblas::Point const& point = reader.GetPoint();
         pcl::PointXYZRGB current_point;
@@ -307,13 +322,13 @@ int main(int argc, char* argv[]) {
     std::cout << "ply_file: " << *origin_pcl_ptr << "\n";
     std::cout << "origin_pcl_ptr: " << origin_pcl_ptr->points.size() << "\n";
 
-    // Pre down sample
+    // Pre down sample the pointcloud
     std::cout << "Pre down sampling.\n";
     double leaf_size = Configurations::get_instance()->leaf_size / 1.5;
     origin_pcl_ptr = nearest_down_sampling_with_leaf_size(origin_pcl_ptr, leaf_size);
     std::cout << "origin_pcl_ptr after pre down sampling: " << origin_pcl_ptr->points.size() << "\n";
 
-    // Filter noise
+    // Apply noise filtering for the pointcloud
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr noise_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr remaining_pcl_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     remaining_pcl_ptr = command_option.noise(origin_pcl_ptr);
@@ -332,6 +347,8 @@ int main(int argc, char* argv[]) {
     noise_pcl_ptr->width = noise_pcl_ptr->points.size();
     noise_pcl_ptr->height = 1;
     std::cout << "p_noise " << noise_pcl_ptr->points.size() << "\n";
+
+    // Save the intermediate pointclouds
     if (command_option.inter) {
         pcl::io::savePLYFile(command_option.inter_noise, *remaining_pcl_ptr, true);
         std::cout << command_option.inter_noise << " saved.\n";
@@ -342,7 +359,7 @@ int main(int argc, char* argv[]) {
     }
     std::cout << "remaining_pcl_ptr after noise filtering: " << remaining_pcl_ptr->points.size() << "\n";
 
-    // Down sample
+    // Down sample the remaining pointcloud
     remaining_pcl_ptr = command_option.down_sampling(remaining_pcl_ptr);
     if (command_option.inter) {
         pcl::io::savePLYFile(command_option.inter_down_sampling, *remaining_pcl_ptr, true);

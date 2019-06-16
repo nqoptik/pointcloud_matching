@@ -102,8 +102,8 @@ void CloudProjection::get_matches_by_direction(const Eigen::Matrix4f transform, 
     std::cout << "flattened_new_pcl_ptr size: " << flattened_new_pcl_ptr->points.size() << "\n";
 
     // Determine the pointcloud's boundary
-    double x_min = 1e10, y_min = 1e10, z_min = 1e10;
-    double x_max = -1e10, y_max = -1e10, z_max = -1e10;
+    double x_min = FLT_MAX, y_min = FLT_MAX, z_min = FLT_MAX;
+    double x_max = -FLT_MAX, y_max = -FLT_MAX, z_max = -FLT_MAX;
     for (size_t i = 0; i < rotated_old_pcl_ptr->points.size(); ++i) {
         if (rotated_old_pcl_ptr->points[i].x < x_min)
             x_min = rotated_old_pcl_ptr->points[i].x;
@@ -220,7 +220,7 @@ void CloudProjection::get_matches_by_direction(const Eigen::Matrix4f transform, 
                 continue;
             }
             pcl::PointXYZRGB nn_point = rotated_old_pcl_ptr->points[nn_index[0]];
-            double max_z = -1e10;
+            double max_z = -FLT_MAX;
             for (size_t k = 0; k < nn_index.size(); ++k) {
                 if (rotated_old_pcl_ptr->points[nn_index[k]].z > max_z) {
                     max_z = rotated_old_pcl_ptr->points[nn_index[k]].z;
@@ -251,7 +251,7 @@ void CloudProjection::get_matches_by_direction(const Eigen::Matrix4f transform, 
                 continue;
             }
             pcl::PointXYZRGB nn_point = rotated_new_pcl_ptr->points[nn_index[0]];
-            double max_z = -1e10;
+            double max_z = -FLT_MAX;
             for (size_t k = 0; k < nn_index.size(); ++k) {
                 if (rotated_new_pcl_ptr->points[nn_index[k]].z > max_z) {
                     max_z = rotated_new_pcl_ptr->points[nn_index[k]].z;
@@ -282,7 +282,7 @@ void CloudProjection::get_matches_by_direction(const Eigen::Matrix4f transform, 
         if (!(kd_flattened_old_pcl.radiusSearch(tmp, distance_threshold, nn_index, nn_sqd_distance) > 0)) {
             continue;
         }
-        double max_z = -1e10;
+        double max_z = -FLT_MAX;
         size_t old_best_nn_index = 0;
         pcl::PointXYZRGB nn_old_point = rotated_old_pcl_ptr->points[nn_index[0]];
         for (size_t j = 0; j < nn_index.size(); ++j) {
@@ -298,7 +298,7 @@ void CloudProjection::get_matches_by_direction(const Eigen::Matrix4f transform, 
         if (!(kd_flattened_new_pcl.radiusSearch(tmp, distance_threshold, nn_index, nn_sqd_distance) > 0)) {
             continue;
         }
-        max_z = -1e10;
+        max_z = -FLT_MAX;
         size_t new_best_nn_index = 0;
         pcl::PointXYZRGB nn_new_point = rotated_new_pcl_ptr->points[nn_index[0]];
         for (size_t j = 0; j < nn_index.size(); ++j) {
@@ -372,13 +372,13 @@ void CloudProjection::detect_2d_matches(const cv::Mat old_projection_img,
     }
     std::cout << "good_matches.size() " << good_matches.size() << "\n";
 
-    // Draw good matches
+    // Draw the good matches
     cv::Mat correct_matches_img;
     drawMatches(new_projection_img, keypoints_new, old_projection_img, keypoints_old,
                 good_matches, correct_matches_img, cv::Scalar::all(-1), cv::Scalar::all(-1),
                 std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
 
-    // Detect good features to track
+    // Detect the good features to track
     cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 30, 0.01);
     cv::Size sub_pix_win_size(1, 1);
     cv::Mat old_projection_gray_img, new_projection_gray_img;
@@ -397,7 +397,7 @@ void CloudProjection::detect_2d_matches(const cv::Mat old_projection_img,
         cv::circle(corner_img, corners[i], 3, cv::Scalar(255), -1, 8);
     }
 
-    // Execute optical flow
+    // Execute the optical flow
     std::vector<cv::Point2f> new_corners, tmp_corners;
     std::vector<uchar> status, status_2;
     std::vector<float> errors, errors_2;
@@ -436,7 +436,7 @@ void CloudProjection::detect_2d_matches(const cv::Mat old_projection_img,
     }
     std::cout << "Total pairs: " << train_points.size() << "\n";
 
-    // Show and save intermediate images
+    // Show and save the intermediate images
     cv::flip(old_projection_img.clone(), old_projection_img, 0);
     cv::flip(new_projection_img.clone(), new_projection_img, 0);
     cv::flip(corner_img.clone(), corner_img, 0);

@@ -45,9 +45,13 @@ int main(int argc, char* argv[]) {
     }
     pcl::PointCloud<pcl::PointXYZ>::Ptr old_parts_ptr(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr new_parts_ptr(new pcl::PointCloud<pcl::PointXYZ>());
+
+    // Apply cloud diff checker on the pointclouds
     CloudDiffChecker CloudDiffCheckerInstance(old_pcl_ptr, new_pcl_ptr, old_parts_ptr, new_parts_ptr, argv[5]);
     std::cout << "old_parts_ptr.size: " << old_parts_ptr->points.size() << "\n";
     std::cout << "new_parts_ptr.size: " << new_parts_ptr->points.size() << "\n";
+
+    // Save the matching results
     std::ofstream ofs_pairs(argv[6]);
     ofs_pairs << std::fixed << offset1_x << " " << std::fixed << offset1_y << " " << std::fixed << offset1_z << "\n";
     for (size_t i = 0; i < old_parts_ptr->points.size(); ++i) {

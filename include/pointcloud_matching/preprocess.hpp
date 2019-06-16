@@ -37,7 +37,7 @@
     "\t-i <input_file>\n"          \
     "\t-ofs <offset_file>\n"
 
-typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr (*FUNCTION)(pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr (*FUNCTION)(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
 struct CommandOption {
     FUNCTION noise = NULL;
     FUNCTION down_sampling = NULL;

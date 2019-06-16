@@ -81,7 +81,7 @@ struct CommandOption {
     char* offset2 = NULL;
 } command_option;
 
-// Keypoints detection
+// The keypoints detection functions
 void iss_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud_ptr,
                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr keypoints_ptr,
                           const bool is_before);
@@ -99,7 +99,7 @@ void two_dimension_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr
                                     const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
                                     const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr);
 
-// Descriptors extraction
+// The descriptors extraction functions
 void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pcl_ptr,
                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pcl_ptr,
                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_kps_ptr,
