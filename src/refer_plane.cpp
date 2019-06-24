@@ -4,20 +4,20 @@ int main(int argc, char* argv[]) {
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
 
     // Load the old pointcloud
-    pcl::PointCloud<pcl::PointXYZ>::Ptr old_pcl_ptr(new pcl::PointCloud<pcl::PointXYZ>());
-    if (pcl::io::loadPLYFile(argv[1], *old_pcl_ptr) < 0) {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr old_pointcloud_ptr(new pcl::PointCloud<pcl::PointXYZ>());
+    if (pcl::io::loadPLYFile(argv[1], *old_pointcloud_ptr) < 0) {
         printf("Failed to load the old pointcloud!\n");
         return 1;
     }
-    std::cout << "old_pcl_ptr size: " << old_pcl_ptr->points.size() << "\n";
+    std::cout << "old_pointcloud_ptr size: " << old_pointcloud_ptr->points.size() << "\n";
 
     // Load the new pointcloud
-    pcl::PointCloud<pcl::PointXYZ>::Ptr new_pcl_ptr(new pcl::PointCloud<pcl::PointXYZ>());
-    if (pcl::io::loadPLYFile(argv[2], *new_pcl_ptr) < 0) {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr new_pointcloud_ptr(new pcl::PointCloud<pcl::PointXYZ>());
+    if (pcl::io::loadPLYFile(argv[2], *new_pointcloud_ptr) < 0) {
         printf("Failed to load the new pointcloud!\n");
         return 1;
     }
-    std::cout << "new_pcl_ptr size: " << new_pcl_ptr->points.size() << "\n";
+    std::cout << "new_pointcloud_ptr size: " << new_pointcloud_ptr->points.size() << "\n";
 
     // Load the offset values
     double offset1_x, offset1_y, offset1_z;
@@ -38,16 +38,16 @@ int main(int argc, char* argv[]) {
     offset_z = offset2_z - offset1_z;
 
     // Shift the new pointcloud by the offset values
-    for (size_t i = 0; i < new_pcl_ptr->points.size(); ++i) {
-        new_pcl_ptr->points[i].x += offset_x;
-        new_pcl_ptr->points[i].y += offset_y;
-        new_pcl_ptr->points[i].z += offset_z;
+    for (size_t i = 0; i < new_pointcloud_ptr->points.size(); ++i) {
+        new_pointcloud_ptr->points[i].x += offset_x;
+        new_pointcloud_ptr->points[i].y += offset_y;
+        new_pointcloud_ptr->points[i].z += offset_z;
     }
     pcl::PointCloud<pcl::PointXYZ>::Ptr old_parts_ptr(new pcl::PointCloud<pcl::PointXYZ>());
     pcl::PointCloud<pcl::PointXYZ>::Ptr new_parts_ptr(new pcl::PointCloud<pcl::PointXYZ>());
 
     // Apply cloud diff checker on the pointclouds
-    CloudDiffChecker CloudDiffCheckerInstance(old_pcl_ptr, new_pcl_ptr, old_parts_ptr, new_parts_ptr, argv[5]);
+    CloudDiffChecker CloudDiffCheckerInstance(old_pointcloud_ptr, new_pointcloud_ptr, old_parts_ptr, new_parts_ptr, argv[5]);
     std::cout << "old_parts_ptr.size: " << old_parts_ptr->points.size() << "\n";
     std::cout << "new_parts_ptr.size: " << new_parts_ptr->points.size() << "\n";
 

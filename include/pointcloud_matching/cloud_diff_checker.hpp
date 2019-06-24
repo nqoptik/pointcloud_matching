@@ -19,51 +19,51 @@
 #include <opencv2/ml/ml.hpp>
 
 struct PlaneCoefficients {
-    float o_a, o_b, o_c, o_d, o_inliers, o_total;
-    float n_a, n_b, n_c, n_d, n_inliers, n_total;
+    float old_a, old_b, old_c, old_d, old_inliers, old_total;
+    float new_a, new_b, new_c, new_d, new_inliers, new_total;
 
-    PlaneCoefficients(const float o_a = 0,
-                      const float o_b = 0,
-                      const float o_c = 0,
-                      const float o_d = 0,
-                      const float o_inliers = 0,
-                      const float o_total = 0,
-                      const float n_a = 0,
-                      const float n_b = 0,
-                      const float n_c = 0,
-                      const float n_d = 0,
-                      const float n_inliers = 0,
-                      const float n_total = 0) {
-        this->o_a = o_a;
-        this->o_b = o_b;
-        this->o_c = o_c;
-        this->o_d = o_d;
-        this->o_inliers = o_inliers;
-        this->o_total = o_total;
-        this->n_a = n_a;
-        this->n_b = n_b;
-        this->n_c = n_c;
-        this->n_d = n_d;
-        this->n_inliers = n_inliers;
-        this->n_total = n_total;
+    PlaneCoefficients(const float old_a = 0,
+                      const float old_b = 0,
+                      const float old_c = 0,
+                      const float old_d = 0,
+                      const float old_inliers = 0,
+                      const float old_total = 0,
+                      const float new_a = 0,
+                      const float new_b = 0,
+                      const float new_c = 0,
+                      const float new_d = 0,
+                      const float new_inliers = 0,
+                      const float new_total = 0) {
+        this->old_a = old_a;
+        this->old_b = old_b;
+        this->old_c = old_c;
+        this->old_d = old_d;
+        this->old_inliers = old_inliers;
+        this->old_total = old_total;
+        this->new_a = new_a;
+        this->new_b = new_b;
+        this->new_c = new_c;
+        this->new_d = new_d;
+        this->new_inliers = new_inliers;
+        this->new_total = new_total;
     }
 };
 
 struct ReferPlane {
-    float r_a, r_b, r_c, r_d;
+    float refer_a, refer_b, refer_c, refer_d;
 
-    ReferPlane(const float r_a = 0, const float r_b = 0, const float r_c = 0, const float r_d = 0) {
-        this->r_a = r_a;
-        this->r_b = r_b;
-        this->r_c = r_c;
-        this->r_d = r_d;
+    ReferPlane(const float refer_a = 0, const float refer_b = 0, const float refer_c = 0, const float refer_d = 0) {
+        this->refer_a = refer_a;
+        this->refer_b = refer_b;
+        this->refer_c = refer_c;
+        this->refer_d = refer_d;
     }
 };
 
 class CloudDiffChecker {
    private:
-    pcl::PointCloud<pcl::PointXYZ>::Ptr old_pcl_ptr_;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr new_pcl_ptr_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr old_pointcloud_ptr_;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr new_pointcloud_ptr_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr old_parts_ptr_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr new_parts_ptr_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr old_diff_ptr_;
@@ -74,7 +74,7 @@ class CloudDiffChecker {
     pcl::PointCloud<pcl::PointXYZ>::Ptr old_projection_ptr_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr new_projection_ptr_;
     std::string matching_results_file_;
-    double old_res_, new_res_;
+    double old_resolution_, new_resolution_;
     float min_moving_distance_;
     float x_min_, x_max_;
     float y_min_, y_max_;
@@ -87,24 +87,24 @@ class CloudDiffChecker {
     float ransac_distance_threshold_;
 
    public:
-    CloudDiffChecker(const pcl::PointCloud<pcl::PointXYZ>::Ptr old_pcl_ptr,
-                     const pcl::PointCloud<pcl::PointXYZ>::Ptr new_pcl_ptr,
+    CloudDiffChecker(const pcl::PointCloud<pcl::PointXYZ>::Ptr old_pointcloud_ptr,
+                     const pcl::PointCloud<pcl::PointXYZ>::Ptr new_pointcloud_ptr,
                      const pcl::PointCloud<pcl::PointXYZ>::Ptr old_parts_ptr,
                      const pcl::PointCloud<pcl::PointXYZ>::Ptr new_parts_ptr,
                      const std::string matching_results_file);
     ~CloudDiffChecker();
 
-    static double compute_cloud_resolution(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& cloud);
+    static double compute_pointcloud_resolution(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& pointcloud_ptr);
     void determine_diff_regions();
-    void get_cloud_parameters();
+    void get_pointcloud_parameters();
     void gridding_diff();
     void get_refer_plane();
     void get_projections();
     void draw_transformation();
-    static float distance(const pcl::PointXYZ p1, const pcl::PointXYZ p2);
-    static float squared_distance(const pcl::PointXYZ p1, const pcl::PointXYZ p2);
+    static float distance(const pcl::PointXYZ point_1, const pcl::PointXYZ point_2);
+    static float squared_distance(const pcl::PointXYZ point_1, const pcl::PointXYZ point_2);
     static pcl::PointXYZ project_onto_plane(const pcl::PointXYZ project_point, const pcl::PointXYZ plane_point, const pcl::PointXYZ plane_normal);
-    static pcl::PointXYZ line_onto_plane(const pcl::PointXYZ point, const pcl::PointXYZ normal, const float a, const float b, const float c, const float d);
+    static pcl::PointXYZ line_onto_plane(const pcl::PointXYZ point_xyz, const pcl::PointXYZ normal, const float a, const float b, const float c, const float d);
 };
 
 #endif  // CLOUD_DIFF_CHECKER_HPP
