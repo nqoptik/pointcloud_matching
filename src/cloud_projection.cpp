@@ -37,11 +37,11 @@ void normalise_colours(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pcl_ptr) {
 CloudProjection::CloudProjection(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
                                  const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
                                  const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
-                                 const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr) {
-    old_pointcloud_ptr_ = old_pointcloud_ptr;
-    new_pointcloud_ptr_ = new_pointcloud_ptr;
-    old_parts_ptr_ = old_parts_ptr;
-    new_parts_ptr_ = new_parts_ptr;
+                                 const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr)
+    : old_pointcloud_ptr_(old_pointcloud_ptr_),
+      new_pointcloud_ptr_(new_pointcloud_ptr),
+      old_parts_ptr_(old_parts_ptr),
+      new_parts_ptr_(new_parts_ptr) {
     match_train_indices_.clear();
     match_query_indices_.clear();
     direction_indices_.clear();

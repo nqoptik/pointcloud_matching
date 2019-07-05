@@ -22,44 +22,41 @@ struct PlaneCoefficients {
     float old_a, old_b, old_c, old_d, old_inliers, old_total;
     float new_a, new_b, new_c, new_d, new_inliers, new_total;
 
-    PlaneCoefficients(const float& old_a = 0,
-                      const float& old_b = 0,
-                      const float& old_c = 0,
-                      const float& old_d = 0,
-                      const float& old_inliers = 0,
-                      const float& old_total = 0,
-                      const float& new_a = 0,
-                      const float& new_b = 0,
-                      const float& new_c = 0,
-                      const float& new_d = 0,
-                      const float& new_inliers = 0,
-                      const float& new_total = 0) {
-        this->old_a = old_a;
-        this->old_b = old_b;
-        this->old_c = old_c;
-        this->old_d = old_d;
-        this->old_inliers = old_inliers;
-        this->old_total = old_total;
-        this->new_a = new_a;
-        this->new_b = new_b;
-        this->new_c = new_c;
-        this->new_d = new_d;
-        this->new_inliers = new_inliers;
-        this->new_total = new_total;
+    PlaneCoefficients(const float& t_old_a = 0,
+                      const float& t_old_b = 0,
+                      const float& t_old_c = 0,
+                      const float& t_old_d = 0,
+                      const float& t_old_inliers = 0,
+                      const float& t_old_total = 0,
+                      const float& t_new_a = 0,
+                      const float& t_new_b = 0,
+                      const float& t_new_c = 0,
+                      const float& t_new_d = 0,
+                      const float& t_new_inliers = 0,
+                      const float& t_new_total = 0)
+        : old_a(t_old_a),
+          old_b(t_old_b),
+          old_c(t_old_c),
+          old_d(t_old_d),
+          old_inliers(t_old_inliers),
+          old_total(t_old_total),
+          new_a(t_new_a),
+          new_b(t_new_b),
+          new_c(t_new_c),
+          new_d(t_new_d),
+          new_inliers(t_new_inliers),
+          new_total(t_new_total) {
     }
 };
 
 struct ReferPlane {
     float refer_a, refer_b, refer_c, refer_d;
 
-    ReferPlane(const float& refer_a = 0,
-               const float& refer_b = 0,
-               const float& refer_c = 0,
-               const float& refer_d = 0) {
-        this->refer_a = refer_a;
-        this->refer_b = refer_b;
-        this->refer_c = refer_c;
-        this->refer_d = refer_d;
+    ReferPlane(const float& t_refer_a = 0,
+               const float& t_refer_b = 0,
+               const float& t_refer_c = 0,
+               const float& t_refer_d = 0)
+        : refer_a(t_refer_a), refer_b(t_refer_b), refer_c(t_refer_c), refer_d(t_refer_d) {
     }
 };
 

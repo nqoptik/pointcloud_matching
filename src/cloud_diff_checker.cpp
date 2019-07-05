@@ -4,12 +4,12 @@ CloudDiffChecker::CloudDiffChecker(const pcl::PointCloud<pcl::PointXYZ>::Ptr& ol
                                    const pcl::PointCloud<pcl::PointXYZ>::Ptr& new_pointcloud_ptr,
                                    const pcl::PointCloud<pcl::PointXYZ>::Ptr& old_parts_ptr,
                                    const pcl::PointCloud<pcl::PointXYZ>::Ptr& new_parts_ptr,
-                                   const std::string& matching_results_file) {
-    old_pointcloud_ptr_ = old_pointcloud_ptr;
-    new_pointcloud_ptr_ = new_pointcloud_ptr;
-    old_parts_ptr_ = old_parts_ptr;
-    new_parts_ptr_ = new_parts_ptr;
-    matching_results_file_ = matching_results_file;
+                                   const std::string& matching_results_file)
+    : old_pointcloud_ptr_(old_pointcloud_ptr),
+      new_pointcloud_ptr_(new_pointcloud_ptr),
+      old_parts_ptr_(old_parts_ptr),
+      new_parts_ptr_(new_parts_ptr),
+      matching_results_file_(matching_results_file) {
     old_diff_ptr_ = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
     new_diff_ptr_ = (pcl::PointCloud<pcl::PointXYZ>::Ptr)(new pcl::PointCloud<pcl::PointXYZ>());
     old_resolution_ = 1.0;
