@@ -1,6 +1,6 @@
 #include "pointcloud_matching/cloud_projection.hpp"
 
-void normalise_colours(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_ptr) {
+void normalise_colours(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pcl_ptr) {
     // Compute the pointcloud's average corlours
     double r_avg = 0, g_avg = 0, b_avg = 0;
     for (size_t i = 0; i < pcl_ptr->points.size(); ++i) {
@@ -34,10 +34,10 @@ void normalise_colours(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_ptr) {
     }
 }
 
-CloudProjection::CloudProjection(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                                 const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                                 const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                                 const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr) {
+CloudProjection::CloudProjection(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                                 const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                                 const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                                 const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr) {
     old_pointcloud_ptr_ = old_pointcloud_ptr;
     new_pointcloud_ptr_ = new_pointcloud_ptr;
     old_parts_ptr_ = old_parts_ptr;
@@ -50,7 +50,7 @@ CloudProjection::CloudProjection(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr ol
 CloudProjection::~CloudProjection() {
 }
 
-void CloudProjection::get_matches_by_direction(const Eigen::Matrix4f transform, const int direction_index) {
+void CloudProjection::get_matches_by_direction(const Eigen::Matrix4f& transform, const int& direction_index) {
     // Rotate the old pointcloud
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr rotated_old_pointcloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     pcl::transformPointCloud(*old_pointcloud_ptr_, *rotated_old_pointcloud_ptr, transform);
@@ -333,12 +333,12 @@ void CloudProjection::get_matches_by_direction(const Eigen::Matrix4f transform, 
     }
 }
 
-void CloudProjection::detect_2d_matches(const cv::Mat old_projection_image,
-                                        const cv::Mat new_projection_image,
-                                        const double distance_threshold,
+void CloudProjection::detect_2d_matches(const cv::Mat& old_projection_image,
+                                        const cv::Mat& new_projection_image,
+                                        const double& distance_threshold,
                                         std::vector<cv::Point2f>& train_points,
                                         std::vector<cv::Point2f>& query_points,
-                                        const int direction_index) {
+                                        const int& direction_index) {
     //Detect key points using SIFT
     cv::Ptr<cv::Feature2D> f2d = cv::xfeatures2d::SIFT::create();
     std::vector<cv::KeyPoint> old_keypoints, new_keypoints;

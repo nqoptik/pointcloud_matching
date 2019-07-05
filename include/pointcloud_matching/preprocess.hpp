@@ -37,7 +37,7 @@
     "\t-i <input_file>\n"          \
     "\t-ofs <offset_file>\n"
 
-typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr (*FUNCTION)(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr (*FUNCTION)(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&);
 struct CommandOption {
     FUNCTION noise = NULL;
     FUNCTION down_sampling = NULL;
@@ -48,18 +48,18 @@ struct CommandOption {
     char* inter_down_sampling = NULL;
 } command_option;
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling_with_leaf_size(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr,
-                                                                            const double leaf_size);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling_with_leaf_size(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr,
+                                                                            const double& leaf_size);
 
 // The noise filtering functions
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr color_based_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_color_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr color_based_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_color_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr);
 
 // The down sampling functions
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr);
 
 // The array reference function
 FUNCTION functions[] = {

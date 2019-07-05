@@ -28,7 +28,7 @@
 
 #include "pointcloud_matching/configurations.hpp"
 
-void normalise_colours(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_ptr);
+void normalise_colours(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pcl_ptr);
 
 class CloudProjection {
    private:
@@ -41,18 +41,19 @@ class CloudProjection {
     std::vector<int> direction_indices_;
 
    public:
-    CloudProjection(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr);
+    CloudProjection(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr);
     ~CloudProjection();
-    void get_matches_by_direction(const Eigen::Matrix4f transform, const int direction_index);
-    static void detect_2d_matches(const cv::Mat old_projection_image,
-                                  const cv::Mat new_projection_image,
-                                  const double distance_threshold,
+
+    void get_matches_by_direction(const Eigen::Matrix4f& transform, const int& direction_index);
+    static void detect_2d_matches(const cv::Mat& old_projection_image,
+                                  const cv::Mat& new_projection_image,
+                                  const double& distance_threshold,
                                   std::vector<cv::Point2f>& train_points,
                                   std::vector<cv::Point2f>& query_points,
-                                  const int direction_index);
+                                  const int& direction_index);
     void detect_matches();
 };
 

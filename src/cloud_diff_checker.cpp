@@ -1,10 +1,10 @@
 #include "pointcloud_matching/cloud_diff_checker.hpp"
 
-CloudDiffChecker::CloudDiffChecker(const pcl::PointCloud<pcl::PointXYZ>::Ptr old_pointcloud_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZ>::Ptr new_pointcloud_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZ>::Ptr old_parts_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZ>::Ptr new_parts_ptr,
-                                   const std::string matching_results_file) {
+CloudDiffChecker::CloudDiffChecker(const pcl::PointCloud<pcl::PointXYZ>::Ptr& old_pointcloud_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZ>::Ptr& new_pointcloud_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZ>::Ptr& old_parts_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZ>::Ptr& new_parts_ptr,
+                                   const std::string& matching_results_file) {
     old_pointcloud_ptr_ = old_pointcloud_ptr;
     new_pointcloud_ptr_ = new_pointcloud_ptr;
     old_parts_ptr_ = old_parts_ptr;
@@ -37,21 +37,21 @@ CloudDiffChecker::CloudDiffChecker(const pcl::PointCloud<pcl::PointXYZ>::Ptr old
 CloudDiffChecker::~CloudDiffChecker() {
 }
 
-float CloudDiffChecker::distance(const pcl::PointXYZ point_1, const pcl::PointXYZ point_2) {
+float CloudDiffChecker::distance(const pcl::PointXYZ& point_1, const pcl::PointXYZ& point_2) {
     float d_x = point_1.x - point_2.x;
     float d_y = point_1.y - point_2.y;
     float d_z = point_1.z - point_2.z;
     return sqrt(d_x * d_x + d_y * d_y + d_z * d_z);
 }
 
-float CloudDiffChecker::squared_distance(const pcl::PointXYZ point_1, const pcl::PointXYZ point_2) {
+float CloudDiffChecker::squared_distance(const pcl::PointXYZ& point_1, const pcl::PointXYZ& point_2) {
     float d_x = point_1.x - point_2.x;
     float d_y = point_1.y - point_2.y;
     float d_z = point_1.z - point_2.z;
     return (d_x * d_x + d_y * d_y + d_z * d_z);
 }
 
-pcl::PointXYZ CloudDiffChecker::project_onto_plane(const pcl::PointXYZ project_point, const pcl::PointXYZ plane_point, const pcl::PointXYZ plane_normal) {
+pcl::PointXYZ CloudDiffChecker::project_onto_plane(const pcl::PointXYZ& project_point, const pcl::PointXYZ& plane_point, const pcl::PointXYZ& plane_normal) {
     float t_upper = plane_normal.x * (plane_point.x - project_point.x) + plane_normal.y * (plane_point.y - project_point.y) + plane_normal.z * (plane_point.z - project_point.z);
     float t_lower = plane_normal.x * plane_normal.x + plane_normal.y * plane_normal.y + plane_normal.z * plane_normal.z;
     float t = t_upper / t_lower;
@@ -62,7 +62,7 @@ pcl::PointXYZ CloudDiffChecker::project_onto_plane(const pcl::PointXYZ project_p
     return point_xyz;
 }
 
-pcl::PointXYZ CloudDiffChecker::line_onto_plane(const pcl::PointXYZ point_xyz, const pcl::PointXYZ normal, const float a, const float b, const float c, const float d) {
+pcl::PointXYZ CloudDiffChecker::line_onto_plane(const pcl::PointXYZ& point_xyz, const pcl::PointXYZ& normal, const float& a, const float& b, const float& c, const float& d) {
     float t_upper = -(a * point_xyz.x + b * point_xyz.y + c * point_xyz.z + d);
     float t_lower = a * normal.x + b * normal.y + c * normal.z;
     float t = t_upper / t_lower;

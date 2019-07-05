@@ -1,7 +1,7 @@
 #include "pointcloud_matching/preprocess.hpp"
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling_with_leaf_size(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr,
-                                                                            const double leaf_size) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling_with_leaf_size(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr,
+                                                                            const double& leaf_size) {
     std::cout << "Nearest median down sampling.\n";
 
     // Initialise the voxel grid
@@ -39,7 +39,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling_with_leaf_size(cons
 }
 
 // The noise filtering functions
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr) {
     std::cout << "Statistical outliers removal.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_pointcloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     for (int loop = 0; loop < 1; ++loop) {
@@ -61,7 +61,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_filtering_noise(const pcl::PointClou
     return stat_pointcloud_ptr;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr) {
     std::cout << "Radius outliers removal.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_pointcloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     for (int loop = 0; loop < 1; ++loop) {
@@ -83,7 +83,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr radius_filtering_noise(const pcl::PointCl
     return radius_pointcloud_ptr;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr color_based_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr color_based_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr) {
     std::cout << "Color-based outliers removal.\n";
 
     // Initialise the KdTreeFLANN search for the pointcloud
@@ -136,7 +136,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr color_based_filtering_noise(const pcl::Po
     return color_pointcloud_ptr;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_color_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_color_filtering_noise(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr) {
     std::cout << "Statistical and color-based outliers removal.\n";
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_color_pointcloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     stat_color_pointcloud_ptr = stat_filtering_noise(input_pointcloud_ptr);
@@ -145,7 +145,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr stat_color_filtering_noise(const pcl::Poi
 }
 
 // The down sampling functions
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr) {
     std::cout << "Median down sampling.\n";
 
     // Initialise the voxel grid
@@ -160,13 +160,13 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr median_down_sampling(const pcl::PointClou
     return median_pointcloud_ptr;
 }
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_pointcloud_ptr) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_pointcloud_ptr) {
     std::cout << "Nearest median down sampling.\n";
     double leaf_size = Configurations::get_instance()->leaf_size;
     return nearest_down_sampling_with_leaf_size(input_pointcloud_ptr, leaf_size);
 }
 
-void print_matching_option(const char* parameter_ptr, const int option) {
+void print_matching_option(const char* parameter_ptr, const int& option) {
     if (parameter_ptr == NULL || option >= sizeof(parameter_ptr) / sizeof(parameter_ptr[0])) {
         std::cout << ERROR << "\n";
         std::cout << HELP << "\n";
@@ -197,7 +197,7 @@ int get_option(const char* parameter_ptr) {
     return INVALID;
 }
 
-int config_value_by_option(const int option, char* parameter_ptr) {
+int config_value_by_option(const int& option, char* parameter_ptr) {
     std::string parameter(parameter_ptr);
 
     if (parameter_ptr == NULL || parameter.compare("") == 0 || option >= sizeof(options) / sizeof(options[0])) {

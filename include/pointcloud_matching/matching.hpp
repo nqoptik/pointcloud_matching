@@ -47,24 +47,24 @@
     "\t-i2 : .ply file\n"                             \
     "\t-o : output file\n"
 
-void draw_keypoints(const std::string file_name,
-                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud_ptr,
-                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr keypoints_ptr);
-void draw_matching_results(const std::string file_name,
-                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr);
+void draw_keypoints(const std::string& file_name,
+                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointcloud_ptr,
+                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& keypoints_ptr);
+void draw_matching_results(const std::string& file_name,
+                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr);
 
 union FUNCTION {
-    void (*f3)(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr, const bool);
+    void (*f3)(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&, const bool&);
 
-    void (*f6)(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr,
-               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr,
-               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr,
-               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr,
-               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr,
-               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr);
+    void (*f6)(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&,
+               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&,
+               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&,
+               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&,
+               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&,
+               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&);
 };
 
 struct CommandOption {
@@ -82,15 +82,15 @@ struct CommandOption {
 } command_option;
 
 // The keypoints detection functions
-void iss_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud_ptr,
-                          const pcl::PointCloud<pcl::PointXYZRGB>::Ptr keypoints_ptr,
-                          const bool is_before);
-void susan_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud_ptr,
-                            const pcl::PointCloud<pcl::PointXYZRGB>::Ptr keypoints_ptr,
-                            const bool is_before);
-void harris3d_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud_ptr,
-                               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr keypoints_ptr,
-                               const bool is_before);
+void iss_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointcloud_ptr,
+                          const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& keypoints_ptr,
+                          const bool& is_before);
+void susan_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointcloud_ptr,
+                            const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& keypoints_ptr,
+                            const bool& is_before);
+void harris3d_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointcloud_ptr,
+                               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& keypoints_ptr,
+                               const bool& is_before);
 
 void two_dimension_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
                                     const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
@@ -100,30 +100,30 @@ void two_dimension_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr
                                     const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr);
 
 // The descriptors extraction functions
-void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_keypoints_ptr,
-                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_keypoints_ptr,
-                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr);
-void shot_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_keypoints_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_keypoints_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr);
-void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_keypoints_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_keypoints_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr);
-void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_keypoints_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_keypoints_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr);
+void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_keypoints_ptr,
+                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_keypoints_ptr,
+                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr);
+void shot_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_keypoints_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_keypoints_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr);
+void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_keypoints_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_keypoints_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr);
+void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_keypoints_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_keypoints_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr);
 
 const char* method_name[] = {
     // The keypoint detection methods

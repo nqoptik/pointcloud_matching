@@ -22,18 +22,18 @@ struct PlaneCoefficients {
     float old_a, old_b, old_c, old_d, old_inliers, old_total;
     float new_a, new_b, new_c, new_d, new_inliers, new_total;
 
-    PlaneCoefficients(const float old_a = 0,
-                      const float old_b = 0,
-                      const float old_c = 0,
-                      const float old_d = 0,
-                      const float old_inliers = 0,
-                      const float old_total = 0,
-                      const float new_a = 0,
-                      const float new_b = 0,
-                      const float new_c = 0,
-                      const float new_d = 0,
-                      const float new_inliers = 0,
-                      const float new_total = 0) {
+    PlaneCoefficients(const float& old_a = 0,
+                      const float& old_b = 0,
+                      const float& old_c = 0,
+                      const float& old_d = 0,
+                      const float& old_inliers = 0,
+                      const float& old_total = 0,
+                      const float& new_a = 0,
+                      const float& new_b = 0,
+                      const float& new_c = 0,
+                      const float& new_d = 0,
+                      const float& new_inliers = 0,
+                      const float& new_total = 0) {
         this->old_a = old_a;
         this->old_b = old_b;
         this->old_c = old_c;
@@ -52,7 +52,10 @@ struct PlaneCoefficients {
 struct ReferPlane {
     float refer_a, refer_b, refer_c, refer_d;
 
-    ReferPlane(const float refer_a = 0, const float refer_b = 0, const float refer_c = 0, const float refer_d = 0) {
+    ReferPlane(const float& refer_a = 0,
+               const float& refer_b = 0,
+               const float& refer_c = 0,
+               const float& refer_d = 0) {
         this->refer_a = refer_a;
         this->refer_b = refer_b;
         this->refer_c = refer_c;
@@ -87,24 +90,25 @@ class CloudDiffChecker {
     float ransac_distance_threshold_;
 
    public:
-    CloudDiffChecker(const pcl::PointCloud<pcl::PointXYZ>::Ptr old_pointcloud_ptr,
-                     const pcl::PointCloud<pcl::PointXYZ>::Ptr new_pointcloud_ptr,
-                     const pcl::PointCloud<pcl::PointXYZ>::Ptr old_parts_ptr,
-                     const pcl::PointCloud<pcl::PointXYZ>::Ptr new_parts_ptr,
-                     const std::string matching_results_file);
+    CloudDiffChecker(const pcl::PointCloud<pcl::PointXYZ>::Ptr& old_pointcloud_ptr,
+                     const pcl::PointCloud<pcl::PointXYZ>::Ptr& new_pointcloud_ptr,
+                     const pcl::PointCloud<pcl::PointXYZ>::Ptr& old_parts_ptr,
+                     const pcl::PointCloud<pcl::PointXYZ>::Ptr& new_parts_ptr,
+                     const std::string& matching_results_file);
     ~CloudDiffChecker();
 
+    static float distance(const pcl::PointXYZ& point_1, const pcl::PointXYZ& point_2);
+    static float squared_distance(const pcl::PointXYZ& point_1, const pcl::PointXYZ& point_2);
+    static pcl::PointXYZ project_onto_plane(const pcl::PointXYZ& project_point, const pcl::PointXYZ& plane_point, const pcl::PointXYZ& plane_normal);
+    static pcl::PointXYZ line_onto_plane(const pcl::PointXYZ& point_xyz, const pcl::PointXYZ& normal, const float& a, const float& b, const float& c, const float& d);
     static double compute_pointcloud_resolution(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& pointcloud_ptr);
+
     void determine_diff_regions();
     void get_pointcloud_parameters();
     void gridding_diff();
     void get_refer_plane();
     void get_projections();
     void draw_transformation();
-    static float distance(const pcl::PointXYZ point_1, const pcl::PointXYZ point_2);
-    static float squared_distance(const pcl::PointXYZ point_1, const pcl::PointXYZ point_2);
-    static pcl::PointXYZ project_onto_plane(const pcl::PointXYZ project_point, const pcl::PointXYZ plane_point, const pcl::PointXYZ plane_normal);
-    static pcl::PointXYZ line_onto_plane(const pcl::PointXYZ point_xyz, const pcl::PointXYZ normal, const float a, const float b, const float c, const float d);
 };
 
 #endif  // CLOUD_DIFF_CHECKER_HPP

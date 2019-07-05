@@ -1,8 +1,8 @@
 #include "pointcloud_matching/matching.hpp"
 
-void draw_keypoints(const std::string file_name,
-                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud_ptr,
-                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr keypoints_ptr) {
+void draw_keypoints(const std::string& file_name,
+                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointcloud_ptr,
+                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& keypoints_ptr) {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr drawn_keypoints_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     for (size_t i = 0; i < keypoints_ptr->points.size(); ++i) {
         float step = Configurations::get_instance()->leaf_size / 100;
@@ -45,11 +45,11 @@ void draw_keypoints(const std::string file_name,
     std::cout << file_name << " saved.\n";
 }
 
-void draw_matching_results(const std::string file_name,
-                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr) {
+void draw_matching_results(const std::string& file_name,
+                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                           const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr) {
     double leaf_size = Configurations::get_instance()->leaf_size * 2;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr matches_ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
     for (size_t i = 0; i < old_pointcloud_ptr->points.size(); ++i) {
@@ -117,9 +117,9 @@ void draw_matching_results(const std::string file_name,
 }
 
 // The keypoints detection functions
-void iss_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud_ptr,
-                          const pcl::PointCloud<pcl::PointXYZRGB>::Ptr keypoints_ptr,
-                          const bool is_before) {
+void iss_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointcloud_ptr,
+                          const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& keypoints_ptr,
+                          const bool& is_before) {
     printf("ISS keypoint detection.\n");
     double iss_salient_radius;
     double iss_nonmax_radius;
@@ -143,9 +143,9 @@ void iss_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointclou
     iss_detector.compute(*keypoints_ptr);
 }
 
-void susan_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud_ptr,
-                            const pcl::PointCloud<pcl::PointXYZRGB>::Ptr keypoints_ptr,
-                            const bool is_before) {
+void susan_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointcloud_ptr,
+                            const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& keypoints_ptr,
+                            const bool& is_before) {
     printf("Susan keypoint detection.\n");
     double susan_radius;
     if (is_before) {
@@ -161,9 +161,9 @@ void susan_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcl
     susan_detector.compute(*keypoints_ptr);
 }
 
-void harris3d_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr pointcloud_ptr,
-                               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr keypoints_ptr,
-                               const bool is_before) {
+void harris3d_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointcloud_ptr,
+                               const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& keypoints_ptr,
+                               const bool& is_before) {
     printf("Harris 3d keypoint detection.\n");
 
     // Detect the pointcloud's keypoints using the Harris3d detetector
@@ -206,24 +206,24 @@ void harris3d_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr poin
     keypoints_ptr->height = 1;
 }
 
-void two_dimension_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_keypoints_ptr,
-                                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_keypoints_ptr,
-                                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr) {
+void two_dimension_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_keypoints_ptr,
+                                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_keypoints_ptr,
+                                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                                    const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr) {
     printf("2D matching method.\n");
     CloudProjection cloud_projection(old_pointcloud_ptr, new_pointcloud_ptr, old_parts_ptr, new_parts_ptr);
     cloud_projection.detect_matches();
 }
 
 // The descriptors extraction functions
-void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_keypoints_ptr,
-                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_keypoints_ptr,
-                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr) {
+void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_keypoints_ptr,
+                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_keypoints_ptr,
+                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                             const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr) {
     printf("ICP matching.\n");
 
     // Down sample the pointclouds to speedup the icp process
@@ -374,12 +374,12 @@ void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_po
     }
 }
 
-void shot_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_keypoints_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_keypoints_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr) {
+void shot_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_keypoints_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_keypoints_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr) {
     printf("SHOT matching.\n");
 
     // Initialise the KdTree search for normal estimation
@@ -521,12 +521,12 @@ void shot_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_p
     }
 }
 
-void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_keypoints_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_keypoints_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr) {
+void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_keypoints_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_keypoints_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                              const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr) {
     printf("FPFH matching.\n");
 
     // Initialise the KdTree search for normal estimation
@@ -704,12 +704,12 @@ void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_p
     }
 }
 
-void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_keypoints_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_keypoints_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr,
-                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_parts_ptr) {
+void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_keypoints_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_keypoints_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
+                                   const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr) {
     printf("SHOTCOLOR matching.\n");
     normalise_colours(old_pointcloud_ptr);
     normalise_colours(new_pointcloud_ptr);
@@ -853,7 +853,7 @@ void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr 
     }
 }
 
-void print_matching_option(const char* parameter_ptr, const int option) {
+void print_matching_option(const char* parameter_ptr, const int& option) {
     if (parameter_ptr == NULL || option >= sizeof(parameter_ptr) / sizeof(parameter_ptr[0])) {
         std::cout << ERROR << "\n";
         std::cout << HELP << "\n";
@@ -885,7 +885,7 @@ int get_option(const char* parameter_ptr) {
     return INVALID;
 }
 
-int config_value_by_option(const int option, char* parameter_ptr) {
+int config_value_by_option(const int& option, char* parameter_ptr) {
     std::string parameter(parameter_ptr);
 
     if (parameter_ptr == NULL || parameter.compare("") == 0 || option >= sizeof(options) / sizeof(options[0])) {
