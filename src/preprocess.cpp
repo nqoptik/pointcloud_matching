@@ -106,7 +106,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr color_based_filtering_noise(const pcl::Po
     for (size_t i = 0; i < input_pointcloud_ptr->points.size(); ++i)
     {
         pcl::PointXYZRGB near_point = input_pointcloud_ptr->points[i];
-        int K = Configurations::get_instance()->cl_based_neighbours;
+        size_t K = Configurations::get_instance()->cl_based_neighbours;
         double cl_stdev_thresh = Configurations::get_instance()->cl_based_stdev_thresh;
         std::vector<int> k_indices;
         std::vector<float> k_squared_distances;
@@ -190,7 +190,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr nearest_down_sampling(const pcl::PointClo
 
 void print_matching_option(const char* parameter_ptr, const int& option)
 {
-    if (parameter_ptr == NULL || option >= sizeof(parameter_ptr) / sizeof(parameter_ptr[0]))
+    if (parameter_ptr == NULL || option >= (int)(sizeof(parameter_ptr) / sizeof(parameter_ptr[0])))
     {
         std::cout << ERROR << "\n";
         std::cout << HELP << "\n";
@@ -229,7 +229,7 @@ int config_value_by_option(const int& option, char* parameter_ptr)
 {
     std::string parameter(parameter_ptr);
 
-    if (parameter_ptr == NULL || parameter.compare("") == 0 || option >= sizeof(options) / sizeof(options[0]))
+    if (parameter_ptr == NULL || parameter.compare("") == 0 || option >= (int)(sizeof(options) / sizeof(options[0])))
     {
         std::cout << ERROR << "\n";
         std::cout << HELP << "\n";

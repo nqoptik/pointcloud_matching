@@ -88,7 +88,7 @@ class CloudDiffChecker
     float z_min_, z_max_;
     float d_max_;
     int grid_count_;
-    int min_points_in_grid_;
+    size_t min_points_in_grid_;
     int x_grid_count_, y_grid_count_;
     float grid_step_length_;
     float ransac_distance_threshold_;

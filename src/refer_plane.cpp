@@ -2,6 +2,12 @@
 
 int main(int argc, char* argv[])
 {
+    if (argc < 5)
+    {
+        printf("Missing arguments.\n");
+        return 1;
+    }
+
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
 
     // Load the old pointcloud

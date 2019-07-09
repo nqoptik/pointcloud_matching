@@ -602,8 +602,6 @@ void CloudDiffChecker::draw_transformation()
         {
             int x_index = i % x_grid_count_;
             int y_index = i / x_grid_count_;
-            float centroid_x = x_min_ + x_index * grid_step_length_ + grid_step_length_ / 2;
-            float centroid_y = y_min_ + y_index * grid_step_length_ + grid_step_length_ / 2;
 
             // Draw the transform vectors
             point_xyzrgb.r = 255;
@@ -622,7 +620,7 @@ void CloudDiffChecker::draw_transformation()
                     search_point.z = z;
                     std::vector<int> k_indices;
                     std::vector<float> k_squared_distances;
-                    int min_size_projection = 0;
+                    size_t min_size_projection = 0;
                     float radius = grid_step_length_ / 2;
                     pcl::PointXYZ old_terminal(0, 0, 0);
                     float old_stdv = 0;

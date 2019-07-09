@@ -42,7 +42,7 @@ CloudProjection::CloudProjection(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& o
                                  const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
                                  const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
                                  const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr)
-    : old_pointcloud_ptr_(old_pointcloud_ptr_),
+    : old_pointcloud_ptr_(old_pointcloud_ptr),
       new_pointcloud_ptr_(new_pointcloud_ptr),
       old_parts_ptr_(old_parts_ptr),
       new_parts_ptr_(new_parts_ptr)
@@ -465,7 +465,7 @@ void CloudProjection::detect_2d_matches(const cv::Mat& old_projection_image,
     {
         cornerSubPix(old_projection_gray_image, tmp_corners, sub_pix_win_size, cv::Size(-1, -1), termcrit);
     }
-    float OF_error_threshold = Configurations::get_instance()->OF_error_threshold;
+
     for (size_t i = 0; i < corners.size(); ++i)
     {
         float dx_err = corners[i].x - tmp_corners[i].x;

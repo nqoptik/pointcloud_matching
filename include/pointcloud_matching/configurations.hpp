@@ -23,7 +23,7 @@ class Configurations
     int ror_min_neighbours;
     int ror_iterations;
 
-    int cl_based_neighbours;
+    size_t cl_based_neighbours;
     double cl_based_stdev_thresh;
     int cl_based_iterations;
 

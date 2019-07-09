@@ -247,6 +247,7 @@ void two_dimension_detect_keypoints(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr
 {
     printf("2D matching method.\n");
     CloudProjection cloud_projection(old_pointcloud_ptr, new_pointcloud_ptr, old_parts_ptr, new_parts_ptr);
+    printf("This method does not utilise the keypoints: %lu, %lu\n", old_keypoints_ptr->points.size(), new_keypoints_ptr->points.size());
     cloud_projection.detect_matches();
 }
 
@@ -302,7 +303,7 @@ void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_p
         pcl::PointXYZRGB old_keypoint = (old_keypoints_ptr->points)[i];
         std::vector<int> k_indices;
         std::vector<float> k_squared_distances;
-        if (!kd_tree_flann_old.radiusSearch(old_keypoint, icp_radius, k_indices, k_squared_distances) > 0)
+        if (!(kd_tree_flann_old.radiusSearch(old_keypoint, icp_radius, k_indices, k_squared_distances) > 0))
         {
             std::cout << " !not found old neighbours\n";
             continue;
@@ -318,7 +319,7 @@ void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_p
         // Get the possible refer keypoints
         std::vector<int> possible_refer_indices;
         std::vector<float> possible_squared_distances;
-        if (!new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0)
+        if (!(new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0))
         {
             std::cout << " !not found possible refer keypoint.\n";
             continue;
@@ -330,7 +331,7 @@ void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_p
             pcl::PointXYZRGB new_keypoint = (new_keypoints_ptr->points)[possible_refer_indices[j]];
             std::vector<int> k_indices;
             std::vector<float> k_squared_distances;
-            if (!kd_tree_flann_new.radiusSearch(new_keypoint, icp_radius, k_indices, k_squared_distances) > 0)
+            if (!(kd_tree_flann_new.radiusSearch(new_keypoint, icp_radius, k_indices, k_squared_distances) > 0))
             {
                 std::cout << " !not found new neighbours\n";
                 continue;
@@ -366,7 +367,7 @@ void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_p
             pcl::PointXYZRGB similar_keypoint = new_keypoints_ptr->points[possible_refer_indices[best_refer_index]];
             std::vector<int> refine_index;
             std::vector<float> refine_sqd;
-            if (!kd_tree_flann_new.radiusSearch(similar_keypoint, icp_refine_radius, refine_index, refine_sqd) > 0)
+            if (!(kd_tree_flann_new.radiusSearch(similar_keypoint, icp_refine_radius, refine_index, refine_sqd) > 0))
             {
                 std::cout << " !not found refine point\n";
                 continue;
@@ -379,7 +380,7 @@ void icp_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_p
                 pcl::PointXYZRGB new_similar_point = (new_pointcloud_icp_ptr->points)[refine_index[j]];
                 std::vector<int> k_indices;
                 std::vector<float> k_squared_distances;
-                if (!kd_tree_flann_new.radiusSearch(new_similar_point, icp_radius, k_indices, k_squared_distances) > 0)
+                if (!(kd_tree_flann_new.radiusSearch(new_similar_point, icp_radius, k_indices, k_squared_distances) > 0))
                 {
                     std::cout << " !not found new neighbours\n";
                     continue;
@@ -488,7 +489,7 @@ void shot_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_
         pcl::PointXYZRGB old_keypoint = old_keypoints_ptr->points[i];
         std::vector<int> possible_refer_indices;
         std::vector<float> possible_squared_distances;
-        if (!new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0)
+        if (!(new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0))
         {
             continue;
         }
@@ -510,8 +511,7 @@ void shot_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_
                 new_descriptor_index = new_descriptor_index_;
             }
         }
-        pcl::PointXYZRGB old_part = old_keypoint;
-        pcl::PointXYZRGB new_part = new_keypoints_ptr->points[new_descriptor_index];
+
         if (new_descriptor_index != -1)
         {
             descriptor_distances.push_back(min_descriptor_d);
@@ -532,7 +532,7 @@ void shot_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_
         pcl::PointXYZRGB old_keypoint = old_keypoints_ptr->points[i];
         std::vector<int> possible_refer_indices;
         std::vector<float> possible_squared_distances;
-        if (!new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0)
+        if (!(new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0))
         {
             continue;
         }
@@ -557,11 +557,11 @@ void shot_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_
         if (min_descriptor_d < descriptor_distance_threshold)
         {
             pcl::PointXYZRGB new_keypoint = new_keypoints_ptr->points[new_descriptor_index];
-            if (!old_kd_tree_flann_keypoints.radiusSearch(new_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0)
+            if (!(old_kd_tree_flann_keypoints.radiusSearch(new_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0))
             {
                 continue;
             }
-            int old_descriptor_index = -1;
+            size_t old_descriptor_index = 0;
             float min_descriptor_d_old = FLT_MAX;
             for (size_t j = 0; j < possible_refer_indices.size(); ++j)
             {
@@ -632,7 +632,7 @@ void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_
         pcl::PointXYZRGB old_point = old_keypoints_ptr->points[i];
         std::vector<int> k_indices;
         std::vector<float> k_squared_distances;
-        if (!kd_tree_flann_old.nearestKSearch(old_point, 1, k_indices, k_squared_distances) > 0)
+        if (!(kd_tree_flann_old.nearestKSearch(old_point, 1, k_indices, k_squared_distances) > 0))
         {
             std::cout << " Check get old keypoint's indices.\n";
             exit(1);
@@ -647,7 +647,7 @@ void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_
         pcl::PointXYZRGB new_point = new_keypoints_ptr->points[i];
         std::vector<int> k_indices;
         std::vector<float> k_squared_distances;
-        if (!kd_tree_flann_new.nearestKSearch(new_point, 1, k_indices, k_squared_distances) > 0)
+        if (!(kd_tree_flann_new.nearestKSearch(new_point, 1, k_indices, k_squared_distances) > 0))
         {
             std::cout << " Check get new keypoint's indices.\n";
             exit(1);
@@ -694,7 +694,7 @@ void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_
         pcl::PointXYZRGB old_keypoint = old_keypoints_ptr->points[i];
         std::vector<int> possible_refer_indices;
         std::vector<float> possible_squared_distances;
-        if (!new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0)
+        if (!(new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0))
         {
             continue;
         }
@@ -716,8 +716,7 @@ void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_
                 new_descriptor_index = new_descriptor_index_;
             }
         }
-        pcl::PointXYZRGB old_part = old_keypoint;
-        pcl::PointXYZRGB new_part = new_keypoints_ptr->points[new_descriptor_index];
+
         if (new_descriptor_index != -1)
         {
             descriptor_distances.push_back(min_descriptor_d);
@@ -738,7 +737,7 @@ void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_
         pcl::PointXYZRGB old_keypoint = old_keypoints_ptr->points[i];
         std::vector<int> possible_refer_indices;
         std::vector<float> possible_squared_distances;
-        if (!new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0)
+        if (!(new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0))
         {
             continue;
         }
@@ -763,11 +762,11 @@ void fpfh_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_
         if (min_descriptor_d < descriptor_distance_threshold)
         {
             pcl::PointXYZRGB new_keypoint = new_keypoints_ptr->points[new_descriptor_index];
-            if (!old_kd_tree_flann_keypoints.radiusSearch(new_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0)
+            if (!(old_kd_tree_flann_keypoints.radiusSearch(new_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0))
             {
                 continue;
             }
-            int old_descriptor_index = -1;
+            size_t old_descriptor_index = 0;
             float min_descriptor_d_old = FLT_MAX;
             for (size_t j = 0; j < possible_refer_indices.size(); ++j)
             {
@@ -862,7 +861,7 @@ void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&
         pcl::PointXYZRGB old_keypoint = old_keypoints_ptr->points[i];
         std::vector<int> possible_refer_indices;
         std::vector<float> possible_squared_distances;
-        if (!new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0)
+        if (!(new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0))
         {
             continue;
         }
@@ -884,8 +883,6 @@ void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&
                 new_descriptor_index = new_descriptor_index_;
             }
         }
-        pcl::PointXYZRGB old_part = old_keypoint;
-        pcl::PointXYZRGB new_part = new_keypoints_ptr->points[new_descriptor_index];
         if (new_descriptor_index != -1)
         {
             descriptor_distances.push_back(min_descriptor_d);
@@ -906,7 +903,7 @@ void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&
         pcl::PointXYZRGB old_keypoint = old_keypoints_ptr->points[i];
         std::vector<int> possible_refer_indices;
         std::vector<float> possible_squared_distances;
-        if (!new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0)
+        if (!(new_kd_tree_flann_keypoints.radiusSearch(old_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0))
         {
             continue;
         }
@@ -931,11 +928,11 @@ void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&
         if (min_descriptor_d < descriptor_distance_threshold)
         {
             pcl::PointXYZRGB new_keypoint = new_keypoints_ptr->points[new_descriptor_index];
-            if (!old_kd_tree_flann_keypoints.radiusSearch(new_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0)
+            if (!(old_kd_tree_flann_keypoints.radiusSearch(new_keypoint, pos_radius, possible_refer_indices, possible_squared_distances) > 0))
             {
                 continue;
             }
-            int old_descriptor_index = -1;
+            size_t old_descriptor_index = 0;
             float min_descriptor_d_old = FLT_MAX;
             for (size_t j = 0; j < possible_refer_indices.size(); ++j)
             {
@@ -966,7 +963,7 @@ void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&
 
 void print_matching_option(const char* parameter_ptr, const int& option)
 {
-    if (parameter_ptr == NULL || option >= sizeof(parameter_ptr) / sizeof(parameter_ptr[0]))
+    if (parameter_ptr == NULL || option >= (int)(sizeof(parameter_ptr) / sizeof(parameter_ptr[0])))
     {
         std::cout << ERROR << "\n";
         std::cout << HELP << "\n";
@@ -1006,7 +1003,7 @@ int config_value_by_option(const int& option, char* parameter_ptr)
 {
     std::string parameter(parameter_ptr);
 
-    if (parameter_ptr == NULL || parameter.compare("") == 0 || option >= sizeof(options) / sizeof(options[0]))
+    if (parameter_ptr == NULL || parameter.compare("") == 0 || option >= (int)(sizeof(options) / sizeof(options[0])))
     {
         std::cout << ERROR << "\n";
         std::cout << HELP << "\n";

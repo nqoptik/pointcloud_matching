@@ -106,7 +106,7 @@ void Configurations::read_config()
         }
         else if (option.compare("cl_based_neighbours") == 0)
         {
-            int val;
+            size_t val;
             in >> val;
             cl_based_neighbours = val;
         }
