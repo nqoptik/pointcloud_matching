@@ -1,36 +1,37 @@
 #ifndef CLOUD_PROJECTION_HPP
 #define CLOUD_PROJECTION_HPP
 
-#include <iostream>
-#include <fstream>
 #include <algorithm>
 #include <cmath>
-#include <vector>
-#include <string>
+#include <fstream>
+#include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
 
-#include <pcl/io/pcd_io.h>
-#include <pcl/io/ply_io.h>
-#include <pcl/point_cloud.h>
 #include <pcl/console/parse.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/keypoints/iss_3d.h>
 #include <pcl/features/fpfh.h>
 #include <pcl/features/fpfh_omp.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/io/ply_io.h>
 #include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/keypoints/iss_3d.h>
+#include <pcl/point_cloud.h>
 #include <pcl/registration/icp.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/xfeatures2d.hpp>
 #include <opencv2/video/tracking.hpp>
+#include <opencv2/xfeatures2d.hpp>
 
 #include "pointcloud_matching/configurations.hpp"
 
 void normalise_colours(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pcl_ptr);
 
-class CloudProjection {
+class CloudProjection
+{
    private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr_;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr_;

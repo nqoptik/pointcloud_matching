@@ -7,25 +7,25 @@
 #include <string>
 #include <vector>
 
-#include <pcl/io/ply_io.h>
-#include <pcl/point_cloud.h>
 #include <pcl/console/parse.h>
+#include <pcl/features/fpfh_omp.h>
+#include <pcl/features/shot_omp.h>
 #include <pcl/filters/filter.h>
-#include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/filters/uniform_sampling.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/io/ply_io.h>
 #include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/keypoints/harris_3d.h>
 #include <pcl/keypoints/iss_3d.h>
 #include <pcl/keypoints/susan.h>
-#include <pcl/keypoints/harris_3d.h>
-#include <pcl/features/shot_omp.h>
-#include <pcl/features/fpfh_omp.h>
+#include <pcl/point_cloud.h>
 #include <pcl/registration/icp.h>
 
-#include "pointcloud_matching/configurations.hpp"
-#include "pointcloud_matching/cloud_projection.hpp"
 #include "pointcloud_matching/cloud_diff_checker.hpp"
+#include "pointcloud_matching/cloud_projection.hpp"
+#include "pointcloud_matching/configurations.hpp"
 
 #define INVALID -1
 #define ERROR "There is a problem when parsing command option"
@@ -67,7 +67,8 @@ union FUNCTION {
                const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&);
 };
 
-struct CommandOption {
+struct CommandOption
+{
     FUNCTION keypoint_detect_method;
     FUNCTION descriptor_detect_methos;
     bool inter = false;

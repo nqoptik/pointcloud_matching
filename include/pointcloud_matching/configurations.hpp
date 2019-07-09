@@ -1,13 +1,14 @@
 #ifndef CONFIGUTATIONS_HPP
 #define CONFIGUTATIONS_HPP
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
 
-class Configurations {
+class Configurations
+{
    public:
     Configurations();
     ~Configurations();
@@ -58,7 +59,8 @@ class Configurations {
 
     void read_config();
 
-    static Configurations* get_instance() {
+    static Configurations* get_instance()
+    {
         return instance_;
     }
 

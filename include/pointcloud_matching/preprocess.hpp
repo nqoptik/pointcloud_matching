@@ -7,15 +7,15 @@
 
 #include <liblas/liblas.hpp>
 
-#include <pcl/io/ply_io.h>
-#include <pcl/point_cloud.h>
 #include <pcl/console/parse.h>
 #include <pcl/filters/filter.h>
-#include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/filters/uniform_sampling.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/io/ply_io.h>
 #include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/point_cloud.h>
 
 #include "pointcloud_matching/configurations.hpp"
 
@@ -38,7 +38,9 @@
     "\t-ofs <offset_file>\n"
 
 typedef pcl::PointCloud<pcl::PointXYZRGB>::Ptr (*FUNCTION)(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&);
-struct CommandOption {
+
+struct CommandOption
+{
     FUNCTION noise = NULL;
     FUNCTION down_sampling = NULL;
     bool inter = false;

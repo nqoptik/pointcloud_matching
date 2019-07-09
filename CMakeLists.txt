@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
 ## System dependencies
-find_package(PCL 1.8 REQUIRED)
+find_package(PCL 1.9 REQUIRED)
 find_package(OpenCV 3 REQUIRED)
 
 ## Specify additional locations of header files

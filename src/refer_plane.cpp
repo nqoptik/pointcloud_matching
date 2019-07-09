@@ -1,11 +1,13 @@
 #include "pointcloud_matching/cloud_diff_checker.hpp"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
 
     // Load the old pointcloud
     pcl::PointCloud<pcl::PointXYZ>::Ptr old_pointcloud_ptr(new pcl::PointCloud<pcl::PointXYZ>());
-    if (pcl::io::loadPLYFile(argv[1], *old_pointcloud_ptr) < 0) {
+    if (pcl::io::loadPLYFile(argv[1], *old_pointcloud_ptr) < 0)
+    {
         printf("Failed to load the old pointcloud!\n");
         return 1;
     }
@@ -13,7 +15,8 @@ int main(int argc, char* argv[]) {
 
     // Load the new pointcloud
     pcl::PointCloud<pcl::PointXYZ>::Ptr new_pointcloud_ptr(new pcl::PointCloud<pcl::PointXYZ>());
-    if (pcl::io::loadPLYFile(argv[2], *new_pointcloud_ptr) < 0) {
+    if (pcl::io::loadPLYFile(argv[2], *new_pointcloud_ptr) < 0)
+    {
         printf("Failed to load the new pointcloud!\n");
         return 1;
     }
@@ -38,7 +41,8 @@ int main(int argc, char* argv[]) {
     offset_z = offset2_z - offset1_z;
 
     // Shift the new pointcloud by the offset values
-    for (size_t i = 0; i < new_pointcloud_ptr->points.size(); ++i) {
+    for (size_t i = 0; i < new_pointcloud_ptr->points.size(); ++i)
+    {
         new_pointcloud_ptr->points[i].x += offset_x;
         new_pointcloud_ptr->points[i].y += offset_y;
         new_pointcloud_ptr->points[i].z += offset_z;
@@ -54,7 +58,8 @@ int main(int argc, char* argv[]) {
     // Save the matching results
     std::ofstream ofs_pairs(argv[6]);
     ofs_pairs << std::fixed << offset1_x << " " << std::fixed << offset1_y << " " << std::fixed << offset1_z << "\n";
-    for (size_t i = 0; i < old_parts_ptr->points.size(); ++i) {
+    for (size_t i = 0; i < old_parts_ptr->points.size(); ++i)
+    {
         ofs_pairs << old_parts_ptr->points[i].x << " " << old_parts_ptr->points[i].y << " " << old_parts_ptr->points[i].z << " "
                   << new_parts_ptr->points[i].x << " " << new_parts_ptr->points[i].y << " " << new_parts_ptr->points[i].z << "\n";
     }

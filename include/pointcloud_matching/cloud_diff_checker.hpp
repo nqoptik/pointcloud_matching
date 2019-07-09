@@ -1,24 +1,27 @@
 #ifndef CLOUD_DIFF_CHECKER_HPP
 #define CLOUD_DIFF_CHECKER_HPP
 
-#include <iostream>
-#include <vector>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <string>
-#include <pcl/io/ply_io.h>
-#include <pcl/point_cloud.h>
-#include <pcl/features/normal_3d_omp.h>
-#include <pcl/kdtree/kdtree_flann.h>
+#include <vector>
+
 #include <pcl/common/transforms.h>
+#include <pcl/features/normal_3d_omp.h>
+#include <pcl/io/ply_io.h>
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/point_cloud.h>
 #include <pcl/sample_consensus/ransac.h>
 #include <pcl/sample_consensus/sac_model_plane.h>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/ml/ml.hpp>
 
-struct PlaneCoefficients {
+struct PlaneCoefficients
+{
     float old_a, old_b, old_c, old_d, old_inliers, old_total;
     float new_a, new_b, new_c, new_d, new_inliers, new_total;
 
@@ -45,22 +48,26 @@ struct PlaneCoefficients {
           new_c(t_new_c),
           new_d(t_new_d),
           new_inliers(t_new_inliers),
-          new_total(t_new_total) {
+          new_total(t_new_total)
+    {
     }
 };
 
-struct ReferPlane {
+struct ReferPlane
+{
     float refer_a, refer_b, refer_c, refer_d;
 
     ReferPlane(const float& t_refer_a = 0,
                const float& t_refer_b = 0,
                const float& t_refer_c = 0,
                const float& t_refer_d = 0)
-        : refer_a(t_refer_a), refer_b(t_refer_b), refer_c(t_refer_c), refer_d(t_refer_d) {
+        : refer_a(t_refer_a), refer_b(t_refer_b), refer_c(t_refer_c), refer_d(t_refer_d)
+    {
     }
 };
 
-class CloudDiffChecker {
+class CloudDiffChecker
+{
    private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr old_pointcloud_ptr_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr new_pointcloud_ptr_;

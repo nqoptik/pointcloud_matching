@@ -2,7 +2,8 @@
 
 Configurations* Configurations::instance_ = new Configurations();
 
-Configurations::Configurations() {
+Configurations::Configurations()
+{
     leaf_size = 0.001;
 
     sor_neighbours = 50;
@@ -47,134 +48,196 @@ Configurations::Configurations() {
     draw_new_colour = false;
 }
 
-Configurations::~Configurations() {
+Configurations::~Configurations()
+{
 }
 
-void Configurations::read_config() {
+void Configurations::read_config()
+{
     std::ifstream ifs("config.ini");
     std::string line;
-    while (std::getline(ifs, line)) {
+    while (std::getline(ifs, line))
+    {
         std::istringstream in(line);
         std::string option;
         in >> option;
 
-        if (option.compare("leaf_size") == 0) {
+        if (option.compare("leaf_size") == 0)
+        {
             double val;
             in >> val;
             leaf_size = val;
-        } else if (option.compare("sor_neighbours") == 0) {
+        }
+        else if (option.compare("sor_neighbours") == 0)
+        {
             int val;
             in >> val;
             sor_neighbours = val;
-        } else if (option.compare("sor_stdev_thresh") == 0) {
+        }
+        else if (option.compare("sor_stdev_thresh") == 0)
+        {
             double val;
             in >> val;
             sor_stdev_thresh = val;
-        } else if (option.compare("sor_iterations") == 0) {
+        }
+        else if (option.compare("sor_iterations") == 0)
+        {
             int val;
             in >> val;
             sor_iterations = val;
-        } else if (option.compare("ror_radius") == 0) {
+        }
+        else if (option.compare("ror_radius") == 0)
+        {
             double val;
             in >> val;
             ror_radius = val;
-        } else if (option.compare("ror_min_neighbours") == 0) {
+        }
+        else if (option.compare("ror_min_neighbours") == 0)
+        {
             int val;
             in >> val;
             ror_min_neighbours = val;
-        } else if (option.compare("ror_iterations") == 0) {
+        }
+        else if (option.compare("ror_iterations") == 0)
+        {
             int val;
             in >> val;
             ror_iterations = val;
-        } else if (option.compare("cl_based_neighbours") == 0) {
+        }
+        else if (option.compare("cl_based_neighbours") == 0)
+        {
             int val;
             in >> val;
             cl_based_neighbours = val;
-        } else if (option.compare("cl_based_stdev_thresh") == 0) {
+        }
+        else if (option.compare("cl_based_stdev_thresh") == 0)
+        {
             double val;
             in >> val;
             cl_based_stdev_thresh = val;
-        } else if (option.compare("cl_based_iterations") == 0) {
+        }
+        else if (option.compare("cl_based_iterations") == 0)
+        {
             int val;
             in >> val;
             cl_based_iterations = val;
-        } else if (option.compare("iss_old_salient_radius") == 0) {
+        }
+        else if (option.compare("iss_old_salient_radius") == 0)
+        {
             double val;
             in >> val;
             iss_old_salient_radius = val;
-        } else if (option.compare("iss_old_nonmax_radius") == 0) {
+        }
+        else if (option.compare("iss_old_nonmax_radius") == 0)
+        {
             double val;
             in >> val;
             iss_old_nonmax_radius = val;
-        } else if (option.compare("iss_old_min_neighbours") == 0) {
+        }
+        else if (option.compare("iss_old_min_neighbours") == 0)
+        {
             int val;
             in >> val;
             iss_old_min_neighbours = val;
-        } else if (option.compare("iss_new_salient_radius") == 0) {
+        }
+        else if (option.compare("iss_new_salient_radius") == 0)
+        {
             double val;
             in >> val;
             iss_new_salient_radius = val;
-        } else if (option.compare("iss_new_nonmax_radius") == 0) {
+        }
+        else if (option.compare("iss_new_nonmax_radius") == 0)
+        {
             double val;
             in >> val;
             iss_new_nonmax_radius = val;
-        } else if (option.compare("iss_new_min_neighbours") == 0) {
+        }
+        else if (option.compare("iss_new_min_neighbours") == 0)
+        {
             int val;
             in >> val;
             iss_new_min_neighbours = val;
-        } else if (option.compare("susan_old_radius") == 0) {
+        }
+        else if (option.compare("susan_old_radius") == 0)
+        {
             double val;
             in >> val;
             susan_old_radius = val;
-        } else if (option.compare("susan_new_radius") == 0) {
+        }
+        else if (option.compare("susan_new_radius") == 0)
+        {
             double val;
             in >> val;
             susan_new_radius = val;
-        } else if (option.compare("harris3d_radius") == 0) {
+        }
+        else if (option.compare("harris3d_radius") == 0)
+        {
             double val;
             in >> val;
             harris3d_radius = val;
-        } else if (option.compare("icp_radius") == 0) {
+        }
+        else if (option.compare("icp_radius") == 0)
+        {
             double val;
             in >> val;
             icp_radius = val;
-        } else if (option.compare("icp_iterations") == 0) {
+        }
+        else if (option.compare("icp_iterations") == 0)
+        {
             int val;
             in >> val;
             icp_iterations = val;
-        } else if (option.compare("icp_refine_radius") == 0) {
+        }
+        else if (option.compare("icp_refine_radius") == 0)
+        {
             double val;
             in >> val;
             icp_refine_radius = val;
-        } else if (option.compare("shot_radius") == 0) {
+        }
+        else if (option.compare("shot_radius") == 0)
+        {
             double val;
             in >> val;
             shot_radius = val;
-        } else if (option.compare("fpfh_radius") == 0) {
+        }
+        else if (option.compare("fpfh_radius") == 0)
+        {
             double val;
             in >> val;
             fpfh_radius = val;
-        } else if (option.compare("OF_error_threshold") == 0) {
+        }
+        else if (option.compare("OF_error_threshold") == 0)
+        {
             float val;
             in >> val;
             OF_error_threshold = val;
-        } else if (option.compare("pi_theta_x") == 0) {
+        }
+        else if (option.compare("pi_theta_x") == 0)
+        {
             double val;
             in >> val;
             pi_theta_x = val;
-        } else if (option.compare("pi_theta_y") == 0) {
+        }
+        else if (option.compare("pi_theta_y") == 0)
+        {
             double val;
             in >> val;
             pi_theta_y = val;
-        } else if (option.compare("pos_radius") == 0) {
+        }
+        else if (option.compare("pos_radius") == 0)
+        {
             double val;
             in >> val;
             pos_radius = val;
-        } else if (option.compare("draw_old_colour") == 0) {
+        }
+        else if (option.compare("draw_old_colour") == 0)
+        {
             bool val;
             in >> val;
             draw_old_colour = val;
-        } else if (option.compare("draw_new_colour") == 0) {
+        }
+        else if (option.compare("draw_new_colour") == 0)
+        {
             bool val;
             in >> val;
             draw_new_colour = val;
