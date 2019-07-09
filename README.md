@@ -10,32 +10,56 @@ sudo apt-get install libtiff5-dev
 sudo apt-get install libudev-dev (for openNI insall libusb-dev libusb-1.0-0-dev)
 sudo apt -y install doxygen mpi-default-dev openmpi-bin openmpi-common libqhull* libgtest-dev libflann-dev libboost-all-dev libeigen3-dev
 sudo apt -y install git-core freeglut3-dev pkg-config build-essential libxmu-dev libxi-dev libphonon-dev libphonon-dev phonon-backend-gstreamer
-sudo apt -y install phonon-backend-vlc graphviz mono-complete qt-sdk
-sudo apt-get install qt-sdk openjdk-8-jdk openjdk-8-jre
+sudo apt -y install phonon-backend-vlc graphviz mono-complete
+sudo apt-get install openjdk-8-jdk openjdk-8-jre
 ```
 
 ### 2. geotiff
-Install GeoTIFF (git reset --hard to version 1.4.0) from https://github.com/ufz/geotiff with:
+Install GeoTIFF (git reset --hard to version 1.4.0) from https://github.com/ufz/geotiff
 ```
+git clone https://github.com/ufz/geotiff.git
+cd geotiff
+mkdir build
+cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release ..
+make - j8
+sudo make install
 ```
 
 ### 3. vtk 8.1.2
-Get vtk version 8.1.2 from https://www.vtk.org/download/ with:
+Get vtk version 8.1.2 from https://www.vtk.org/download/ or clone from https://github.com/Kitware/VTK.git
 ```
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release .. && make -j8
+git clone https://github.com/Kitware/VTK.git
+cd VTK
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release ..
+make -j8
+sudo make install
 ```
 
 ### 4. libLAS 1.8.1
-Install libLAS (git reset --hard to version 1.8.1) from https://github.com/libLAS/LibLAS with:
+Install libLAS (git reset --hard to version 1.8.1) from https://github.com/libLAS/LibLAS
 ```
+git clone https://github.com/libLAS/libLAS.git
+cd LibLAS
+mkdir build
+cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release ..
+make - j8
+sudo make install
 ```
 
 ### 5. pcl 1.9.1
-Install pointcloud library (git reset --hard to version 1.9.1) from https://github.com/PointCloudLibrary/pcl with:
+Install pointcloud library (git reset --hard to version 1.9.1) from https://github.com/PointCloudLibrary/pcl
 ```
+git clone https://github.com/PointCloudLibrary/pcl.git
+cd pcl
+mkdir build
+cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release ..
+make - j8
+sudo make install
 ```
 
 ## Build project
