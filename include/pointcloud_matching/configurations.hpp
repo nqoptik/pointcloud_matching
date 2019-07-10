@@ -9,7 +9,7 @@
 
 class Configurations
 {
-   public:
+public:
     Configurations();
     ~Configurations();
 
@@ -64,8 +64,8 @@ class Configurations
         return instance_;
     }
 
-   private:
+private:
     static Configurations* instance_;
 };
 
-#endif  // CONFIGUTATIONS_HPP
+#endif // CONFIGUTATIONS_HPP

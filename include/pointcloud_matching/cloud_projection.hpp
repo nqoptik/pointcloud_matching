@@ -32,7 +32,7 @@ void normalise_colours(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pcl_ptr);
 
 class CloudProjection
 {
-   private:
+private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_pointcloud_ptr_;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_pointcloud_ptr_;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr old_parts_ptr_;
@@ -41,7 +41,7 @@ class CloudProjection
     std::vector<size_t> match_query_indices_;
     std::vector<int> direction_indices_;
 
-   public:
+public:
     CloudProjection(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_pointcloud_ptr,
                     const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_pointcloud_ptr,
                     const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
@@ -58,4 +58,4 @@ class CloudProjection
     void detect_matches();
 };
 
-#endif  // CLOUD_PROJECTION_HPP
+#endif // CLOUD_PROJECTION_HPP

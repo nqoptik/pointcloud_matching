@@ -105,4 +105,4 @@ const char* options[] = {
     // The intermediate downsampling option
     "-ids"};
 
-#endif  // PREPROCESS_HPP
+#endif // PREPROCESS_HPP

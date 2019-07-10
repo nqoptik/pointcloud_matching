@@ -171,4 +171,4 @@ const char* options[] = {
     // The offset value 2
     "-ofs2"};
 
-#endif  // MATCHING_HPP
+#endif // MATCHING_HPP

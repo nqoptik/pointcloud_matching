@@ -68,7 +68,7 @@ struct ReferPlane
 
 class CloudDiffChecker
 {
-   private:
+private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr old_pointcloud_ptr_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr new_pointcloud_ptr_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr old_parts_ptr_;
@@ -93,7 +93,7 @@ class CloudDiffChecker
     float grid_step_length_;
     float ransac_distance_threshold_;
 
-   public:
+public:
     CloudDiffChecker(const pcl::PointCloud<pcl::PointXYZ>::Ptr& old_pointcloud_ptr,
                      const pcl::PointCloud<pcl::PointXYZ>::Ptr& new_pointcloud_ptr,
                      const pcl::PointCloud<pcl::PointXYZ>::Ptr& old_parts_ptr,
@@ -115,4 +115,4 @@ class CloudDiffChecker
     void draw_transformation();
 };
 
-#endif  // CLOUD_DIFF_CHECKER_HPP
+#endif // CLOUD_DIFF_CHECKER_HPP
