@@ -5,13 +5,19 @@
 #include <string>
 #include <vector>
 
+#include <pcl/pcl_config.h>
+#if PCL_VERSION_COMPARE(<, 1, 8, 0)
+#include <pcl/keypoints/uniform_sampling.h>
+#else
+#include <pcl/filters/uniform_sampling.h>
+#endif
+
 #include <liblas/liblas.hpp>
 
 #include <pcl/console/parse.h>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/filters/statistical_outlier_removal.h>
-#include <pcl/filters/uniform_sampling.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/ply_io.h>
 #include <pcl/kdtree/kdtree_flann.h>

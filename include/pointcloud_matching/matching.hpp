@@ -8,7 +8,6 @@
 #include <vector>
 
 #include <pcl/pcl_config.h>
-
 #if PCL_VERSION_COMPARE(<, 1, 8, 0)
 #include <pcl/keypoints/uniform_sampling.h>
 #else
