@@ -7,13 +7,20 @@
 #include <string>
 #include <vector>
 
+#include <pcl/pcl_config.h>
+
+#if PCL_VERSION_COMPARE(<, 1, 7, 2)
+#include <pcl/keypoints/uniform_sampling.h>
+#else
+#include <pcl/filters/uniform_sampling.h>
+#endif
+
 #include <pcl/console/parse.h>
 #include <pcl/features/fpfh_omp.h>
 #include <pcl/features/shot_omp.h>
 #include <pcl/filters/filter.h>
 #include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/filters/statistical_outlier_removal.h>
-#include <pcl/filters/uniform_sampling.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/ply_io.h>
 #include <pcl/kdtree/kdtree_flann.h>
@@ -56,7 +63,8 @@ void draw_matching_results(const std::string& file_name,
                            const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& old_parts_ptr,
                            const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& new_parts_ptr);
 
-union FUNCTION {
+union FUNCTION
+{
     void (*f3)(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&, const bool&);
 
     void (*f6)(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&,
