@@ -9,7 +9,7 @@
 
 #include <pcl/pcl_config.h>
 
-#if PCL_VERSION_COMPARE(<, 1, 7, 2)
+#if PCL_VERSION_COMPARE(<, 1, 8, 0)
 #include <pcl/keypoints/uniform_sampling.h>
 #else
 #include <pcl/filters/uniform_sampling.h>
