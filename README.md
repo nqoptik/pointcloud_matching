@@ -1,35 +1,10 @@
 # Pointcloud matching project
 Detect the transformations between 2 point-clouds that are scanned from the same place at the different times.
 
-## Prerequisites:
-
-### 1. Setup prerequisites
-Install all the prerequisites:
-```
-sudo apt install -y libgeotiff-dev
-sudo apt-get install libtiff5-dev
-sudo apt-get install libudev-dev (for openNI insall libusb-dev libusb-1.0-0-dev)
-sudo apt -y install doxygen mpi-default-dev openmpi-bin openmpi-common libqhull* libgtest-dev libflann-dev libboost-all-dev libeigen3-dev
-sudo apt -y install git-core freeglut3-dev pkg-config build-essential libxmu-dev libxi-dev libphonon-dev libphonon-dev phonon-backend-gstreamer
-sudo apt -y install phonon-backend-vlc graphviz mono-complete
-sudo apt-get install openjdk-8-jdk openjdk-8-jre
-```
-
-### 3. vtk 8.1.2
-Get vtk version 8.1.2 from https://www.vtk.org/download/ or clone from https://github.com/Kitware/VTK.git
-```
-git clone https://github.com/Kitware/VTK.git
-cd VTK
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release ..
-make -j8
-sudo make install
-```
-
-### 4. libLAS 1.8.1
+## Prerequisite
 Install libLAS (git reset --hard to version 1.8.1) from https://github.com/libLAS/LibLAS
 ```
+sudo apt install -y libgeotiff-dev
 cd ~/Downloads
 git clone git@github.com:libLAS/libLAS.git
 cd libLAS
