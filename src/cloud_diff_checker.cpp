@@ -292,12 +292,12 @@ void CloudDiffChecker::gridding_diff()
 
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
-    cv::findContours(grid_image.clone(), contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+    cv::findContours(grid_image.clone(), contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
     std::cout << "contours.size() = " << contours.size() << "\n";
     cv::Mat contours_image = cv::Mat(y_grid_count_, x_grid_count_, CV_8UC1, 255);
     for (size_t i = 0; i < contours.size(); ++i)
     {
-        cv::drawContours(contours_image, contours, i, i, CV_FILLED);
+        cv::drawContours(contours_image, contours, i, i, cv::FILLED);
     }
 
     // Get the cluster's indices

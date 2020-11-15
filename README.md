@@ -41,25 +41,17 @@ sudo make install
 ### 4. libLAS 1.8.1
 Install libLAS (git reset --hard to version 1.8.1) from https://github.com/libLAS/LibLAS
 ```
-git clone https://github.com/libLAS/libLAS.git
-cd LibLAS
+cd ~/Downloads
+git clone git@github.com:libLAS/libLAS.git
+cd libLAS
+git checkout 1.8.1
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release ..
 make - j8
 sudo make install
-```
-
-### 5. pcl 1.9.1
-Install pointcloud library (git reset --hard to version 1.9.1) from https://github.com/PointCloudLibrary/pcl
-```
-git clone https://github.com/PointCloudLibrary/pcl.git
-cd pcl
-mkdir build
-cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release ..
-make - j8
-sudo make install
+cd ../..
+rm -rf libLAS
 ```
 
 ## Build project
