@@ -963,7 +963,7 @@ void shotcolor_extract_description(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&
 
 void print_matching_option(const char* parameter_ptr, const int& option)
 {
-    if (parameter_ptr == NULL || option >= (int)(sizeof(parameter_ptr) / sizeof(parameter_ptr[0])))
+    if (parameter_ptr == NULL)
     {
         std::cout << ERROR << "\n";
         std::cout << HELP << "\n";

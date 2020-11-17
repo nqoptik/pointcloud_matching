@@ -386,42 +386,42 @@ void CloudProjection::detect_2d_matches(const cv::Mat& old_projection_image,
                                         const int& direction_index)
 {
     //Detect key points using SIFT
-    cv::Ptr<cv::Feature2D> f2d = cv::xfeatures2d::SIFT::create();
+    // cv::Ptr<cv::Feature2D> f2d = cv::xfeatures2d::SIFT::create();
     std::vector<cv::KeyPoint> old_keypoints, new_keypoints;
-    f2d->detect(old_projection_image, old_keypoints);
-    std::cout << "old_keypoints's size " << old_keypoints.size() << "\n";
-    f2d->detect(new_projection_image, new_keypoints);
-    std::cout << "new_keypoints's size " << new_keypoints.size() << "\n";
+    // f2d->detect(old_projection_image, old_keypoints);
+    // std::cout << "old_keypoints's size " << old_keypoints.size() << "\n";
+    // f2d->detect(new_projection_image, new_keypoints);
+    // std::cout << "new_keypoints's size " << new_keypoints.size() << "\n";
 
-    //Compute descriptors using SIFT
-    cv::Mat old_descriptors, new_descriptors;
-    f2d->compute(old_projection_image, old_keypoints, old_descriptors);
-    f2d->compute(new_projection_image, new_keypoints, new_descriptors);
+    // //Compute descriptors using SIFT
+    // cv::Mat old_descriptors, new_descriptors;
+    // f2d->compute(old_projection_image, old_keypoints, old_descriptors);
+    // f2d->compute(new_projection_image, new_keypoints, new_descriptors);
     int win_size = Configurations::get_instance()->pos_radius / distance_threshold;
 
-    // Match the descriptors
-    cv::FlannBasedMatcher matcher;
-    std::vector<std::vector<cv::DMatch>> matches;
-    matcher.knnMatch(new_descriptors, old_descriptors, matches, 2);
+    // // Match the descriptors
+    // cv::FlannBasedMatcher matcher;
+    // std::vector<std::vector<cv::DMatch>> matches;
+    // matcher.knnMatch(new_descriptors, old_descriptors, matches, 2);
     std::vector<cv::DMatch> good_matches;
-    for (size_t i = 0; i < matches.size(); ++i)
-    {
-        if (matches[i][0].distance / matches[i][1].distance < 0.7)
-        {
-            cv::Point2f train_point = old_keypoints[matches[i][0].trainIdx].pt;
-            cv::Point2f query_point = new_keypoints[matches[i][0].queryIdx].pt;
-            float d_x = train_point.x - query_point.x;
-            float d_y = train_point.y - query_point.y;
-            float d = sqrt(d_x * d_x + d_y * d_y);
-            if (d < win_size)
-            {
-                good_matches.push_back(matches[i][0]);
-            }
-        }
-    }
-    std::cout << "good_matches.size() " << good_matches.size() << "\n";
+    // for (size_t i = 0; i < matches.size(); ++i)
+    // {
+    //     if (matches[i][0].distance / matches[i][1].distance < 0.7)
+    //     {
+    //         cv::Point2f train_point = old_keypoints[matches[i][0].trainIdx].pt;
+    //         cv::Point2f query_point = new_keypoints[matches[i][0].queryIdx].pt;
+    //         float d_x = train_point.x - query_point.x;
+    //         float d_y = train_point.y - query_point.y;
+    //         float d = sqrt(d_x * d_x + d_y * d_y);
+    //         if (d < win_size)
+    //         {
+    //             good_matches.push_back(matches[i][0]);
+    //         }
+    //     }
+    // }
+    // std::cout << "good_matches.size() " << good_matches.size() << "\n";
 
-    // Draw the good matches
+    // // Draw the good matches
     cv::Mat correct_matches_image;
     drawMatches(new_projection_image, new_keypoints, old_projection_image, old_keypoints,
                 good_matches, correct_matches_image, cv::Scalar::all(-1), cv::Scalar::all(-1),
@@ -432,8 +432,8 @@ void CloudProjection::detect_2d_matches(const cv::Mat& old_projection_image,
     cv::Size sub_pix_win_size(1, 1);
     cv::Mat old_projection_gray_image, new_projection_gray_image;
     std::vector<cv::Point2f> corners;
-    cv::cvtColor(old_projection_image, old_projection_gray_image, CV_BGR2GRAY);
-    cv::cvtColor(new_projection_image, new_projection_gray_image, CV_BGR2GRAY);
+    cv::cvtColor(old_projection_image, old_projection_gray_image, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(new_projection_image, new_projection_gray_image, cv::COLOR_BGR2GRAY);
     cv::goodFeaturesToTrack(old_projection_gray_image, corners, 50000, 0.01, win_size / 2, cv::Mat(), 3, false, 0.04);
 
     if (corners.size() > 0)
